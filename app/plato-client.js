@@ -69,15 +69,18 @@ class PlatoClient {
     return Array.isArray(data) ? data : Object.keys(data);
   }
 
-  /** POST /submit → submit a tile */
-  async submitTile(tile) {
+  /** POST /room/{room}/submit → submit a tile
+   *  PLATO expects: POST /room/{room}/submit with { domain, question, answer, confidence } */
+  async submitTile(roomName, tile) {
+    const encoded = encodeURIComponent(roomName);
     const payload = {
-      domain: tile.room || tile.domain || 'general',
-      agent: tile.agent || 'cocapn-www',
-      question: tile.content || tile.question || '',
+      domain: tile.domain || 'general',
+      question: tile.question || tile.content || '',
+      answer: tile.answer || tile.content || '',
+      confidence: tile.confidence ?? 0.9,
     };
     if (tile.tags) payload.tags = tile.tags;
-    return this._post('/submit', payload);
+    return this._post(`/room/${encoded}/submit`, payload);
   }
 
   /** GET /search?q=query → search tiles */
@@ -97,6 +100,10 @@ export async function getTiles(roomName) {
 
 export async function getRooms() {
   return _shared.getRooms();
+}
+
+export async function submitTile(roomName, tile) {
+  return _shared.submitTile(roomName, tile);
 }
 
 // Re-export class for direct use
