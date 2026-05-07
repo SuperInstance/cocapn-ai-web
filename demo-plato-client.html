@@ -656,10 +656,10 @@
     <div class="panel" style="margin-bottom:16px">
       <div class="panel-title">PLATO REST API — Room Protocol v1</div>
       <div class="protocol-ref">
-        <div><span class="method">GET</span>  <span class="path">/room/{room}/status</span>        → { agents, tile_count }</div>
-        <div><span class="method">GET</span>  <span class="path">/room/{room}/history?limit=N</span> → [tiles]</div>
-        <div><span class="method post">POST</span> <span class="path">/room/{room}/tiles</span>      → { id }</div>
-        <div><span class="method">GET</span>  <span class="path">/room/{room}/tiles/stream</span>  → SSE / long-poll</div>
+        <div><span class="method">GET</span>  <span class="path">/room/{room}</span>           → { tiles, tile_count }</div>
+        <div><span class="method post">POST</span> <span class="path">/room/{room}/submit</span>   → { status, tile_hash }</div>
+        <div><span class="method">GET</span>  <span class="path">/provenance/chain</span>     → { chain_length }</div>
+        <div><span class="method">GET</span>  <span class="path">/provenance/trust</span>      → { trust_scores }</div>
       </div>
     </div>
     <div class="panel" style="margin-bottom:16px">
@@ -868,7 +868,8 @@ async function connectToServer() {
 
   try {
     const res = await Promise.race([
-      fetch(`${server}/room/${document.getElementById('roomName').value}/status`),
+      // PLATO server: GET /room/{room} for status + tile list
+      fetch(`${server}/room/${document.getElementById('roomName').value}`),
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
     ]);
 
@@ -890,7 +891,8 @@ function startPolling() {
     try {
       const server = getServer();
       const room = document.getElementById('roomName').value;
-      const res = await fetch(`${server}/room/${room}/status`);
+      // PLATO server: GET /room/{room} returns room state + tiles
+      const res = await fetch(`${server}/room/${room}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
       isOnline = true;
@@ -909,7 +911,8 @@ function startOfflineQueueDrain() {
     try {
       const server = getServer();
       const room = document.getElementById('roomName').value;
-      const res = await fetch(`${server}/room/${room}/status`);
+      // PLATO server: GET /room/{room} returns room state
+      const res = await fetch(`${server}/room/${room}`);
       if (!res.ok) throw new Error();
       isOnline = true;
       updateStatus('online');
@@ -919,6 +922,27 @@ function startOfflineQueueDrain() {
       updateStatus('offline');
     }
   }, 8000);
+}
+
+// Format tile data for PLATO Q&A pair submission
+function formatTileSummary(tile) {
+  const d = tile.data || {};
+  if (tile.type === 'trust') return `${d.from || '?'} → ${d.to || '?'}: ${d.value}`;
+  if (tile.type === 'emergence') return `β₁=${d.beta_one || d.beta_one}, V=${d.V}, E=${d.E}, detected=${d.detected}`;
+  if (tile.type === 'zhc') return `loop_residual=${d.loop_residual}, consensus=${d.consensus_reached}`;
+  if (tile.type === 'captain_decision') return `${d.decision}: ${d.reason}`;
+  if (tile.type === 'inquiry') return d.question || '';
+  return tile.type;
+}
+
+function formatTileAnswer(tile) {
+  const d = tile.data || {};
+  if (tile.type === 'trust') return `Trust tile: ${d.from || '?'} → ${d.to || '?'} = ${d.value}. Fleet trust update submitted.`;
+  if (tile.type === 'emergence') return `Emergence detection: β₁=${d.beta_one || d.beta_one}, threshold=${d.threshold || 'auto'}, detected=${d.detected}. Fleet topology analysis.`;
+  if (tile.type === 'zhc') return `ZHC loop residual=${d.loop_residual}. Consensus reached=${d.consensus_reached}. Trust convergence verified.`;
+  if (tile.type === 'captain_decision') return `Captain decision: ${d.decision}. Reason: ${d.reason}. Consulted: ${(d.consulted || []).join(', ') || 'none'}.`;
+  if (tile.type === 'inquiry') return `Fleet inquiry: ${d.question}. Context: ${d.context || 'none'}. Specialists consulted: ${(d.specialists_consulted || []).join(', ') || 'none'}.`;
+  return JSON.stringify(d);
 }
 
 async function drainQueue() {
@@ -931,14 +955,22 @@ async function drainQueue() {
 
   for (const tile of toSync) {
     try {
-      const res = await fetch(`${server}/room/${room}/tiles`, {
+      // PLATO server: POST /room/{room}/submit with { domain, question, answer, confidence }
+      const res = await fetch(`${server}/room/${room}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: tile.type, data: tile.data })
+        body: JSON.stringify({
+          domain: room,
+          question: `${tile.type}: ${formatTileSummary(tile)}`,
+          answer: formatTileAnswer(tile),
+          confidence: tile.data.confidence || 0.8,
+          source: 'plato-client-demo'
+        })
       });
-      if (res.ok) {
+      const json = await res.json();
+      if (json.status === 'accepted') {
         tile.synced = true;
-        tile.id = (await res.json()).id;
+        tile.id = json.tile_hash;
       } else {
         queuedTiles.push(tile);
       }
@@ -958,11 +990,13 @@ async function fetchHistory() {
   feed.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Loading…</span>';
 
   try {
-    const res = await fetch(`${server}/room/${room}/history?limit=${limit}`);
+    // PLATO server: GET /room/{room} returns { tiles: [...], tile_count: N }
+    const res = await fetch(`${server}/room/${room}`);
     if (!res.ok) throw new Error();
-    const history = await res.json();
-    document.getElementById('historyRoom').textContent = room;
-    renderHistoryFeed(feed, history);
+    const data = await res.json();
+    const tiles = (data.tiles || []).slice(-limit).reverse();
+    document.getElementById('historyRoom').textContent = room + ` (${data.tile_count} tiles)`;
+    renderHistoryFeed(feed, tiles);
   } catch (e) {
     feed.innerHTML = '<span style="color:var(--danger);font-size:12px">Failed to fetch history. Server unreachable.</span>';
   }
