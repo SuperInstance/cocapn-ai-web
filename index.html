@@ -413,6 +413,55 @@
     .tile-content { font-size: 0.85rem; color: var(--text); line-height: 1.5; }
     .tile-count { margin-bottom: 0.75rem; font-size: 0.85rem; color: var(--muted); }
 
+    /* Constraint Playground */
+    .playground-intro { max-width: 680px; margin: 0 auto 2rem; text-align: center; color: var(--muted); font-size: 1.05rem; line-height: 1.8; }
+    .playground-intro strong { color: var(--text); }
+    .playground-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem; }
+    @media (max-width: 1024px) { .playground-layout { grid-template-columns: 1fr; } }
+    .editor-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+    .editor-panel .editor-header { display: flex; justify-content: space-between; align-items: center; }
+    .editor-panel .editor-title { font-size: 0.85rem; font-weight: 600; color: var(--accent); display: flex; align-items: center; gap: 0.4rem; }
+    .editor-controls { display: flex; gap: 0.5rem; }
+    .editor-btn { padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text); transition: all 0.2s; }
+    .editor-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .editor-btn.primary { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
+    .editor-btn.primary:hover { background: #2563eb; }
+    .editor-wrap { position: relative; flex: 1; min-height: 320px; }
+    .editor-highlight { position: absolute; top: 0; left: 0; right: 0; bottom: 0; padding: 1rem; font-family: 'Space Mono', monospace; font-size: 0.85rem; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; overflow-y: auto; color: var(--editor-text, #c9d1d9); pointer-events: none; tab-size: 2; }
+    .editor-textarea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 1rem; font-family: 'Space Mono', monospace; font-size: 0.85rem; line-height: 1.6; background: transparent; color: transparent; caret-color: var(--text); border: none; resize: none; outline: none; tab-size: 2; overflow-y: auto; }
+    .editor-textarea::selection { background: rgba(52,152,219,0.3); }
+    .example-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .example-pill { padding: 0.25rem 0.75rem; border: 1px solid var(--border); border-radius: 20px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; color: var(--muted); background: transparent; }
+    .example-pill:hover { border-color: var(--success); color: var(--success); }
+    .cursor-pos { font-size: 0.75rem; color: var(--muted); font-family: 'Space Mono', monospace; }
+    .output-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+    .output-panel .editor-title { font-size: 0.85rem; font-weight: 600; color: var(--accent); display: flex; align-items: center; gap: 0.4rem; }
+    .status-badge { display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem; border-radius: 8px; font-size: 1rem; font-weight: 700; text-align: center; min-height: 60px; }
+    .status-badge.success { background: rgba(34,197,94,0.12); color: var(--success); border: 1px solid rgba(34,197,94,0.3); }
+    .status-badge.error { background: rgba(239,68,68,0.12); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+    .status-badge.loading { background: rgba(59,130,246,0.08); color: var(--accent); border: 1px solid rgba(59,130,246,0.2); }
+    .metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+    .metric-card { background: var(--surface2); border-radius: 8px; padding: 0.75rem; text-align: center; }
+    .metric-value { font-family: 'Space Mono', monospace; font-size: 1.1rem; font-weight: 700; color: var(--text); }
+    .metric-label { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; }
+    .asm-output { background: #0d1117; border-radius: 8px; padding: 1rem; font-family: 'Space Mono', monospace; font-size: 0.8rem; max-height: 280px; overflow-y: auto; }
+    .asm-line { display: flex; gap: 1rem; padding: 0.15rem 0; }
+    .asm-addr { color: #6a737d; min-width: 50px; }
+    .asm-mnemonic { color: #3498db; font-weight: 600; }
+    .asm-operand { color: #c9d1d9; }
+    .exec-preview { background: #0d1117; border-radius: 8px; padding: 0.75rem; font-family: 'Space Mono', monospace; font-size: 0.8rem; }
+    .exec-case { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0; flex-wrap: wrap; }
+    .exec-input { color: var(--warning); }
+    .exec-arrow { color: var(--muted); }
+    .exec-result { color: var(--success); }
+    .exec-action { font-size: 0.75rem; margin-left: 0.5rem; }
+    /* Syntax highlight colors */
+    .kw { color: #ff6b6b; font-weight: 600; }
+    .type { color: #da70d6; }
+    .str { color: #2ecc71; }
+    .num { color: #e67e22; }
+    .comment { color: #6a737d; font-style: italic; }
+
     /* Responsive */
     @media (max-width: 768px) {
       .stats-bar { gap: 1.5rem; }
@@ -657,6 +706,49 @@
       </div>
     </div>
 
+    <!-- Constraint Playground -->
+    <div class="section-header">
+      <h2>🔒 Constraint Playground</h2>
+      <p>Write a GUARD constraint, compile to FLUX-C bytecode, see it verify before it runs on hardware.</p>
+    </div>
+    <div class="playground-intro">
+      <strong>Write once, verify forever.</strong> GUARD is PLATO's constraint language for safety-critical systems.
+      Paste a template or write your own — see it compile to FLUX-C bytecode in real time.
+      <span style="color:var(--warning)">⚠️ Live FLUX-C compilation requires the fleet-coordinate WASM module (coming in Phase F) — this demo uses a mock compiler.</span>
+    </div>
+    <div class="playground-layout">
+      <!-- Editor Panel -->
+      <div class="editor-panel">
+        <div class="editor-header">
+          <div class="editor-title">🔒 GUARD Editor</div>
+          <div class="editor-controls">
+            <button class="editor-btn primary" id="compileBtn">▶ Compile</button>
+            <button class="editor-btn" id="resetBtn">↻ Reset</button>
+          </div>
+        </div>
+        <div class="editor-wrap">
+          <div class="editor-highlight" id="highlight"></div>
+          <textarea class="editor-textarea" id="guard-code" spellcheck="false"></textarea>
+        </div>
+        <div class="example-pills">
+          <span style="font-size:0.75rem;color:var(--muted);margin-right:0.25rem">Examples:</span>
+          <button class="example-pill" data-example="Temperature">🌡️ Temperature</button>
+          <button class="example-pill" data-example="Door">🚪 Door</button>
+          <button class="example-pill" data-example="Motor">⚙️ Motor</button>
+          <button class="example-pill" data-example="Light">💡 Light</button>
+        </div>
+        <div class="cursor-pos">Line <span id="lineNum">1</span>, Col <span id="colNum">1</span></div>
+      </div>
+
+      <!-- Output Panel -->
+      <div class="output-panel">
+        <div class="editor-title">⚡ Compilation Output</div>
+        <div id="playground-output">
+          <div class="status-badge loading">⏳ Waiting...</div>
+        </div>
+      </div>
+    </div>
+
     <!-- FLUX Certify CTA -->
     <div class="section-header" id="learn">
       <h2>Start With FLUX Certify</h2>
@@ -757,6 +849,7 @@
   import { initRadar } from './app/radar-canvas.js';
   import { initMurmurInsights } from './app/murmur-insights.js';
   import { initPlatoExplorer } from './app/plato-explorer.js';
+  import { initPlayground } from './app/constraint-playground.js';
 
   // Initialize WebGPU radar (falls back to CSS radar automatically)
   initRadar('radar-canvas');
@@ -835,6 +928,9 @@
 
   // Initialize PLATO history explorer
   initPlatoExplorer('plato-explorer');
+
+  // Initialize Constraint Playground
+  initPlayground('guard-code', 'playground-output');
 </script>
 </body>
 </html>
