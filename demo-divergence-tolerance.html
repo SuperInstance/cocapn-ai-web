@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoCapn — Divergence-Aware Tolerance Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0e17;
+      --surface: #111827;
+      --surface2: #1a2235;
+      --border: #1e293b;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --accent: #3b82f6;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #eab308;
+      --int8: #22c55e;
+      --dual: #f59e0b;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2rem;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.1rem; color: var(--muted); margin-bottom: 1.5rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .channel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    .channel.int8 { border-color: var(--int8); }
+    .channel.dual { border-color: var(--dual); box-shadow: 0 0 12px rgba(245,158,11,0.3); }
+    .channel-name { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .tolerance { font-family: 'Space Mono', monospace; font-size: 1.2rem; font-weight: 700; }
+    .precision { font-size: 0.7rem; margin-top: 0.5rem; padding: 2px 8px; border-radius: 4px; }
+    .precision.int8 { background: rgba(34,197,94,0.2); color: var(--int8); }
+    .precision.dual { background: rgba(245,158,11,0.2); color: var(--dual); }
+    .bar-container { height: 4px; background: var(--surface2); border-radius: 2px; margin-top: 0.5rem; }
+    .bar { height: 100%; border-radius: 2px; transition: width 0.5s, background 0.5s; }
+    .controls { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    button:hover { opacity: 0.9; }
+    button.danger { background: var(--danger); }
+    button.warning { background: var(--warning); color: #000; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .stat-value { font-family: 'Space Mono', monospace; font-size: 1.5rem; font-weight: 700; }
+    .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
+    .log {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      line-height: 1.8;
+    }
+    .log .event { color: var(--warning); }
+    .log .decay { color: var(--muted); }
+    .log .reset { color: var(--accent); }
+    footer { margin-top: 2rem; text-align: center; color: var(--muted); font-size: 0.75rem; }
+  </style>
+</head>
+<body>
+  <h1>⚙️ Divergence-Aware Tolerance</h1>
+  <h2>Runtime→Compile Feedback Loop — 9-Channel Constraint Adjustment</h2>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value" id="dual-count">0</div>
+      <div class="stat-label">DUAL Channels</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="avg-tol">0.500</div>
+      <div class="stat-label">Avg Effective Tolerance</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="events">0</div>
+      <div class="stat-label">Drift Events</div>
+    </div>
+  </div>
+
+  <div class="grid" id="channels"></div>
+
+  <div class="controls">
+    <button onclick="simulateDrift()">⚠️ Simulate Drift</button>
+    <button class="warning" onclick="simulateSurge()">🌊 Drift Surge</button>
+    <button onclick="decay()">📉 Decay Cycle</button>
+    <button onclick="autoDecay()">⏱️ Auto-Decay (10x)</button>
+    <button class="danger" onclick="reset()">🔄 Reset</button>
+  </div>
+
+  <div class="log" id="log"></div>
+
+  <footer>
+    DivergenceAwareTolerance — Rust (flux-lucid) + JS (polyformalism-a2a-js) + Python (polyformalism-a2a-python)
+    <br>111 cross-language tests • Forgemaster ⚒️
+  </footer>
+
+<script>
+const NAMES = [
+  'C1: Saliency', 'C2: Tone', 'C3: Process', 'C4: Social',
+  'C5: Temporal', 'C6: Proximity', 'C7: Channel', 'C8: Novelty', 'C9: Stakes'
+];
+
+const dat = {
+  base: Array(9).fill(0.5),
+  adj: Array(9).fill(0),
+  obs: Array(9).fill(0),
+  decayRate: 0.9,
+  maxTightening: 0.5
+};
+
+let totalEvents = 0;
+
+function eff(i) { return dat.base[i] * (1 - dat.adj[i]); }
+function prec(i) { return dat.adj[i] > 0.1 ? 'dual' : 'int8'; }
+
+function render() {
+  const grid = document.getElementById('channels');
+  grid.innerHTML = '';
+  for (let i = 0; i < 9; i++) {
+    const p = prec(i);
+    const t = eff(i);
+    const pct = (t / 0.5) * 100;
+    const col = p === 'dual' ? 'var(--dual)' : 'var(--int8)';
+    grid.innerHTML += `
+      <div class="channel ${p}">
+        <div class="channel-name">${NAMES[i]}</div>
+        <div class="tolerance">${t.toFixed(3)}</div>
+        <div class="precision ${p}">${p.toUpperCase()}</div>
+        <div class="bar-container">
+          <div class="bar" style="width:${pct}%;background:${col}"></div>
+        </div>
+      </div>`;
+  }
+  const tols = Array.from({length:9}, (_,i) => eff(i));
+  const duals = Array.from({length:9}, (_,i) => prec(i) === 'dual').filter(Boolean).length;
+  document.getElementById('dual-count').textContent = duals;
+  document.getElementById('avg-tol').textContent = (tols.reduce((a,b)=>a+b)/9).toFixed(3);
+  document.getElementById('events').textContent = totalEvents;
+}
+
+function log(msg, cls='') {
+  const el = document.getElementById('log');
+  el.innerHTML += `<div class="${cls}">${new Date().toLocaleTimeString()} ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function adjust(ch, score, trend) {
+  const factor = trend === 'increasing' ? 0.3 : trend === 'stable' ? 0.1 : 0.02;
+  dat.adj[ch] = Math.min(dat.adj[ch] + score * factor, dat.maxTightening);
+  dat.obs[ch]++;
+  totalEvents++;
+  const p = prec(ch);
+  log(`C${ch+1} drift=${score.toFixed(1)} ${trend} → tol=${eff(ch).toFixed(3)} [${p.toUpperCase()}]`, 'event');
+  render();
+}
+
+function simulateDrift() {
+  const ch = Math.floor(Math.random() * 9);
+  const score = 0.3 + Math.random() * 0.7;
+  const trends = ['increasing', 'stable', 'decreasing'];
+  const trend = trends[Math.floor(Math.random() * 3)];
+  adjust(ch, score, trend);
+}
+
+function simulateSurge() {
+  for (let i = 0; i < 9; i++) {
+    if (Math.random() > 0.4) {
+      adjust(i, 0.5 + Math.random() * 0.5, 'increasing');
+    }
+  }
+}
+
+function doDecay() {
+  dat.adj = dat.adj.map(a => a * dat.decayRate);
+  log(`Decay cycle — adjustments faded`, 'decay');
+  render();
+}
+
+function decay() { doDecay(); }
+
+function autoDecay() {
+  let count = 0;
+  const iv = setInterval(() => {
+    doDecay();
+    if (++count >= 10) clearInterval(iv);
+  }, 400);
+}
+
+function reset() {
+  dat.adj = Array(9).fill(0);
+  dat.obs = Array(9).fill(0);
+  totalEvents = 0;
+  log('Reset — all tolerances returned to baseline', 'reset');
+  render();
+}
+
+render();
+log('DivergenceAwareTolerance initialized — 9 channels at baseline (0.500)');
+</script>
+</body>
+</html>
