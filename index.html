@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CoCapn — Safety-Critical AI Fleet</title>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/+esm" type="module"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
@@ -304,6 +305,81 @@
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
+    /* Fleet topology */
+    #fleet-topology {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+    }
+    #fleet-topology .graph-container {
+      width: 100%;
+      height: 420px;
+      position: relative;
+    }
+    #fleet-topology .node-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      fill: var(--text);
+    }
+    #fleet-topology .node { cursor: pointer; }
+    #fleet-topology .edge { stroke: var(--border); stroke-width: 1.5px; }
+    #fleet-topology .tooltip {
+      position: absolute;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 0.85rem;
+      pointer-events: none;
+    }
+    #fleet-topology .legend {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    #fleet-topology .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    #fleet-topology .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    #fleet-topology .legend-line {
+      width: 20px;
+      height: 3px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+    #fleet-topology .topology-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    #fleet-topology .topology-header h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    #fleet-topology .topology-header .live-tag {
+      font-size: 0.75rem;
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .stats-bar { gap: 1.5rem; }
@@ -471,6 +547,49 @@
       </div>
     </div>
 
+    <!-- Fleet Topology Graph -->
+    <div class="section-header">
+      <h2>Fleet Topology</h2>
+      <p>Live trust graph — agents as nodes, trust as edges. Hover for stats, click for recent tiles.</p>
+    </div>
+    <section id="fleet-topology">
+      <div class="topology-header">
+        <h3>Agent Network</h3>
+        <span class="live-tag"><span class="live-dot" style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block;animation:livepulse 2s infinite"></span> Live · polls every 10s</span>
+      </div>
+      <div class="graph-container" id="fleet-graph"></div>
+      <div class="legend">
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#22c55e"></span>
+          <span>Online</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#eab308"></span>
+          <span>Degraded</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#ef4444"></span>
+          <span>Failed</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#64748b"></span>
+          <span>Offline</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-line" style="background:#22c55e"></span>
+          <span>High trust (≥0.8)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-line" style="background:#eab308"></span>
+          <span>Med trust (≥0.6)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-line" style="background:#ef4444"></span>
+          <span>Low trust</span>
+        </div>
+      </div>
+    </section>
+
     <!-- FLUX Certify CTA -->
     <div class="section-header" id="learn">
       <h2>Start With FLUX Certify</h2>
@@ -567,6 +686,7 @@
 
 <script type="module">
   import { PlatoClient } from './app/plato-client.js';
+  import { initFleetTopology } from './app/fleet-topology.js';
 
   const plato = new PlatoClient();
   let prevRoomCount = 0;
@@ -633,6 +753,9 @@
   updateStats();
   // Poll every 5 seconds
   setInterval(updateStats, 5000);
+
+  // Initialize fleet topology graph
+  initFleetTopology('fleet-graph');
 </script>
 </body>
 </html>
