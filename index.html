@@ -418,7 +418,8 @@
   <!-- Hero -->
   <section class="hero">
     <div class="hero-radar">
-      <div class="radar-wrap-hero">
+      <!-- CSS fallback radar (hidden if WebGPU available) -->
+      <div class="css-radar radar-wrap-hero" style="display:none">
         <svg viewBox="0 0 260 260" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="130" cy="130" r="120" stroke="#1e293b" stroke-width="1"/>
           <circle cx="130" cy="130" r="85" stroke="#1e293b" stroke-width="1"/>
@@ -435,6 +436,10 @@
           <circle class="agent-ping fm" cx="106" cy="158" r="6"/>
           <circle class="agent-ping ccc" cx="162" cy="126" r="6"/>
         </svg>
+      </div>
+      <!-- WebGPU radar canvas (shown if WebGPU available) -->
+      <div id="webgpu-radar" class="radar-wrap-hero" style="display:block">
+        <canvas id="radar-canvas" width="520" height="520" style="width:260px;height:260px"></canvas>
       </div>
       <h1>Safety-Critical AI<br>That Doesn't Fail Silently.</h1>
       <div class="pain-point">
@@ -687,6 +692,10 @@
 <script type="module">
   import { PlatoClient } from './app/plato-client.js';
   import { initFleetTopology } from './app/fleet-topology.js';
+  import { initRadar } from './app/radar-canvas.js';
+
+  // Initialize WebGPU radar (falls back to CSS radar automatically)
+  initRadar('radar-canvas');
 
   const plato = new PlatoClient();
   let prevRoomCount = 0;
