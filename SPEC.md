@@ -4,7 +4,7 @@
 **Spec Version:** 1.0  
 **Date:** 2026-05-07  
 **Author:** Oracle1 (subagent research task)  
-**Status:** Draft for Casey review
+**Status:** Phase A ✅ — Landing page live with PLATO connection
 
 ---
 
@@ -312,12 +312,15 @@ PLATO `oracle1_infrastructure` room contains architecture decisions, captain rea
 
 ## 7. Implementation Plan
 
-### Phase A: Landing + PLATO Connection (1-2 days)
-- Set up `index.html` shell with CSS variables from existing style.css
-- Implement `plato-client.js` — HTTP client for :8847 room server
-- Build `StatsBar` component — live counts from PLATO
-- Port hero section (static SVG radar first, WebGPU later in Phase C)
-- Deploy and verify: page loads, PLATO data streams in
+### Phase A: Landing + PLATO Connection (1-2 days) ✅ DONE
+- [x] Set up `index.html` shell with CSS variables from existing style.css
+- [x] Implement `plato-client.js` — HTTP client for :8847 room server
+- [x] Build `StatsBar` component — live counts from PLATO (5s polling)
+- [x] Port hero section (static SVG radar with CSS sweep animation)
+- [x] Fleet cards section ported from PHP
+- [x] Nav preserved from index.php
+- [x] Footer with PodiumJS attribution
+- [x] Commit and push to SuperInstance/cocapn-ai-web
 
 ### Phase B: Fleet Topology + D3.js (2-3 days)
 - Build `FleetTopology.js` — D3.js force-directed graph
