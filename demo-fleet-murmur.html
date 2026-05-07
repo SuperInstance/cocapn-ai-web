@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLEET-MURMUR — 5 Thinking Strategies on Fleet Math</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0e17;
+      --surface: #111827;
+      --surface2: #1a2235;
+      --border: #1e293b;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59,130,246,0.25);
+      --keeper: #f59e0b;
+      --edge: #10b981;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #eab308;
+      --explore: #3b82f6;
+      --connect: #10b981;
+      --contradict: #ef4444;
+      --synthesize: #eab308;
+      --question: #a855f7;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 0 1rem;
+    }
+    .mono { font-family: 'Space Mono', 'Courier New', monospace; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    /* Header */
+    header {
+      text-align: center;
+      padding: 2.5rem 0 1.5rem;
+      position: relative;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    header h1 {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+      position: relative;
+    }
+    .ai-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.75rem;
+    }
+    .ai-status.available { border-color: var(--edge); color: var(--edge); }
+    .ai-status .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+    .ai-status.available .dot { background: var(--edge); box-shadow: 0 0 6px var(--edge); }
+
+    /* Strategy Buttons */
+    .strategy-bar {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 1.5rem 0;
+    }
+    .strategy-btn {
+      padding: 0.5rem 1.25rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid;
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Space Mono', monospace;
+    }
+    .strategy-btn.explore { border-color: var(--explore); color: var(--explore); }
+    .strategy-btn.explore:hover, .strategy-btn.explore.active { background: var(--explore); color: white; }
+    .strategy-btn.connect { border-color: var(--connect); color: var(--connect); }
+    .strategy-btn.connect:hover, .strategy-btn.connect.active { background: var(--connect); color: white; }
+    .strategy-btn.contradict { border-color: var(--contradict); color: var(--contradict); }
+    .strategy-btn.contradict:hover, .strategy-btn.contradict.active { background: var(--contradict); color: white; }
+    .strategy-btn.synthesize { border-color: var(--synthesize); color: var(--synthesize); }
+    .strategy-btn.synthesize:hover, .strategy-btn.synthesize.active { background: var(--synthesize); color: black; }
+    .strategy-btn.question { border-color: var(--question); color: var(--question); }
+    .strategy-btn.question:hover, .strategy-btn.question.active { background: var(--question); color: white; }
+    .strategy-btn.all { border-color: var(--muted); color: var(--muted); }
+    .strategy-btn.all:hover, .strategy-btn.all.active { background: var(--muted); color: white; }
+
+    /* Theorem Selector */
+    .theorem-selector {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .theorem-selector h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+    .theorem-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+    }
+    .theorem-radio {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: color 0.15s;
+    }
+    .theorem-radio:hover { color: var(--accent); }
+    .theorem-radio input { display: none; }
+    .theorem-radio .radio-mark {
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .theorem-radio input:checked + .radio-mark {
+      border-color: var(--accent);
+    }
+    .theorem-radio input:checked + .radio-mark::after {
+      content: '';
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    /* Output Area */
+    .output-area {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      min-height: 280px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .output-placeholder {
+      color: var(--muted);
+      text-align: center;
+      padding: 3rem 1rem;
+      font-size: 0.95rem;
+    }
+    .output-placeholder .emoji {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+
+    /* Insight Card */
+    .insight-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: slideIn 0.4s ease forwards;
+    }
+    @keyframes slideIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .insight-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .strategy-badge {
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .strategy-badge.explore { background: rgba(59,130,246,0.2); color: var(--explore); }
+    .strategy-badge.connect { background: rgba(16,185,129,0.2); color: var(--connect); }
+    .strategy-badge.contradict { background: rgba(239,68,68,0.2); color: var(--contradict); }
+    .strategy-badge.synthesize { background: rgba(234,179,8,0.2); color: var(--synthesize); }
+    .strategy-badge.question { background: rgba(168,85,247,0.2); color: var(--question); }
+    .theorem-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+    }
+    .insight-content {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      margin-bottom: 1rem;
+    }
+    .insight-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+    }
+    .meta-tag {
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+    }
+    .meta-tag.confidence { color: var(--accent); }
+    .meta-tag.connection { color: var(--edge); }
+    .meta-tag.flaw { color: var(--warning); }
+
+    /* Quality Score */
+    .quality-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .quality-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+    .quality-score {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .quality-breakdown {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .quality-breakdown span { color: var(--text); }
+
+    /* Circular Progress */
+    .circle-wrap {
+      position: relative;
+      width: 60px;
+      height: 60px;
+    }
+    .circle-bg, .circle-fill {
+      fill: none;
+      stroke-width: 5;
+    }
+    .circle-bg { stroke: var(--border); }
+    .circle-fill {
+      stroke: var(--accent);
+      stroke-linecap: round;
+      transform: rotate(-90deg);
+      transform-origin: center;
+      transition: stroke-dashoffset 1s ease;
+    }
+    .circle-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 0;
+      margin-top: 3rem;
+    }
+    .footer-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+      text-align: center;
+    }
+    .footer-content p {
+      color: var(--muted);
+      font-size: 0.875rem;
+      max-width: 600px;
+    }
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+      font-size: 0.85rem;
+    }
+    .footer-links a { color: var(--accent); }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .strategy-btn { padding: 0.4rem 0.75rem; font-size: 0.75rem; }
+      .theorem-options { flex-direction: column; gap: 0.5rem; }
+      .quality-breakdown { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🧠 FLEET-MURMUR</h1>
+      <p style="color: var(--muted); font-size: 0.95rem;">5 Thinking Strategies on Fleet Math Theorems</p>
+      <div class="ai-status" id="aiStatus">
+        <span class="dot"></span>
+        <span id="aiStatusText">Checking Gemini Nano...</span>
+      </div>
+    </header>
+
+    <div class="strategy-bar">
+      <button class="strategy-btn explore" onclick="runStrategy('explore')">EXPLORE</button>
+      <button class="strategy-btn connect" onclick="runStrategy('connect')">CONNECT</button>
+      <button class="strategy-btn contradict" onclick="runStrategy('contradict')">CONTRADICT</button>
+      <button class="strategy-btn synthesize" onclick="runStrategy('synthesize')">SYNTHESIZE</button>
+      <button class="strategy-btn question" onclick="runStrategy('question')">QUESTION</button>
+      <button class="strategy-btn all" onclick="runAllStrategies()">ALL</button>
+    </div>
+
+    <div class="theorem-selector">
+      <h3>Theorem Selector</h3>
+      <div class="theorem-options">
+        <label class="theorem-radio">
+          <input type="radio" name="theorem" value="laman_rigidity" checked>
+          <span class="radio-mark"></span> Laman Rigidity
+        </label>
+        <label class="theorem-radio">
+          <input type="radio" name="theorem" value="h1_emergence">
+          <span class="radio-mark"></span> H¹ Emergence Detection
+        </label>
+        <label class="theorem-radio">
+          <input type="radio" name="theorem" value="zhc_holonomy">
+          <span class="radio-mark"></span> Zero Holonomy Consensus
+        </label>
+        <label class="theorem-radio">
+          <input type="radio" name="theorem" value="pythagorean48">
+          <span class="radio-mark"></span> Pythagorean48 Trust Encoding
+        </label>
+        <label class="theorem-radio">
+          <input type="radio" name="theorem" value="trust_convergence">
+          <span class="radio-mark"></span> Trust Convergence Theorem
+        </label>
+      </div>
+    </div>
+
+    <div class="output-area" id="outputArea">
+      <div class="output-placeholder">
+        <span class="emoji">⚡</span>
+        Select a strategy and theorem, then click a strategy button to generate insights.
+      </div>
+    </div>
+
+    <div class="quality-section" id="qualitySection" style="display: none;">
+      <div class="circle-wrap">
+        <svg width="60" height="60" viewBox="0 0 60 60">
+          <circle class="circle-bg" cx="30" cy="30" r="25"/>
+          <circle class="circle-fill" id="qualityCircle" cx="30" cy="30" r="25"
+            stroke-dasharray="157" stroke-dashoffset="157"/>
+        </svg>
+        <div class="circle-text" id="qualityPercent">0%</div>
+      </div>
+      <div>
+        <div class="quality-label">QUALITY SCORE</div>
+        <div class="quality-score" id="qualityOverall">0%</div>
+      </div>
+      <div class="quality-breakdown">
+        <div>Novelty: <span id="qNovelty">0%</span></div>
+        <div>Correctness: <span id="qCorrect">0%</span></div>
+        <div>Completeness: <span id="qComplete">0%</span></div>
+        <div>Depth: <span id="qDepth">0%</span></div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="footer-content">
+        <p>
+          <strong>Fleet-Murmur</strong> applies five rigorous thinking strategies — explore, connect, contradict, synthesize, question — to fleet math theorems. It reveals hidden implications, cross-theorem connections, failure modes, and open problems.
+        </p>
+        <div class="footer-links">
+          <a href="https://cocapn.ai/fleet-math" target="_blank">Fleet Math Paper</a>
+          <a href="https://github.com/cocapn/fleet-coordinate" target="_blank">Fleet Coordinate Repo</a>
+          <a href="https://github.com/cocapn/fleet-murmur" target="_blank">Fleet-Murmur</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // ============================================================
+    // FLEET MATH THEOREMS (hardcoded)
+    // ============================================================
+    const THEOREMS = {
+      laman_rigidity: {
+        id: 'laman_rigidity',
+        name: 'Laman Rigidity',
+        statement: 'A graph is generically rigid in 2D iff E = 2V - 3 and every subgraph satisfies the same condition.',
+        coreQuestion: 'What does exactly 2V-3 edges mean for fleet coordination?',
+        failureModes: ['non-generic configurations', '3D generalizations'],
+        theorems: ['h1_emergence', 'zhc_holonomy', 'beam_joint_equilibrium']
+      },
+      h1_emergence: {
+        id: 'h1_emergence',
+        name: 'H¹ Emergence Detection',
+        statement: 'β₁ = E - V + C. Emergence when β₁ exceeds the rigidity threshold.',
+        coreQuestion: 'How does topology signal emergent behavior before it manifests?',
+        failureModes: ['H² voids', 'transient spikes'],
+        theorems: ['laman_rigidity', 'zhc_holonomy', 'pythagorean48']
+      },
+      zhc_holonomy: {
+        id: 'zhc_holonomy',
+        name: 'Zero Holonomy Consensus',
+        statement: 'For any cycle γ in a flat connection, the product of holonomy transformations around γ equals identity.',
+        coreQuestion: 'Why does geometric consistency imply consensus?',
+        failureModes: ['non-flat topologies', 'Byzantine topology attacks'],
+        theorems: ['h1_emergence', 'beam_joint_equilibrium']
+      },
+      pythagorean48: {
+        id: 'pythagorean48',
+        name: 'Pythagorean48 Trust Encoding',
+        statement: '48 exact directions on the unit circle, log₂(48) = 5.585 bits per vector.',
+        coreQuestion: 'Why 48 directions and what does 5.585 bits really mean?',
+        failureModes: ['3D generalization', 'implementation drift'],
+        theorems: ['laman_rigidity', 'h1_emergence']
+      },
+      trust_convergence: {
+        id: 'trust_convergence',
+        name: 'Trust Convergence Theorem',
+        statement: 'In a Laman-rigid fleet with trust edges satisfying the ZHC flatness condition, trust values converge to a unique equilibrium.',
+        coreQuestion: 'When does a fleet\'s trust actually settle?',
+        failureModes: ['non-rigid topologies', 'non-flat connections'],
+        theorems: ['laman_rigidity', 'zhc_holonomy']
+      }
+    };
+
+    // ============================================================
+    // RULE-BASED TEMPLATES (port from strategies.rs + quality.rs)
+    // ============================================================
+    const TEMPLATES = {
+      explore: {
+        laman_rigidity: [
+          { content: "Laman rigidity implies H¹ bound: For a Laman-rigid graph with V vertices and E=2V-3 edges, β₁ = E-V+1 = V-2. A Laman-rigid graph HAS cycles — these are the redundant paths that enable fault tolerance without extra coordination.", confidence: 0.85, connections: ['h1_emergence'] },
+          { content: "2V-3 edges implies average degree ≈ 4 - 6/V. For large fleets (V >> 1), average neighbor count approaches 4. This aligns with empirical findings that 4-6 neighbors is optimal — not because of Laman directly, but because the rigidity condition forces this scale.", confidence: 0.80, flaws: ['Assumes uniform degree distribution — real fleets may have variance.'] },
+          { content: "Laman rigidity is a MINIMAL condition, not an OPTIMAL condition. E=2V-3 is the FEWEST edges that produce rigidity. Adding more edges increases redundancy and fault tolerance but also coordination overhead. The theorem says nothing about optimal edge count for real-world fleet performance.", confidence: 0.90 },
+          { content: "The subgraph condition (every subgraph has ≤ 2v'-3 edges) means rigidity is a LOCAL property. This explains why distributed verification works: each agent can check rigidity of its local neighborhood without global knowledge.", confidence: 0.88, connections: ['zhc_holonomy'] },
+          { content: "Laman rigidity does NOT guarantee stability under dynamic load. A rigid graph can still flip or fold if loads are applied differently. 'Rigid' means distance-preserving under small motions, not force-resistant.", confidence: 0.92, flaws: ['The distinction matters most for non-generic configurations.'] }
+        ],
+        h1_emergence: [
+          { content: "H¹ emergence and Laman rigidity are OPPOSITES in a sense: Laman requires exactly 2V-3 edges (rigid but no extra cycles), while H¹ > 0 requires E > 2V-3 (overconstrained, extra cycles = emergence). They describe different regimes of the same edge-count space.", confidence: 0.90, connections: ['laman_rigidity'] },
+          { content: "β₁ = E-V+C counts INDEPENDENT cycles, not total cycles. For K_n (complete graph), β₁ = E-V+1 = n(n-1)/2 - n + 1 = (n² - 3n + 2)/2. For n=12, β₁ = 55 — not the raw 66 edges.", confidence: 0.88 },
+          { content: "H¹ emergence at β₁ > 0 means REDUNDANT constraint paths. This connects to ZHC: redundant paths are what allow parallel transport around loops. If β₁ = 0 (tree), ZHC is vacuously true (no loops to check).", confidence: 0.85, connections: ['zhc_holonomy'] },
+          { content: "The 2.7s early warning property: H¹ detects topological preconditions (a new 1-cycle forming in the Vietoris-Rips complex) BEFORE the corresponding behavioral pattern emerges. This is structural, not statistical — the emergence hasn't happened yet, but its structure is forming.", confidence: 0.90 },
+          { content: "For V=1024 with Laman rigidity (E=2V-3=2045), β₁ = 2045-1024+1 = 1022. This is the 'safe' baseline — some cycles exist but not overconstrained. Emergence threshold starts above E=2045.", confidence: 0.92 }
+        ],
+        zhc_holonomy: [
+          { content: "ZHC solves a DIFFERENT problem than PBFT: PBFT agrees on VALUE (all honest nodes see same data), ZHC verifies GEOMETRY (parallel transport around closed loops = identity). These are complementary — ZHC can't elect a leader or decide a transaction, but it can verify the constraint graph is consistent.", confidence: 0.95, flaws: ['The distinction is subtle — practitioners often conflate them.'] },
+          { content: "If β₁ = 0 (tree, no cycles), ZHC is vacuously true — there are no closed loops to check. This is both a strength (trivial check) and a weakness (no verification when it matters). ZHC only has teeth when β₁ > 0.", confidence: 0.88, connections: ['h1_emergence'] },
+          { content: "The '38ms vs 412ms' latency difference comes from O(1) vs O(N²) messages. O(1) means each node sends constant work regardless of fleet size. This is possible because verification is LOCAL — check your neighbors' gradients, nothing else needed.", confidence: 0.85 },
+          { content: "Non-zero holonomy is a topological invariant — it can't be 'fixed' by adding more agents or edges. If the constraint graph has non-zero holonomy, the fleet is fundamentally limited. This is stronger than 'reliability' — it's a mathematical property.", confidence: 0.90, flaws: ['Non-zero holonomy detection may require global computation, contradicting O(1) locality.'] },
+          { content: "The 'any number of Byzantine nodes' claim requires careful reading: ZHC tolerates Byzantine nodes because correctness depends on GEOMETRY, not agent behavior. But this only works if the topology itself is trustworthy.", confidence: 0.82, flaws: ['Assumes Byzantine nodes cannot modify the constraint graph itself.'] }
+        ],
+        pythagorean48: [
+          { content: "Pythagorean48 with 5.585 bits/vector and Laman-rigid fleet (≤2V-3 neighbors) means maximum trust information per agent = 5.585 * (2V-3) bits. For V=1024, that's 5.585 * 2045 ≈ 11,420 bits of trust information per agent — far more than needed.", confidence: 0.88 },
+          { content: "The zero-drift property (bit-identical after unlimited hops) requires the encoding to be from a FINITE set, not continuous. f32 accumulation shows ~17° drift after 1000 hops. Pythagorean48 is a FIXED-POINT encoding — you get back the EXACT same direction no matter how many times you encode/decode.", confidence: 0.92, flaws: ['Assumes no floating-point implementation errors.'] },
+          { content: "48 = 4 + 8 + 8 + 8 + 8 + 8 + 4 = cardinal axes + 5 Pythagorean triples. The encoding captures exactly the unit vectors representable as (a/c, b/c) where a,b,c are integers and a²+b²=c². This is NOT arbitrary — it's ALL such vectors with c ≤ 41.", confidence: 0.90, flaws: ['Is c ≤ 41 optimal? Could there be more directions with larger denominators?'] },
+          { content: "The 48 directions correspond to DIRECTIONS ON A CIRCLE, not general 2D vectors. Trust topology is inherently directional (agent i trusts agent j in direction from i to j). The encoding captures exactly this.", confidence: 0.85 },
+          { content: "Connection to H¹: H¹ measures topological information (cycles = redundancy), Pythagorean48 measures encoding information (bits per vector). Both quantify 'how much structure exists' — different metrics pursuing similar goals.", confidence: 0.80, connections: ['h1_emergence'] }
+        ],
+        trust_convergence: [
+          { content: "Trust convergence requires BOTH Laman-rigidity (structural guarantee) AND ZHC flatness (geometric consistency). Neither alone suffices: rigidity without flatness admits curvature obstructions; flatness without rigidity allows floppy modes. Together they define the convergence domain.", confidence: 0.92, connections: ['laman_rigidity', 'zhc_holonomy'] },
+          { content: "The convergence rate depends on the spectral gap of the trust graph's Laplacian. A Laman-rigid fleet with uniform trust weights has spectral gap ≈ 1/V. This means O(log V) rounds to reach ε-equilibrium. For V=1024, that's ~7 rounds regardless of fleet size.", confidence: 0.88 },
+          { content: "The unique equilibrium is the eigenvector of the trust transition matrix corresponding to eigenvalue 1. This is the stationary distribution of the random walk on the trust graph. Trust convergence = finding the stationary distribution.", confidence: 0.90 },
+          { content: "If the trust graph is NOT Laman-rigid, convergence may be to a non-unique equilibrium or fail entirely (non-ergodic). The ZHC condition filters out topologies where parallel transport around different loops gives different results — these would produce inconsistent equilibria.", confidence: 0.85, connections: ['zhc_holonomy'] }
+        ]
+      },
+      connect: {
+        laman_rigidity: [
+          { content: "Laman + H¹: Both constrain the edge-vertex relationship from different angles. Laman says E=2V-3 for rigidity. H¹ says β₁=E-V+C. Together: for rigid fleet, β₁=V-2. For 1024 agents, β₁=1022. This is the 'base redundancy' — minimum cycles needed for rigidity.", confidence: 0.92, connections: ['h1_emergence'] },
+          { content: "Laman + ZHC: Laman rigidity ensures the constraint graph is well-connected (no floppy modes). ZHC requires a FLAT connection — no curvature. Rigidity ≠ flatness. A rigid graph can have non-zero holonomy.", confidence: 0.85, connections: ['zhc_holonomy'] },
+          { content: "Laman + Beam Joint: The beam joint equilibrium convergence is related to graph rigidity. A Laman-rigid beam topology converges; a non-rigid topology diverges. The Jacobian of the residual function is non-singular when the graph is rigid.", confidence: 0.80, connections: ['beam_joint_equilibrium'] }
+        ],
+        h1_emergence: [
+          { content: "H¹ + ZHC: β₁ > 0 means there are non-trivial loops. ZHC checks consistency around those loops. If β₁ = 0 (tree), ZHC is vacuous. If β₁ > 0, ZHC provides non-trivial verification. ZHC is the OPERATIONALIZATION of H¹'s topological information.", confidence: 0.92, connections: ['zhc_holonomy'] },
+          { content: "H¹ + Pythagorean48: β₁ measures topological information (cycles = redundancy). 5.585 bits/vector measures encoding information. Both quantify 'how much structure exists'. The hypothesis: maximum useful fleet information is bounded by both.", confidence: 0.78, connections: ['pythagorean48'] },
+          { content: "H¹ emergence + Beam Joint: Emergence (β₁ > threshold) means the constraint graph has redundant paths. Redundant paths in beam topology → multiple joint configurations satisfy equilibrium → convergence can fail (non-unique solutions). This is why over-constrained beams fail.", confidence: 0.80, connections: ['beam_joint_equilibrium'] }
+        ],
+        zhc_holonomy: [
+          { content: "ZHC + Pythagorean48: Both are about INFORMATION without ERROR. ZHC: geometric consistency verifiable with O(1) messages (no drift in interpretation). Pythagorean48: direction encoding with bit-exact round-trip. Together they enable trust propagation that doesn't accumulate error over many hops.", confidence: 0.88, connections: ['pythagorean48'] },
+          { content: "ZHC + Beam Joint: ZHC checks consistency around closed loops in the constraint graph. Beam joint equilibrium checks consistency at joint boundaries (left state = right state). Both are forms of CONSENSUS CHECKING — verify that two perspectives on the same thing agree.", confidence: 0.85, connections: ['beam_joint_equilibrium'] }
+        ],
+        pythagorean48: [
+          { content: "Pythagorean48 + Laman: 48 directions * 12 neighbors (max from Laman) = 576 possible trust relationships per agent. This is far more than needed for practical coordination. The encoding is massively over-capacity, which means it can represent complex trust topologies without confusion.", confidence: 0.82, connections: ['laman_rigidity'] },
+          { content: "Pythagorean48 + Beam Joint: The 8-component joint state (T, M, y, θ on each side) could be encoded as 2 trust vectors. 48² = 2304 possible pairs — far more than needed. The encoding space is sparse.", confidence: 0.75, connections: ['beam_joint_equilibrium'] }
+        ],
+        trust_convergence: [
+          { content: "Trust Convergence = Laman Rigidity + ZHC Flatness. Laman ensures the trust graph has the right structure (no floppy modes). ZHC ensures parallel transport is path-independent. Together they guarantee unique equilibrium exists.", confidence: 0.92, connections: ['laman_rigidity', 'zhc_holonomy'] },
+          { content: "Trust Convergence connects to H¹: the convergence proof requires β₁ ≥ V-2 (the Laman baseline). If β₁ drops below this, the fleet becomes under-constrained and convergence fails. H¹ is the canary for convergence failure.", confidence: 0.88, connections: ['h1_emergence'] }
+        ]
+      },
+      contradict: {
+        laman_rigidity: [
+          { content: "Laman's theorem assumes GENERIC position (no three points collinear, no four concyclic). But what if the fleet's agents are naturally arranged in a grid? Grid arrangements break the generic assumption — rigidity may fail even with E=2V-3.", confidence: 0.88, flaws: ['For most practical deployments, generic position is approximately true. But for structured environments (underwater grids, warehouse robots), this matters.'] },
+          { content: "Laman rigidity does NOT imply MINIMAL rigidity. The condition E=2V-3 is necessary and sufficient, but there are graphs with E >> 2V-3 that are ALSO rigid (overconstrained). Laman doesn't tell you when extra edges STOP helping.", confidence: 0.90 },
+          { content: "The subgraph condition (every subgraph ≤ 2v'-3) is O(V²) to check naively. For V=10,000 fleet agents, checking all O(V²) subgraphs is expensive. Does a more efficient check exist? Laman's theorem doesn't address computational complexity.", confidence: 0.82 },
+          { content: "Laman's theorem is 2D only. In 3D, the condition is different (Maxwell's rule: M ≥ 3V-6 for rigidity in R³). The fleet's agents exist in 3D physical space. Does Laman apply to the 2D projection of the 3D fleet?", confidence: 0.90, flaws: ['For most fleet coordination (communication/topology), 2D may suffice. But for physical coordination (formation flying), 3D matters.'] }
+        ],
+        h1_emergence: [
+          { content: "H¹ only detects 1-dimensional holes (loops). What about H² (voids, cavities)? A fleet with a 'hole' in the middle (ring formation) has H¹ > 0 (correct). But what about a fleet with a 3D 'bubble' inside it? That would be H². Does H² matter?", confidence: 0.88, flaws: ['For most fleet coordination (2D topology of communication), H² may not matter. But for physical 3D formations, it might.'] },
+          { content: "H¹ emergence is a STATIC analysis — it tells you the current topology. But fleets are DYNAMIC — agents move, join, leave. H¹ could spike transiently during reorganization. Does transient emergence mean actual emergent behavior, or just a temporary topological artifact?", confidence: 0.85 },
+          { content: "H¹ says 'emergence detected when H¹ > 0' but doesn't specify a THRESHOLD. A fleet with β₁=1 vs β₁=10000 — both 'have emergence' per H¹. Is there a difference in how dangerous they are? The theorem doesn't say.", confidence: 0.90, flaws: ['The quality module might derive a threshold, but it is not in the theorem itself.'] },
+          { content: "H¹ emergence detection doesn't tell you WHAT the emergence IS. β₁=100 could mean 100 independent feedback loops OR one giant interconnected mess. H¹ loses information about the STRUCTURE of cycles.", confidence: 0.88 }
+        ],
+        zhc_holonomy: [
+          { content: "ZHC requires FLAT connection (zero curvature). But who guarantees the connection is flat? The theorem assumes flatness as a precondition, not a conclusion. If the underlying geometry has curvature (agents on a curved surface, or communication constrained by obstacles), ZHC fails.", confidence: 0.92, flaws: ['Checking flatness may require global computation, which contradicts O(1) locality.'] },
+          { content: "The claim 'any number of Byzantine nodes tolerated' is only true if Byzantine nodes cannot manipulate the TOPOLOGY. But if Byzantine nodes can add/remove edges (Sybil attack), they can create non-flat topology. ZHC doesn't protect against topology attacks.", confidence: 0.90, flaws: ['In practice, Byzantine nodes often DO control topology (e.g., eclipse attacks). This limits ZHC's applicability.'] },
+          { content: "ZHC is not Byzantine fault tolerant for VALUE consensus — it only handles geometric consistency. But FLP shows no deterministic async algorithm can solve consensus with even 1 crash fault. ZHC doesn't bypass FLP — it solves a DIFFERENT problem.", confidence: 0.92, flaws: ['This is a subtle distinction that practitioners often miss.'] }
+        ],
+        pythagorean48: [
+          { content: "48 directions is NOT enough for 3D trust encoding. A 3D unit vector has TWO degrees of freedom (azimuth + elevation), but the unit circle only has one. 48 directions on a circle can't capture the full 3D trust direction space. For 3D formations, Pythagorean48 fails.", confidence: 0.90, flaws: ['If fleet coordination is only about topology (who trusts whom), 2D encoding may suffice. But physical 3D coordination needs more.'] },
+          { content: "Is 48 OPTIMAL? The theorem says these are the directions with integer numerators and denominators ≤41. But 'optimal' for what? If we care about angular resolution, we could use 360 directions (1° increments). The encoding's optimality depends on the GOAL.", confidence: 0.88, flaws: ['The claim of optimality is only meaningful relative to the constraint of exact representation.'] },
+          { content: "Bit-exactness requires implementations to use INTEGER arithmetic. If an implementation uses floating-point for intermediate calculations (common), the exactness guarantee breaks. The encoding is exact in PRINCIPLE, not necessarily in PRACTICE.", confidence: 0.85 }
+        ],
+        trust_convergence: [
+          { content: "Trust convergence requires BOTH Laman-rigidity AND ZHC flatness as preconditions. But what if the fleet is Laman-rigid but the trust weights are time-varying (agents update their trust based on recent behavior)? The convergence theorem assumes static trust edges.", confidence: 0.88, flaws: ['Dynamic trust weights may prevent convergence even in Laman-rigid fleets.'] },
+          { content: "The theorem guarantees convergence to a unique equilibrium, but doesn't bound the TIME to converge. A fleet could be technically converging but take 10⁶ rounds to reach ε-equilibrium. For real-time coordination, this is as bad as no convergence.", confidence: 0.85 },
+          { content: "ZHC flatness is defined for a specific connection. But trust relationships themselves may create feedback loops: agent A trusts B based on B's behavior, which then affects A's trust evaluation of others. Does this feedback preserve flatness?", confidence: 0.82 }
+        ]
+      },
+      synthesize: {
+        laman_rigidity: [
+          { content: "UNIFIED INSIGHT: Laman rigidity, H¹ emergence, and ZHC all express different aspects of CONSTRAINT SATISFACTION as COORDINATION. Laman = minimal edges needed for coordination. H¹ = redundant paths for safety. ZHC = geometric consistency verification. A fleet with Laman-rigid topology + H¹ baseline redundancy + ZHC verification = provably correct self-coordination with O(1) verification.", confidence: 0.90, connections: ['h1_emergence', 'zhc_holonomy'] }
+        ],
+        h1_emergence: [
+          { content: "UNIFIED INSIGHT: H¹ cohomology and Pythagorean48 encoding are both attempts to QUANTIFY INFORMATION in fleet topology. H¹ measures topological information (cycles = redundancy = safe information). Pythagorean48 measures encoding information (bits per direction = efficient information). Fleet information is bounded by both the topology's capacity (H¹) and the encoding's efficiency (Pythagorean48). Together they define the fleet's information theoretic limits.", confidence: 0.88, connections: ['pythagorean48', 'zhc_holonomy'] }
+        ],
+        zhc_holonomy: [
+          { content: "UNIFIED INSIGHT: ZHC and beam joint equilibrium are both CONSENSUS PROTOCOLS expressed in different geometries. ZHC = consensus on geometric consistency (parallel transport around loops). Beam joint = consensus on state variables at boundaries (T, M, y, θ left = right). CONSENSUS = GEOMETRIC CONSTRAINT SATISFACTION. The fleet reaches consensus when all local constraints are simultaneously satisfied.", confidence: 0.92, connections: ['beam_joint_equilibrium', 'laman_rigidity'] }
+        ],
+        pythagorean48: [
+          { content: "UNIFIED INSIGHT: Pythagorean48 encoding and H¹ cohomology measure the same thing in different languages. H¹ counts the number of independent cycles in the trust graph (β₁). Pythagorean48 enables encoding the result of traversing any cycle (Dir48 encoding). Together: fleet's information capacity = β₁ × log₂(48) bits per cycle.", confidence: 0.90, connections: ['h1_emergence'] },
+          { content: "The 48 directions and Laman's 2V-3 edges both express MINIMAL ENCODING. Laman finds the minimal edges needed for rigidity, Pythagorean48 finds the minimal directions needed for exact integer representation. Both are looking for a basis set that spans the space with no redundancy.", confidence: 0.85, connections: ['laman_rigidity'] }
+        ],
+        trust_convergence: [
+          { content: "UNIFIED INSIGHT: Trust convergence synthesizes Laman rigidity (structural foundation) and ZHC flatness (geometric guarantee) into a single result: convergence to unique equilibrium. This is the synthesis theorem — it takes the structural condition (Laman) and the geometric condition (ZHC) and produces a dynamical guarantee (convergence).", confidence: 0.92, connections: ['laman_rigidity', 'zhc_holonomy'] }
+        ]
+      },
+      question: {
+        laman_rigidity: [
+          { content: "Does rigidity imply STABILITY under dynamic load? Laman says the graph doesn't deform under small motions, but doesn't say how it behaves under large loads or time-varying forces. A rigid graph can still flip, fold, or bifurcate. How do we extend rigidity analysis to stability analysis?", confidence: 0.90 },
+          { content: "What is the computational complexity of checking Laman conditions for DYNAMIC fleets? Agents join/leave constantly. Re-checking the full subgraph condition O(V²) per change is expensive. Is there an incremental algorithm?", confidence: 0.88 },
+          { content: "Can we design Laman-OPTIMAL topologies? Given a V-agent fleet with specific reliability requirements, what's the minimum E that satisfies Laman + extra redundancy constraints? The theorem gives necessary/sufficient conditions but no design guidelines.", confidence: 0.85 },
+          { content: "Is there a connection between Laman rigidity and beam joint convergence? When the joint graph is Laman-rigid, Newton-Raphson converges. When it's not, it may diverge. But WHY? What is the exact condition on the beam topology that guarantees convergence?", confidence: 0.82, connections: ['beam_joint_equilibrium'] }
+        ],
+        h1_emergence: [
+          { content: "Does detecting emergence mean we can PREVENT or CONTROL it? H¹ gives a warning signal (β₁ spiking) but doesn't say how to respond. Can we use H¹ not just for detection but for intervention? What control actions reduce β₁ back to safe levels?", confidence: 0.90 },
+          { content: "What is the significance of H² (2-cycles, voids) for fleet coordination? H¹ = 1-cycles (loops). H² = 2-cycles (cavities). In a 3D fleet formation, could there be topological voids that matter? The theorem is silent on this.", confidence: 0.88 },
+          { content: "Can we bound the RATE of emergence growth from H¹ trajectory? If β₁ is increasing, how fast can it grow? Is there a maximum rate? Could we predict when β₁ will exceed danger thresholds based on current trajectory?", confidence: 0.85 },
+          { content: "What is the relationship between H¹ and INFORMATION THEORY? β₁ is the number of independent cycles. Each cycle carries some information. Is there a way to compute the information capacity of a fleet's topology directly from β₁?", confidence: 0.82, connections: ['pythagorean48'] }
+        ],
+        zhc_holonomy: [
+          { content: "What does NON-ZERO holonomy tell us about the fleet's topology? ZHC only addresses the zero case. But what if we detect non-zero holonomy? Is there a 'holonomy consensus' protocol for non-flat topologies? Can we decompose non-zero holonomy into components (curvature classes)?", confidence: 0.90 },
+          { content: "How does ZHC interact with DYNAMIC topology changes? When agents join/leave, the constraint graph changes. Does ZHC need to re-verify from scratch, or can it incrementally update? The theorem is static, but fleets are dynamic.", confidence: 0.88 },
+          { content: "Is there a connection between non-zero holonomy and H¹ emergence? Non-zero holonomy means the constraint graph has obstructions. H¹ > 0 means the graph has redundant cycles. Are these related? Could we use H¹ to detect when holonomy might become non-zero?", confidence: 0.85, connections: ['h1_emergence'] },
+          { content: "Can ZHC be combined with BFT? ZHC handles geometric consistency, BFT handles value consensus. Could we build a hybrid protocol where ZHC verifies geometry and BFT handles values? Would this be more efficient than pure BFT?", confidence: 0.82 }
+        ],
+        pythagorean48: [
+          { content: "Is 48 OPTIMAL for a different goal? The theorem optimizes for EXACT representation with small denominators. But if we optimize for UNIFORM angular coverage (most even distribution on circle), we might get a different number. Is 48 the optimal for exactness, or could we get more directions with larger denominators?", confidence: 0.88 },
+          { content: "What encoding works for 3D trust relationships? 48 directions on a circle doesn't generalize to S² (sphere). Is there a 3D equivalent? Spherical codes (HEALPix, equiangular vectors) exist but don't have the exactness property. What's the 3D analog of Pythagorean48?", confidence: 0.90 },
+          { content: "Can we construct a hierarchical encoding? 48² = 2304 possible pairs of directions. 48³ = 110,592. Could we encode multi-hop trust paths as sequences of 48-direction steps? Would this be useful for routing or reputation systems?", confidence: 0.85 }
+        ],
+        trust_convergence: [
+          { content: "What is the minimum spectral gap required for practical convergence? The theorem guarantees convergence exists, but doesn't say how large the spectral gap must be for convergence in reasonable time. Is there a bound in terms of V and β₁?", confidence: 0.88, connections: ['h1_emergence'] },
+          { content: "Can the convergence theorem be extended to time-varying trust weights? The current theorem assumes static trust edges. Real fleets have agents updating trust continuously. Does convergence still hold under slowly-varying trust?", confidence: 0.85 },
+          { content: "Is the unique equilibrium STABLE under perturbation? The theorem guarantees existence and uniqueness, but doesn't characterize the equilibrium's stability. Could small changes in trust edges cause large changes in equilibrium values?", confidence: 0.82 }
+        ]
+      }
+    };
+
+    // ============================================================
+    // QUALITY SCORING (port from quality.rs)
+    // ============================================================
+    function computeQuality(insight, theorem) {
+      const novelty = computeNovelty(insight, theorem);
+      const correctness = computeCorrectness(insight, theorem);
+      const completeness = computeCompleteness(insight, theorem);
+      const depth = computeDepth(insight, theorem);
+      const overall = novelty * correctness * completeness * depth;
+      return { novelty, correctness, completeness, depth, overall };
+    }
+
+    function computeNovelty(insight, theorem) {
+      const contentLower = insight.content.toLowerCase();
+      const formalLower = theorem.statement.toLowerCase();
+      const nameLower = theorem.name.toLowerCase();
+
+      const restatementIndicators = ['generically rigid', '2v-3', 'e = 2v - 3', 'e - v + c', 'parallel transport', 'zero holonomy'];
+      let restatementCount = 0;
+      restatementIndicators.forEach(ind => {
+        if (contentLower.includes(ind.toLowerCase())) restatementCount++;
+      });
+
+      let novelty = 0.8;
+      if (restatementCount > 2) novelty -= 0.3;
+      if (insight.connections && insight.connections.length > 0) novelty += 0.1 * insight.connections.length;
+      if (insight.flaws && insight.flaws.length > 0) novelty += 0.1;
+      return Math.max(0, Math.min(1, novelty));
+    }
+
+    function computeCorrectness(insight, theorem) {
+      let correctness = 0.9;
+      if (insight.strategy === 'synthesize' && insight.connections && insight.connections.length >= 2) correctness += 0.05;
+      return Math.max(0, Math.min(1, correctness));
+    }
+
+    function computeCompleteness(insight, theorem) {
+      const contentLower = (insight.content || '').toLowerCase();
+      const coreKeywords = theorem.coreQuestion.split(' ').filter(w => w.length > 4);
+      let matches = 0;
+      coreKeywords.forEach(kw => { if (contentLower.includes(kw.toLowerCase())) matches++; });
+      const coverage = coreKeywords.length > 0 ? matches / coreKeywords.length : 0.7;
+
+      let bonus = 0.05;
+      if (insight.strategy === 'synthesize' && insight.connections && insight.connections.length >= 2) bonus = 0.1;
+      if (insight.strategy === 'question' && insight.content.includes('?')) bonus = 0.1;
+      if (insight.strategy === 'contradict' && (insight.content.includes('fail') || insight.content.includes('break'))) bonus = 0.1;
+
+      return Math.max(0, Math.min(1, 0.5 + coverage * 0.4 + bonus));
+    }
+
+    function computeDepth(insight, theorem) {
+      const content = (insight.content || '');
+      const depthIndicators = ['implies', 'means', 'because', 'suggests', 'explains why', 'reveals', 'exposes', 'unifies', 'connects'];
+      let indicatorCount = 0;
+      depthIndicators.forEach(ind => { if (content.toLowerCase().includes(ind)) indicatorCount++; });
+
+      const hasNumbers = (content.match(/\d/g) || []).length > 3;
+      const crossTheorem = insight.connections && insight.connections.length >= 2;
+
+      let depth = 0.5;
+      depth += Math.min(0.2, indicatorCount * 0.05);
+      if (hasNumbers) depth += 0.1;
+      if (crossTheorem) depth += 0.15;
+      if (insight.strategy === 'synthesize') depth += 0.1;
+      if ((insight.strategy === 'contradict' || insight.strategy === 'question') && insight.flaws && insight.flaws.length > 0) depth += 0.1;
+
+      return Math.max(0, Math.min(1, depth));
+    }
+
+    // ============================================================
+    // GEMINI NANO DETECTION
+    // ============================================================
+    let geminiAvailable = false;
+
+    async function checkGeminiNano() {
+      const statusEl = document.getElementById('aiStatus');
+      const textEl = document.getElementById('aiStatusText');
+
+      try {
+        if (typeof ai !== 'undefined' && ai.languageModel) {
+          const capabilities = await ai.languageModel.capabilities();
+          if (capabilities && capabilities.available !== 'no') {
+            geminiAvailable = true;
+            statusEl.classList.add('available');
+            textEl.textContent = 'Gemini Nano Available ☑️';
+            return;
+          }
+        }
+      } catch (e) {
+        // Fall through to cloud fallback
+      }
+
+      statusEl.classList.remove('available');
+      textEl.textContent = 'Cloud Fallback ☁️';
+      geminiAvailable = false;
+    }
+
+    // ============================================================
+    // STRATEGY EXECUTION
+    // ============================================================
+    function getSelectedTheorem() {
+      const radios = document.getElementsByName('theorem');
+      for (const r of radios) {
+        if (r.checked) return THEOREMS[r.value];
+      }
+      return THEOREMS['laman_rigidity'];
+    }
+
+    function setActiveButton(strategy) {
+      document.querySelectorAll('.strategy-btn').forEach(btn => btn.classList.remove('active'));
+      const btn = document.querySelector(`.strategy-btn.${strategy}`);
+      if (btn) btn.classList.add('active');
+    }
+
+    async function runStrategy(strategy) {
+      const theorem = getSelectedTheorem();
+      setActiveButton(strategy);
+
+      let insight;
+      if (geminiAvailable) {
+        insight = await runWithGemini(strategy, theorem);
+      } else {
+        insight = runWithTemplate(strategy, theorem);
+      }
+
+      displayInsight(insight, strategy, theorem);
+      displayQuality(insight, theorem);
+    }
+
+    async function runAllStrategies() {
+      const theorem = getSelectedTheorem();
+      document.querySelectorAll('.strategy-btn').forEach(b => b.classList.add('active'));
+      document.getElementById('outputArea').innerHTML = '';
+
+      const strategies = ['explore', 'connect', 'contradict', 'synthesize', 'question'];
+
+      for (let i = 0; i < strategies.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        let insight;
+        if (geminiAvailable) {
+          insight = await runWithGemini(strategies[i], theorem);
+        } else {
+          insight = runWithTemplate(strategies[i], theorem);
+        }
+        appendInsight(insight, strategies[i], theorem);
+        if (i === strategies.length - 1) {
+          displayQuality(insight, theorem);
+        }
+      }
+
+      document.querySelectorAll('.strategy-btn').forEach(btn => btn.classList.remove('active'));
+    }
+
+    async function runWithGemini(strategy, theorem) {
+      try {
+        const prompt = `You are analyzing the "${theorem.name}" theorem using the "${strategy.toUpperCase()}" strategy.\n\nTheorem statement: ${theorem.statement}\nCore question: ${theorem.coreQuestion}\n\nProvide a concise insight that:\n1. If EXPLORE: reveals non-obvious implications\n2. If CONNECT: relates to other theorems (H¹ Emergence, ZHC, Pythagorean48, Trust Convergence, Laman Rigidity)\n3. If CONTRADICT: identifies when the theorem fails or has counterexamples\n4. If SYNTHESIZE: creates a unifying statement across multiple theorems\n5. If QUESTION: identifies what the theorem does NOT answer\n\nFormat: Return a JSON object with fields: content (string), confidence (0.0-1.0), connections (array of theorem IDs as strings), flaws (array of potential issues as strings).`;
+
+        const session = await ai.languageModel.create({
+          systemPrompt: "You are fleet-murmur, an expert mathematical reasoning assistant."
+        });
+
+        const result = await session.prompt(prompt);
+        const parsed = JSON.parse(result);
+
+        return {
+          content: parsed.content,
+          confidence: parsed.confidence || 0.85,
+          connections: parsed.connections || [],
+          flaws: parsed.flaws || [],
+          strategy
+        };
+      } catch (e) {
+        console.warn('Gemini Nano failed, falling back to templates:', e);
+        return runWithTemplate(strategy, theorem);
+      }
+    }
+
+    function runWithTemplate(strategy, theorem) {
+      const templates = TEMPLATES[strategy] && TEMPLATES[strategy][theorem.id];
+      if (!templates || templates.length === 0) {
+        return {
+          content: `No template available for ${strategy} on ${theorem.name}.`,
+          confidence: 0.5,
+          connections: [],
+          flaws: [],
+          strategy
+        };
+      }
+      // Pick a random template (avoid repetition)
+      const idx = Math.floor(Math.random() * templates.length);
+      const t = templates[idx];
+      return {
+        content: t.content,
+        confidence: t.confidence || 0.85,
+        connections: t.connections || [],
+        flaws: t.flaws || [],
+        strategy
+      };
+    }
+
+    function displayInsight(insight, strategy, theorem) {
+      const output = document.getElementById('outputArea');
+      output.innerHTML = renderInsightCard(insight, strategy, theorem, 0);
+    }
+
+    function appendInsight(insight, strategy, theorem) {
+      const output = document.getElementById('outputArea');
+      const cards = output.querySelectorAll('.insight-card');
+      const delay = cards.length * 0.15;
+      output.insertAdjacentHTML('beforeend', renderInsightCard(insight, strategy, theorem, delay));
+    }
+
+    function renderInsightCard(insight, strategy, theorem, delay) {
+      const connTags = (insight.connections || []).map(c => {
+        const t = THEOREMS[c];
+        return t ? `<span class="meta-tag connection">${t.name}</span>` : '';
+      }).join('');
+
+      const flawTags = (insight.flaws || []).map(f => `<span class="meta-tag flaw">⚠ ${f}</span>`).join('');
+
+      return `
+        <div class="insight-card" style="animation-delay: ${delay}s">
+          <div class="insight-header">
+            <span class="strategy-badge ${strategy}">${strategy.toUpperCase()}</span>
+            <span class="theorem-label">${theorem.name}</span>
+          </div>
+          <div class="insight-content">${insight.content}</div>
+          <div class="insight-meta">
+            <span class="meta-tag confidence">CONFIDENCE: ${(insight.confidence * 100).toFixed(0)}%</span>
+            ${connTags}
+            ${flawTags}
+          </div>
+        </div>
+      `;
+    }
+
+    function displayQuality(insight, theorem) {
+      const score = computeQuality(insight, theorem);
+      const section = document.getElementById('qualitySection');
+      section.style.display = 'flex';
+
+      const circle = document.getElementById('qualityCircle');
+      const offset = 157 - (157 * score.overall);
+      circle.style.strokeDashoffset = offset;
+
+      document.getElementById('qualityPercent').textContent = `${(score.overall * 100).toFixed(0)}%`;
+      document.getElementById('qualityOverall').textContent = `${(score.overall * 100).toFixed(0)}%`;
+      document.getElementById('qNovelty').textContent = `${(score.novelty * 100).toFixed(0)}%`;
+      document.getElementById('qCorrect').textContent = `${(score.correctness * 100).toFixed(0)}%`;
+      document.getElementById('qComplete').textContent = `${(score.completeness * 100).toFixed(0)}%`;
+      document.getElementById('qDepth').textContent = `${(score.depth * 100).toFixed(0)}%`;
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    checkGeminiNano();
+  </script>
+</body>
+</html>

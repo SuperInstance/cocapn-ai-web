@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>fleet-spread · Captain Deliberation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* cocapn.ai CSS variables */
+    :root {
+      --bg: #0a0e17;
+      --surface: #111827;
+      --surface2: #1a2235;
+      --border: #1e293b;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59,130,246,0.25);
+      --keeper: #f59e0b;
+      --keeper-glow: rgba(245,158,11,0.25);
+      --edge: #10b981;
+      --edge-glow: rgba(16,185,129,0.25);
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #eab308;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    .mono { font-family: 'Space Mono', 'Courier New', monospace; }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    header h1 {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .ai-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .ai-status.available { background: rgba(34,197,94,0.15); color: var(--success); }
+    .ai-status.fallback { background: rgba(100,116,139,0.15); color: var(--muted); }
+
+    /* Main layout */
+    main {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 1.5rem;
+      padding: 1.5rem 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    /* Panels */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    .panel-header h2 {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+    .panel-body { padding: 1.25rem; }
+
+    /* Graph area */
+    #graph-svg {
+      width: 100%;
+      height: 420px;
+      background: radial-gradient(circle at center, rgba(59,130,246,0.08) 0%, transparent 65%);
+      border-radius: 0 0 10px 10px;
+    }
+    #graph-svg .node {
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    #graph-svg .node:hover { transform: scale(1.1); }
+    #graph-svg .node.selected .node-circle { stroke: var(--accent); stroke-width: 3; }
+    #graph-svg .node-circle {
+      fill: var(--surface);
+      stroke: var(--border);
+      stroke-width: 2;
+      transition: all 0.2s;
+    }
+    #graph-svg .node-label {
+      fill: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      text-anchor: middle;
+      dominant-baseline: central;
+      pointer-events: none;
+    }
+    #graph-svg .edge {
+      stroke: var(--edge);
+      stroke-width: 2;
+      stroke-opacity: 0.6;
+      transition: stroke-opacity 0.2s;
+    }
+    #graph-svg .edge:hover { stroke-opacity: 1; stroke-width: 3; }
+    #graph-svg .edge-label {
+      fill: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      text-anchor: middle;
+    }
+    #graph-svg .ping {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 1.5;
+      opacity: 0;
+    }
+    @keyframes ping {
+      0% { r: 20; opacity: 0.8; }
+      100% { r: 50; opacity: 0; }
+    }
+    #graph-svg .ping.animating { animation: ping 1.5s ease-out forwards; }
+
+    /* Buttons */
+    .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: none;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-danger { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+    .btn-danger:hover { background: rgba(239,68,68,0.25); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Scenarios */
+    .scenario-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+    .scenario-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      color: var(--text);
+    }
+    .scenario-btn:hover { border-color: var(--accent); background: rgba(59,130,246,0.08); }
+    .scenario-btn h4 { font-family: 'Space Mono', monospace; font-size: 0.85rem; margin-bottom: 0.2rem; }
+    .scenario-btn p { font-size: 0.75rem; color: var(--muted); }
+
+    /* Deliberation output */
+    .deliberation-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      min-height: 280px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      line-height: 1.8;
+    }
+    .deliberation-box .step { margin-bottom: 0.75rem; padding-left: 1rem; border-left: 2px solid var(--border); }
+    .deliberation-box .step.checking { border-left-color: var(--accent); }
+    .deliberation-box .step.inquiring { border-left-color: var(--keeper); }
+    .deliberation-box .step.constrained { border-left-color: var(--danger); }
+    .deliberation-box .step.decided { border-left-color: var(--edge); }
+    .deliberation-box .step.stable { border-left-color: var(--success); }
+    .deliberation-box .step .prompt { color: var(--keeper); margin-bottom: 0.3rem; }
+    .deliberation-box .step .result { color: var(--text); }
+    .deliberation-box .step .result .mono { color: var(--accent); }
+    .deliberation-box .final-decision {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 700;
+    }
+    .deliberation-box .final-decision.stable { background: rgba(34,197,94,0.15); color: var(--success); border: 1px solid rgba(34,197,94,0.3); }
+    .deliberation-box .final-decision.decided { background: rgba(16,185,129,0.15); color: var(--edge); border: 1px solid rgba(16,185,129,0.3); }
+    .deliberation-box .final-decision.emergence { background: rgba(234,179,8,0.15); color: var(--warning); border: 1px solid rgba(234,179,8,0.3); }
+    .deliberation-box .final-decision.constrained { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+    .deliberation-box .final-decision.disconnected { background: rgba(245,158,11,0.15); color: var(--keeper); border: 1px solid rgba(245,158,11,0.3); }
+
+    /* Metrics panel */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .metric-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      text-align: center;
+    }
+    .metric-card .value {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .metric-card .value.warn { color: var(--warning); }
+    .metric-card .value.ok { color: var(--success); }
+    .metric-card .value.bad { color: var(--danger); }
+    .metric-card .label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.2rem;
+    }
+    .metric-card.full { grid-column: span 2; }
+
+    /* Explanation */
+    .explanation {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+    .explanation h4 {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--keeper);
+      margin-bottom: 0.5rem;
+    }
+    .explanation p { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .explanation code {
+      background: rgba(59,130,246,0.1);
+      color: var(--accent);
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+    }
+
+    /* Graph controls */
+    .graph-controls {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    /* Connection mode */
+    .connection-hint {
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      color: var(--keeper);
+      margin-bottom: 0.75rem;
+      display: none;
+    }
+    .connection-hint.active { display: block; }
+
+    /* Divider */
+    .divider { height: 1px; background: var(--border); margin: 1rem 0; }
+
+    /* Badge */
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .badge.blue { background: rgba(59,130,246,0.15); color: var(--accent); }
+    .badge.green { background: rgba(34,197,94,0.15); color: var(--success); }
+    .badge.yellow { background: rgba(234,179,8,0.15); color: var(--warning); }
+    .badge.red { background: rgba(239,68,68,0.15); color: var(--danger); }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--muted);
+    }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+    .empty-state p { font-size: 0.85rem; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚓ fleet-spread · Captain Deliberation</h1>
+  <div id="ai-status" class="ai-status fallback">☁️ Checking Gemini Nano...</div>
+</header>
+
+<main>
+  <!-- Left: Graph + Controls -->
+  <div>
+    <div class="panel" style="margin-bottom:1.5rem;">
+      <div class="panel-header">
+        <h2>Fleet Topology</h2>
+        <div class="btn-row">
+          <button class="btn btn-outline" onclick="addAgent()">+ Agent</button>
+          <button class="btn btn-outline" onclick="toggleConnectMode()" id="connect-btn">Connect</button>
+          <button class="btn btn-danger" onclick="clearGraph()">Clear</button>
+        </div>
+      </div>
+      <div class="connection-hint" id="connection-hint">Click a second agent to connect them</div>
+      <div id="graph-svg-wrap">
+        <svg id="graph-svg" viewBox="0 0 600 420">
+          <defs>
+            <radialGradient id="nodeGrad" cx="40%" cy="40%">
+              <stop offset="0%" stop-color="#1e293b"/>
+              <stop offset="100%" stop-color="#0f172a"/>
+            </radialGradient>
+          </defs>
+          <g id="edges-group"></g>
+          <g id="nodes-group"></g>
+          <g id="pings-group"></g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Scenarios -->
+    <div class="panel">
+      <div class="panel-header"><h2>Pre-loaded Scenarios</h2></div>
+      <div class="panel-body">
+        <div class="scenario-list">
+          <button class="scenario-btn" onclick="loadScenario('rigid')">
+            <h4>5-Agent Rigid Fleet</h4>
+            <p>V=5, E=7 · Exactly Laman-rigid · Captain: STABLE</p>
+          </button>
+          <button class="scenario-btn" onclick="loadScenario('emergence')">
+            <h4>6-Agent Over-Connected</h4>
+            <p>V=6, E=14 · β₁=9 &gt; threshold 4 · Captain: EMERGENCE</p>
+          </button>
+          <button class="scenario-btn" onclick="loadScenario('disconnected')">
+            <h4>8-Agent Disconnected</h4>
+            <p>Two components · C=2 · Captain: DISCONNECTED</p>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Metrics + Deliberation -->
+  <div>
+    <!-- Metrics -->
+    <div class="panel" style="margin-bottom:1.5rem;">
+      <div class="panel-header"><h2>Fleet Metrics</h2></div>
+      <div class="panel-body">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="value" id="m-V">0</div>
+            <div class="label">Vertices (V)</div>
+          </div>
+          <div class="metric-card">
+            <div class="value" id="m-E">0</div>
+            <div class="label">Edges (E)</div>
+          </div>
+          <div class="metric-card">
+            <div class="value" id="m-laman">—</div>
+            <div class="label">Laman (2V−3)</div>
+          </div>
+          <div class="metric-card">
+            <div class="value" id="m-beta">—</div>
+            <div class="label">β₁ (E−V+1)</div>
+          </div>
+          <div class="metric-card full">
+            <div class="value" id="m-components">1</div>
+            <div class="label">Connected Components (C)</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="runDeliberation()" id="deliberate-btn">⚓ Run Deliberation</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deliberation output -->
+    <div class="panel">
+      <div class="panel-header"><h2>Captain's Reasoning</h2></div>
+      <div class="panel-body">
+        <div class="deliberation-box" id="deliberation-output">
+          <div class="empty-state">
+            <div class="icon">⚓</div>
+            <p>Load a scenario or build a fleet graph, then run deliberation.</p>
+          </div>
+        </div>
+
+        <div class="explanation" id="explanation" style="display:none;">
+          <h4>📖 What just happened?</h4>
+          <p id="explanation-text"></p>
+          <p><code>E = 2V − 3</code> for Laman rigidity · <code>β₁ = E − V + C</code> for H¹ emergence</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ================================================================
+// FLEET-COORDINATE-JS · INLINE (ported from TypeScript)
+// ================================================================
+
+// --- Types ---
+// RigidityResult, EmergenceResult, ZhcResult, TrustEdge, FleetNode, FleetEdge, FleetGraph, FullAnalysis
+
+function checkLamanRigidity(V, E, tolerance = 0) {
+  const expected_E = 2 * V - 3;
+  const violations = [];
+  if (V < 2) {
+    return { is_rigid: false, expected_E, h1_dimension: 0, violations: ['V < 2: graph too small to be rigid'] };
+  }
+  const h1_dimension = E - V + 1;
+  const diff = Math.abs(E - expected_E);
+  if (diff > tolerance) {
+    violations.push(`E = ${E} ≠ 2V−3 = ${expected_E} (diff: ${diff})`);
+  }
+  return { is_rigid: violations.length === 0, expected_E, h1_dimension, violations };
+}
+
+function detectEmergence(V, E, C = 1, override_threshold) {
+  if (V < 2) return { beta_one: 0, detected: false, threshold: override_threshold ?? 0, is_overconstrained: false };
+  const beta_one = E - V + C;
+  const is_rigid = E === 2 * V - 3;
+  const default_threshold = is_rigid ? V - 2 : V - 1;
+  const threshold = override_threshold ?? default_threshold;
+  const detected = beta_one > threshold;
+  return { beta_one, detected, threshold, is_overconstrained: detected };
+}
+
+function computeLoopResidual(trustEdges, tolerance = 1e-6) {
+  if (trustEdges.length < 3) return { loop_residual: 0, consensus_reached: true, cycle_length: trustEdges.length };
+  let cosProduct = 1.0;
+  let negativeProduct = 1.0;
+  for (const edge of trustEdges) {
+    const trust = Math.max(-1, Math.min(1, edge.trust));
+    const cosTheta = Math.cos(Math.acos(Math.abs(trust)));
+    cosProduct *= cosTheta;
+    if (trust < 0) negativeProduct *= -1;
+  }
+  const loopResidual = Math.abs(1 - Math.abs(cosProduct));
+  const consensusReached = loopResidual < tolerance && negativeProduct > 0;
+  return { loop_residual: loopResidual, consensus_reached: consensusReached, cycle_length: trustEdges.length };
+}
+
+function findCycles(edges, maxCycles = 10) {
+  const adj = new Map();
+  for (const edge of edges) {
+    if (!adj.has(edge.from)) adj.set(edge.from, []);
+    if (!adj.has(edge.to)) adj.set(edge.to, []);
+    adj.get(edge.from).push(edge.to);
+    adj.get(edge.to).push(edge.from);
+  }
+  const cycles = [];
+  const visited = new Set();
+
+  function dfs(node, start, path, depth) {
+    if (cycles.length >= maxCycles || depth > 10) return;
+    if (node === start && path.length >= 3) {
+      const cycleEdges = [];
+      for (let i = 0; i < path.length - 1; i++) {
+        const from = path[i], to = path[i + 1];
+        const edge = edges.find(e => (e.from === from && e.to === to) || (e.from === to && e.to === from));
+        if (edge) cycleEdges.push(edge);
+      }
+      cycles.push(cycleEdges);
+      return;
+    }
+    if (visited.has(node)) return;
+    visited.add(node);
+    const neighbors = adj.get(node) || [];
+    for (const neighbor of neighbors) {
+      if (!visited.has(neighbor) || neighbor === start) {
+        dfs(neighbor, start, [...path, neighbor], depth + 1);
+      }
+    }
+    visited.delete(node);
+  }
+
+  for (const node of adj.keys()) {
+    if (cycles.length >= maxCycles) break;
+    visited.clear();
+    dfs(node, node, [node], 0);
+  }
+  return cycles;
+}
+
+function buildFleetGraph(nodes, edges) {
+  const adjacency = new Map();
+  for (const node of nodes) adjacency.set(node.id, []);
+  for (const edge of edges) {
+    adjacency.get(edge.from)?.push(edge.to);
+    adjacency.get(edge.to)?.push(edge.from);
+  }
+  const visited = new Set();
+  let C = 0;
+  for (const node of nodes) {
+    if (!visited.has(node.id)) {
+      C++;
+      const queue = [node.id];
+      while (queue.length > 0) {
+        const current = queue.shift();
+        if (visited.has(current)) continue;
+        visited.add(current);
+        for (const neighbor of adjacency.get(current) || []) {
+          if (!visited.has(neighbor)) queue.push(neighbor);
+        }
+      }
+    }
+  }
+  return { nodes, edges, V: nodes.length, E: edges.length, C };
+}
+
+function analyzeFleetGraph(graph, checkCycles = true) {
+  const rigidity = checkLamanRigidity(graph.V, graph.E);
+  const emergence = detectEmergence(graph.V, graph.E, graph.C);
+  let zhc = null;
+  if (checkCycles && graph.edges.length >= 3) {
+    const cycles = findCycles(graph.edges, 3);
+    if (cycles.length > 0) {
+      zhc = computeLoopResidual(cycles[0]);
+      for (const cycle of cycles.slice(1)) {
+        const residual = computeLoopResidual(cycle);
+        if (Math.abs(residual.loop_residual - (zhc?.loop_residual ?? 0)) > 1e-4) {
+          zhc = { loop_residual: 1, consensus_reached: false, cycle_length: 0 };
+          break;
+        }
+      }
+    }
+  }
+  const isSelfCoordinating = rigidity.is_rigid && !emergence.detected && (zhc === null || zhc.consensus_reached);
+  return { rigidity, emergence, zhc, is_self_coordinating: isSelfCoordinating };
+}
+
+// ================================================================
+// APP STATE
+// ================================================================
+let nodes = [];
+let edges = [];
+let nextNodeId = 1;
+let selectedNode = null;
+let connectMode = false;
+
+// Node positions for SVG (spread in a circle)
+function nodePosition(index, total) {
+  const cx = 300, cy = 210, r = 160;
+  if (total === 1) return { x: cx, y: cy };
+  const angle = (index / total) * 2 * Math.PI - Math.PI / 2;
+  return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+}
+
+// ================================================================
+// SCENARIOS
+// ================================================================
+const SCENARIOS = {
+  rigid: {
+    nodes: [
+      { id: 'a1', label: 'A1' }, { id: 'a2', label: 'A2' },
+      { id: 'a3', label: 'A3' }, { id: 'a4', label: 'A4' },
+      { id: 'a5', label: 'A5' }
+    ],
+    edges: [
+      { from: 'a1', to: 'a2', trust: 0.8 }, { from: 'a1', to: 'a3', trust: 0.7 },
+      { from: 'a2', to: 'a3', trust: 0.9 }, { from: 'a2', to: 'a4', trust: 0.6 },
+      { from: 'a3', to: 'a4', trust: 0.75 }, { from: 'a3', to: 'a5', trust: 0.85 },
+      { from: 'a4', to: 'a5', trust: 0.7 }
+    ],
+    label: '5-Agent Rigid Fleet'
+  },
+  emergence: {
+    nodes: [
+      { id: 'b1', label: 'B1' }, { id: 'b2', label: 'B2' },
+      { id: 'b3', label: 'B3' }, { id: 'b4', label: 'B4' },
+      { id: 'b5', label: 'B5' }, { id: 'b6', label: 'B6' }
+    ],
+    edges: [
+      { from: 'b1', to: 'b2', trust: 0.9 }, { from: 'b1', to: 'b3', trust: 0.8 },
+      { from: 'b1', to: 'b4', trust: 0.7 }, { from: 'b1', to: 'b5', trust: 0.6 },
+      { from: 'b1', to: 'b6', trust: 0.85 }, { from: 'b2', to: 'b3', trust: 0.75 },
+      { from: 'b2', to: 'b4', trust: 0.8 }, { from: 'b2', to: 'b5', trust: 0.9 },
+      { from: 'b2', to: 'b6', trust: 0.7 }, { from: 'b3', to: 'b4', trust: 0.85 },
+      { from: 'b3', to: 'b5', trust: 0.6 }, { from: 'b3', to: 'b6', trust: 0.9 },
+      { from: 'b4', to: 'b5', trust: 0.75 }, { from: 'b4', to: 'b6', trust: 0.8 }
+    ],
+    label: '6-Agent Over-Connected'
+  },
+  disconnected: {
+    nodes: [
+      { id: 'c1', label: 'C1' }, { id: 'c2', label: 'C2' }, { id: 'c3', label: 'C3' },
+      { id: 'c4', label: 'C4' }, { id: 'c5', label: 'D1' },
+      { id: 'd2', label: 'D2' }, { id: 'd3', label: 'D3' }, { id: 'd4', label: 'D4' }
+    ],
+    edges: [
+      { from: 'c1', to: 'c2', trust: 0.8 }, { from: 'c2', to: 'c3', trust: 0.7 },
+      { from: 'c3', to: 'c4', trust: 0.9 }, { from: 'c4', to: 'c1', trust: 0.6 },
+      { from: 'd2', to: 'd3', trust: 0.75 }, { from: 'd3', to: 'd4', trust: 0.8 },
+      { from: 'd4', to: 'd2', trust: 0.7 }
+    ],
+    label: '8-Agent Disconnected'
+  }
+};
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  nodes = JSON.parse(JSON.stringify(s.nodes));
+  edges = JSON.parse(JSON.stringify(s.edges));
+  nextNodeId = nodes.length + 1;
+  selectedNode = null;
+  connectMode = false;
+  document.getElementById('connect-btn').textContent = 'Connect';
+  document.getElementById('connection-hint').classList.remove('active');
+  renderGraph();
+  updateMetrics();
+}
+
+// ================================================================
+// RENDERING
+// ================================================================
+function renderGraph() {
+  const nodesGroup = document.getElementById('nodes-group');
+  const edgesGroup = document.getElementById('edges-group');
+  nodesGroup.innerHTML = '';
+  edgesGroup.innerHTML = '';
+
+  const positions = {};
+  nodes.forEach((n, i) => {
+    const pos = nodePosition(i, nodes.length);
+    positions[n.id] = pos;
+  });
+
+  // Edges
+  for (const edge of edges) {
+    const from = positions[edge.from];
+    const to = positions[edge.to];
+    if (!from || !to) continue;
+
+    const trust = edge.trust ?? 0.5;
+    const opacity = 0.3 + trust * 0.5;
+    const stroke = trust < 0 ? 'var(--danger)' : 'var(--edge)';
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('class', 'edge');
+    line.setAttribute('x1', from.x); line.setAttribute('y1', from.y);
+    line.setAttribute('x2', to.x); line.setAttribute('y2', to.y);
+    line.setAttribute('stroke', stroke);
+    line.setAttribute('stroke-opacity', opacity);
+    line.setAttribute('stroke-width', '2');
+    edgesGroup.appendChild(line);
+
+    // Edge trust label
+    const mx = (from.x + to.x) / 2, my = (from.y + to.y) / 2;
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('class', 'edge-label');
+    text.setAttribute('x', mx); text.setAttribute('y', my - 6);
+    text.textContent = trust.toFixed(2);
+    edgesGroup.appendChild(text);
+  }
+
+  // Nodes
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+    const pos = positions[node.id];
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'node' + (selectedNode === node.id ? ' selected' : ''));
+    g.setAttribute('transform', `translate(${pos.x}, ${pos.y})`);
+    g.setAttribute('data-id', node.id);
+    g.onclick = () => onNodeClick(node.id);
+
+    // Ping ring (for animation)
+    const ping = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    ping.setAttribute('class', 'ping');
+    ping.setAttribute('r', '20');
+    ping.setAttribute('cx', '0'); ping.setAttribute('cy', '0');
+    g.appendChild(ping);
+
+    // Node circle
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('class', 'node-circle');
+    circle.setAttribute('r', '22');
+    circle.setAttribute('fill', 'url(#nodeGrad)');
+    g.appendChild(circle);
+
+    // Node label
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    label.setAttribute('class', 'node-label');
+    label.setAttribute('y', '1');
+    label.textContent = node.label || node.id;
+    g.appendChild(label);
+
+    nodesGroup.appendChild(g);
+  }
+}
+
+function animatePing(nodeId) {
+  const nodeEl = document.querySelector(`[data-id="${nodeId}"] .ping`);
+  if (!nodeEl) return;
+  nodeEl.classList.remove('animating');
+  void nodeEl.offsetWidth; // reflow
+  nodeEl.classList.add('animating');
+  nodeEl.addEventListener('animationend', () => nodeEl.classList.remove('animating'), { once: true });
+}
+
+function onNodeClick(nodeId) {
+  if (!connectMode) {
+    selectedNode = selectedNode === nodeId ? null : nodeId;
+    renderGraph();
+    return;
+  }
+  // Connect mode: select two nodes to connect
+  if (selectedNode === null) {
+    selectedNode = nodeId;
+    renderGraph();
+  } else if (selectedNode !== nodeId) {
+    // Add edge
+    const trust = 0.5 + Math.random() * 0.4; // random trust between 0.5-0.9
+    edges.push({ from: selectedNode, to: nodeId, trust: Math.round(trust * 100) / 100 });
+    selectedNode = null;
+    connectMode = false;
+    document.getElementById('connect-btn').textContent = 'Connect';
+    document.getElementById('connection-hint').classList.remove('active');
+    renderGraph();
+    updateMetrics();
+  }
+}
+
+function addAgent() {
+  const id = `n${nextNodeId++}`;
+  nodes.push({ id, label: id.toUpperCase() });
+  renderGraph();
+  updateMetrics();
+  // Ping the new node
+  setTimeout(() => animatePing(id), 50);
+}
+
+function toggleConnectMode() {
+  connectMode = !connectMode;
+  selectedNode = null;
+  document.getElementById('connect-btn').textContent = connectMode ? 'Cancel' : 'Connect';
+  document.getElementById('connection-hint').classList.toggle('active', connectMode);
+  renderGraph();
+}
+
+function clearGraph() {
+  nodes = [];
+  edges = [];
+  nextNodeId = 1;
+  selectedNode = null;
+  connectMode = false;
+  document.getElementById('connect-btn').textContent = 'Connect';
+  document.getElementById('connection-hint').classList.remove('active');
+  renderGraph();
+  updateMetrics();
+  document.getElementById('deliberation-output').innerHTML = `<div class="empty-state"><div class="icon">⚓</div><p>Load a scenario or build a fleet graph, then run deliberation.</p></div>`;
+  document.getElementById('explanation').style.display = 'none';
+}
+
+function updateMetrics() {
+  const V = nodes.length, E = edges.length;
+  const graph = buildFleetGraph(nodes, edges);
+  const C = graph.C;
+  const expectedE = 2 * V - 3;
+  const beta = E - V + 1;
+
+  document.getElementById('m-V').textContent = V;
+  document.getElementById('m-E').textContent = E;
+  document.getElementById('m-laman').textContent = V < 2 ? '—' : `${expectedE}`;
+  document.getElementById('m-beta').textContent = V < 2 ? '—' : beta;
+
+  const compsEl = document.getElementById('m-components');
+  compsEl.textContent = C;
+  compsEl.className = 'value' + (C > 1 ? ' warn' : '');
+
+  // Color code Laman
+  const lamEl = document.getElementById('m-laman');
+  if (V >= 2) {
+    if (E === expectedE) lamEl.className = 'value ok';
+    else if (E > expectedE) lamEl.className = 'value warn';
+    else lamEl.className = 'value bad';
+  } else {
+    lamEl.className = 'value';
+  }
+
+  // Color code beta
+  const betaEl = document.getElementById('m-beta');
+  if (V >= 2) {
+    const threshold = E === expectedE ? V - 2 : V - 1;
+    if (beta <= threshold) betaEl.className = 'value ok';
+    else betaEl.className = 'value bad';
+  }
+}
+
+// ================================================================
+// CHROME BUILT-IN AI (Prompt API)
+// ================================================================
+let geminiNanoAvailable = false;
+
+async function checkGeminiNano() {
+  const statusEl = document.getElementById('ai-status');
+  if (window.ai?.gemini) {
+    try {
+      const session = await window.ai.gemini.createTextSession();
+      await session.prompt('hello');
+      session.destroy();
+      geminiNanoAvailable = true;
+      statusEl.className = 'ai-status available';
+      statusEl.textContent = '🤖 Gemini Nano: Available';
+      return true;
+    } catch (e) {
+      // fall through
+    }
+  }
+  statusEl.className = 'ai-status fallback';
+  statusEl.textContent = '☁️ Cloud fallback mode';
+  return false;
+}
+
+async function geminiPrompt(text) {
+  if (geminiNanoAvailable && window.ai?.gemini) {
+    try {
+      const session = await window.ai.gemini.createTextSession();
+      const result = await session.prompt(text);
+      session.destroy();
+      return result;
+    } catch (e) {
+      return null;
+    }
+  }
+  return null;
+}
+
+// ================================================================
+// CAPTAIN DELIBERATION
+// ================================================================
+const STATES = {
+  CHECKING: 'checking',
+  INQUIRING: 'inquiring',
+  CONSTRAINED: 'constrained',
+  DECIDED: 'decided',
+  STABLE: 'stable',
+  EMERGENCE: 'emergence',
+  DISCONNECTED: 'disconnected'
+};
+
+async function runDeliberation() {
+  if (nodes.length < 2) {
+    alert('Add at least 2 agents first.');
+    return;
+  }
+
+  const output = document.getElementById('deliberation-output');
+  const explanation = document.getElementById('explanation');
+  const btn = document.getElementById('deliberate-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Deliberating...';
+
+  // Reset
+  output.innerHTML = '';
+
+  // Build graph
+  const graph = buildFleetGraph(nodes, edges);
+  const analysis = analyzeFleetGraph(graph);
+
+  // Step 1: Checking stability
+  await addStep(output, STATES.CHECKING, 'Checking Laman rigidity...', `E=${graph.E}, 2V−3=${analysis.rigidity.expected_E}`);
+  await delay(600);
+
+  // Ping all nodes
+  for (const node of nodes) animatePing(node.id);
+  await delay(400);
+
+  // Step 2: Rigidity result
+  if (analysis.rigidity.is_rigid) {
+    await addStep(output, STATES.STABLE, 'Fleet is Laman-rigid', `E=${graph.E}=2·${graph.V}−3=${analysis.rigidity.expected_E} ✓`);
+  } else {
+    const v = analysis.rigidity.violations[0];
+    await addStep(output, STATES.CHECKING, 'Laman condition not met', v);
+  }
+  await delay(400);
+
+  // Step 3: Check connectedness
+  if (graph.C > 1) {
+    await addStep(output, STATES.CHECKING, 'Checking connectivity...', `C=${graph.C} components detected — fleet is fragmented`);
+    await delay(400);
+    await addStep(output, STATES.DISCONNECTED, 'DISCONNECTED', `Fleet has ${graph.C} disconnected components. Cannot form coherent fleet.`);
+    finishDeliberation(btn, output, explanation, graph, analysis);
+    return;
+  }
+
+  // Step 4: H¹ emergence check
+  await addStep(output, STATES.INQUIRING, 'Computing H¹ Betti number...', `β₁ = E − V + C = ${graph.E} − ${graph.V} + ${graph.C} = ${analysis.emergence.beta_one}`);
+  await delay(500);
+
+  const rigidLabel = graph.E === 2 * graph.V - 3 ? 'rigid' : 'non-rigid';
+  const threshold = analysis.emergence.threshold;
+  const thresholdLabel = graph.E === 2 * graph.V - 3 ? `V−2=${threshold}` : `V−1=${threshold}`;
+
+  if (analysis.emergence.detected) {
+    await addStep(output, STATES.EMERGENCE, 'EMERGENCE DETECTED', `β₁=${analysis.emergence.beta_one} > ${thresholdLabel} — fleet is over-constrained`);
+    await addStep(output, STATES.EMERGENCE, 'Novel structure emerging', 'The constraint density exceeds safe operating parameters. Specialist consultation required.');
+    finishDeliberation(btn, output, explanation, graph, analysis);
+    return;
+  } else {
+    await addStep(output, STATES.STABLE, 'H¹ within threshold', `β₁=${analysis.emergence.beta_one} ≤ ${thresholdLabel} ✓`);
+  }
+  await delay(400);
+
+  // Step 5: ZHC loop residual (if cycles exist)
+  if (graph.edges.length >= 3) {
+    await addStep(output, STATES.INQUIRING, 'Running ZHC loop residual check...', 'Consulting specialist agents on cycle consistency');
+    await delay(500);
+
+    if (analysis.zhc) {
+      if (analysis.zhc.consensus_reached) {
+        await addStep(output, STATES.STABLE, 'Loop consensus reached', `Loop residual: ${analysis.zhc.loop_residual.toExponential(2)}, cycle length: ${analysis.zhc.cycle_length}`);
+      } else {
+        await addStep(output, STATES.CONSTRAINED, 'Loop consensus FAILED', `Loop residual: ${analysis.zhc.loop_residual.toExponential(2)} — fleet connection is not flat`);
+      }
+    } else {
+      await addStep(output, STATES.STABLE, 'No cycles detected', 'Graph is acyclic — skip ZHC check');
+    }
+  }
+
+  // Step 6: Final decision
+  if (analysis.rigidity.is_rigid && !analysis.emergence.detected && (analysis.zhc === null || analysis.zhc.consensus_reached)) {
+    await addStep(output, STATES.STABLE, 'STABLE — Fleet is self-coordinating', 'All constraints satisfied. Captain authorizes fleet operation.');
+  } else if (analysis.rigidity.is_rigid && !analysis.emergence.detected && analysis.zhc && !analysis.zhc.consensus_reached) {
+    await addStep(output, STATES.CONSTRAINED, 'Fleet has ZHC violations', 'Loop residual exceeds tolerance. Fleet requires repair before operation.');
+  } else {
+    await addStep(output, STATES.DECIDED, 'Fleet requires intervention', 'Structural issues detected. Reconfigure before proceeding.');
+  }
+
+  finishDeliberation(btn, output, explanation, graph, analysis);
+}
+
+function finishDeliberation(btn, output, explanation, graph, analysis) {
+  btn.disabled = false;
+  btn.textContent = '⚓ Run Deliberation';
+
+  // Build final badge
+  const final = document.createElement('div');
+  let badgeClass = 'decided', badgeText = 'DECIDED';
+  if (analysis.rigidity.is_rigid && !analysis.emergence.detected && graph.C === 1 && (analysis.zhc === null || analysis.zhc.consensus_reached)) {
+    badgeClass = 'stable'; badgeText = '⚓ STABLE';
+  } else if (graph.C > 1) {
+    badgeClass = 'disconnected'; badgeText = '⚠ DISCONNECTED';
+  } else if (analysis.emergence.detected) {
+    badgeClass = 'emergence'; badgeText = '⚡ EMERGENCE DETECTED';
+  } else if (analysis.zhc && !analysis.zhc.consensus_reached) {
+    badgeClass = 'constrained'; badgeText = '✗ CONSTRAINED';
+  }
+  final.className = `final-decision ${badgeClass}`;
+  final.textContent = badgeText;
+  output.appendChild(final);
+
+  // Explanation
+  explanation.style.display = 'block';
+  let explain = '';
+  if (graph.C > 1) {
+    explain = `The fleet has <strong>${graph.C} disconnected components</strong> (C=${graph.C}). A fleet must be a single connected component to deliberate. Split the fleet and retry.`;
+  } else if (analysis.emergence.detected) {
+    explain = `The H¹ Betti number <strong>β₁=${analysis.emergence.beta_one} exceeds threshold ${analysis.emergence.threshold}</strong>. This means the fleet has more independent cycles than a stable fleet should have — emergence is occurring. The captain flags this as a novel structure forming.`;
+  } else if (analysis.rigidity.is_rigid && !analysis.emergence.detected && (analysis.zhc === null || analysis.zhc.consensus_reached)) {
+    explain = `The fleet satisfies <strong>E=2V−3</strong> (Laman-rigid) with <strong>β₁=${analysis.emergence.beta_one} ≤ ${analysis.emergence.threshold}</strong> (no emergence). This is a minimally-rigid, self-coordinating fleet. The captain declares STABLE.`;
+  } else if (analysis.zhc && !analysis.zhc.consensus_reached) {
+    explain = `The fleet is Laman-rigid but has <strong>ZHC loop residual = ${analysis.zhc.loop_residual.toExponential(2)}</strong>. The trust transformations around some cycle don't sum to identity — the fleet connection is not flat.`;
+  } else {
+    explain = `The fleet is not Laman-rigid. Try adding or removing edges to reach E=2V−3.`;
+  }
+  document.getElementById('explanation-text').innerHTML = explain;
+}
+
+async function addStep(container, state, prompt, result) {
+  const step = document.createElement('div');
+  step.className = `step ${state}`;
+  step.innerHTML = `<div class="prompt">${prompt}</div><div class="result">${result}</div>`;
+  container.appendChild(step);
+  container.scrollTop = container.scrollHeight;
+  await delay(300 + Math.random() * 400);
+}
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ================================================================
+// INIT
+// ================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  checkGeminiNano();
+  renderGraph();
+  updateMetrics();
+});
+</script>
+</body>
+</html>

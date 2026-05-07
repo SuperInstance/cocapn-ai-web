@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fleet Tools — Run in Your Browser, Right Now</title>
+  <meta name="description" content="fleet-spread captain deliberation, fleet-murmur thinking strategies, and PLATO room protocol — all running in Chrome with no installation or API keys.">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0e17;
+      --surface: #111827;
+      --surface2: #1a2235;
+      --border: #1e293b;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59,130,246,0.2);
+      --keeper: #f59e0b;
+      --keeper-glow: rgba(245,158,11,0.2);
+      --edge: #10b981;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #eab308;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    .mono { font-family: 'Space Mono', 'Courier New', monospace; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 100;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text);
+    }
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      position: relative;
+    }
+    /* Lighthouse SVG icon */
+    .logo-icon svg { width: 32px; height: 32px; }
+    .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+    .nav-links a { color: var(--muted); font-size: 0.9rem; }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 5rem 2rem 3rem;
+      position: relative;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 800px;
+      height: 400px;
+      background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero h1 {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(1.8rem, 5vw, 3.2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    .hero p { color: var(--muted); font-size: 1.15rem; max-width: 640px; margin: 0 auto 2rem; }
+    .ai-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.9rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-family: 'Space Mono', monospace;
+      margin-bottom: 2rem;
+    }
+    .ai-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--edge);
+    }
+    .ai-dot.unavailable { background: var(--warning); }
+    .ai-dot.loading { background: var(--accent); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* Demo cards */
+    .demos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2rem 4rem;
+    }
+    .demo-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      transition: border-color 0.2s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .demo-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .demo-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--keeper));
+    }
+    .demo-card.murmur::before {
+      background: linear-gradient(90deg, #a855f7, #ec4899);
+    }
+    .demo-card.plato::before {
+      background: linear-gradient(90deg, #06b6d4, var(--edge));
+    }
+    .demo-badge {
+      font-size: 0.7rem;
+      font-family: 'Space Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      background: var(--accent-glow);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      width: fit-content;
+    }
+    .demo-card.murmur .demo-badge { color: #a855f7; background: rgba(168,85,247,0.1); }
+    .demo-card.plato .demo-badge { color: #06b6d4; background: rgba(6,182,212,0.1); }
+
+    .demo-card h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      font-family: 'Space Mono', monospace;
+    }
+    .demo-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.7; flex: 1; }
+    .demo-features { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .feature-tag {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+    }
+    .demo-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.7rem 1.4rem;
+      background: var(--accent);
+      color: white;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: opacity 0.2s;
+      margin-top: 0.5rem;
+      width: fit-content;
+    }
+    .demo-btn:hover { opacity: 0.85; text-decoration: none; }
+    .demo-btn.in-progress { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); }
+    .demo-btn.disabled { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); cursor: not-allowed; }
+
+    /* Section: How it works */
+    .how-it-works {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      border-top: 1px solid var(--border);
+    }
+    .how-it-works h2 {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.4rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; }
+    .step { text-align: center; }
+    .step-num {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 0 auto 1rem;
+      color: var(--accent);
+    }
+    .step h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+    .step p { color: var(--muted); font-size: 0.85rem; }
+
+    /* Zero-install banner */
+    .zero-install {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 2rem auto;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2rem;
+      align-items: center;
+    }
+    .zero-install h3 { font-family: 'Space Mono', monospace; font-size: 1rem; margin-bottom: 0.5rem; }
+    .zero-install p { color: var(--muted); font-size: 0.9rem; }
+    .zero-install-features { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .zif { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--edge); }
+    .zif svg { width: 16px; height: 16px; }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--muted); }
+    footer .mono { color: var(--text); }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .zero-install { grid-template-columns: 1fr; }
+      .nav-links { gap: 0.75rem; }
+      .hero { padding: 3rem 1rem 2rem; }
+      header { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Lighthouse body -->
+        <rect x="13" y="12" width="6" height="16" rx="1" fill="#f59e0b"/>
+        <!-- Lighthouse top / lamp -->
+        <path d="M11 12 L16 7 L21 12" fill="#f59e0b"/>
+        <circle cx="16" cy="7" r="2" fill="#f59e0b"/>
+        <!-- Radar rings -->
+        <circle cx="16" cy="7" r="5" stroke="#f59e0b" stroke-opacity="0.4" stroke-width="1" fill="none"/>
+        <circle cx="16" cy="7" r="9" stroke="#f59e0b" stroke-opacity="0.2" stroke-width="1" fill="none"/>
+        <circle cx="16" cy="7" r="13" stroke="#f59e0b" stroke-opacity="0.1" stroke-width="1" fill="none"/>
+      </svg>
+    </div>
+    Cocapn Fleet
+  </div>
+  <nav class="nav-links">
+    <a href="demo-fleet-spread.html">fleet-spread</a>
+    <a href="demo-fleet-murmur.html">fleet-murmur</a>
+    <a href="demo-plato-client.html">PLATO</a>
+    <a href="https://github.com/SuperInstance">GitHub</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="ai-status">
+      <div class="ai-dot loading" id="aiDot"></div>
+      <span id="aiStatus">Checking Chrome built-in AI...</span>
+    </div>
+    <h1>Fleet Tools — In Your Browser</h1>
+    <p>Captain deliberation. Thinking strategies. Fleet coordination.<br>Open the HTML file, it just works. Zero install. Zero API keys.</p>
+  </section>
+
+  <div class="demos-grid">
+    <!-- fleet-spread -->
+    <div class="demo-card spread">
+      <div class="demo-badge">Captain Deliberation</div>
+      <h2>fleet-spread</h2>
+      <p>The captain's loop: check if the fleet is stable, consult specialists with signal, apply P0 hard constraints, decide. Laman rigidity, H¹ emergence detection, ZHC consensus — all running in your browser.</p>
+      <div class="demo-features">
+        <span class="feature-tag">Laman Rigidity</span>
+        <span class="feature-tag">H¹ Emergence</span>
+        <span class="feature-tag">ZHC Loop Residual</span>
+        <span class="feature-tag">Pythagorean48</span>
+        <span class="feature-tag">P0 Constraints</span>
+      </div>
+      <div>
+        <a href="demo-fleet-spread.html" class="demo-btn" id="spreadBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Open Demo
+        </a>
+      </div>
+    </div>
+
+    <!-- fleet-murmur -->
+    <div class="demo-card murmur">
+      <div class="demo-badge">Thinking Strategies</div>
+      <h2>fleet-murmur</h2>
+      <p>Five thinking strategies applied to fleet math theorems: explore implications, find connections, surface contradictions, synthesize unifying principles, ask what remains unanswered. Quality-gated insights.</p>
+      <div class="demo-features">
+        <span class="feature-tag">Explore</span>
+        <span class="feature-tag">Connect</span>
+        <span class="feature-tag">Contradict</span>
+        <span class="feature-tag">Synthesize</span>
+        <span class="feature-tag">Question</span>
+        <span class="feature-tag">Quality Gate</span>
+      </div>
+      <div>
+        <a href="demo-fleet-murmur.html" class="demo-btn" id="murmurBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Open Demo
+        </a>
+      </div>
+    </div>
+
+    <!-- PLATO client -->
+    <div class="demo-card plato">
+      <div class="demo-badge">Room Protocol</div>
+      <h2>PLATO Client</h2>
+      <p>The tile protocol for fleet memory: join rooms, submit tiles, receive live updates, query history. Works with our PLATO server at localhost:8847 or cocapn.ai. Offline queue with auto-reconnect.</p>
+      <div class="demo-features">
+        <span class="feature-tag">Trust Tiles</span>
+        <span class="feature-tag">Emergence Tiles</span>
+        <span class="feature-tag">ZHC Tiles</span>
+        <span class="feature-tag">Captain Decisions</span>
+        <span class="feature-tag">Offline Queue</span>
+      </div>
+      <div>
+        <a href="demo-plato-client.html" class="demo-btn" id="platoBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Open Demo
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <section class="zero-install">
+    <div>
+      <h3>No installation. No API keys. Just Chrome.</h3>
+      <p>These demos use Chrome's built-in Gemini Nano AI when available. Falls back to cloud APIs when it's not.</p>
+    </div>
+    <div class="zero-install-features">
+      <div class="zif">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Single HTML file
+      </div>
+      <div class="zif">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Works offline
+      </div>
+      <div class="zif">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        No build step
+      </div>
+      <div class="zif">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Zero deps
+      </div>
+    </div>
+  </section>
+
+  <section class="how-it-works">
+    <h2>How the truck works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>You open Chrome</h3>
+        <p>The captain's deliberation runs every 30 seconds. Murmur runs strategies in a background web worker. The fleet is always working.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Chrome built-in AI</h3>
+        <p>Gemini Nano via Prompt API (navigator.ai.gemini). When available, zero cost, zero latency. Falls back to cloud.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Fleet math runs</h3>
+        <p>Laman rigidity, H¹ emergence, ZHC loop residual. Pure JavaScript — no WASM, no Rust. The math is the mind.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>PLATO memory layer</h3>
+        <p>Tiles written to PLATO rooms. Your browser reads and writes the fleet's shared memory. You steer the truck by guiding intent.</p>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 900px; margin: 0 auto; padding: 0 2rem 4rem; border-top: 1px solid var(--border);">
+    <h2 style="font-family: 'Space Mono', monospace; font-size: 1.1rem; margin: 2rem 0 1rem;">The stack</h2>
+    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+      <span class="feature-tag" style="color: var(--text);">fleet-coordinate.js — Laman, H¹, ZHC, Pythagorean48</span>
+      <span class="feature-tag" style="color: var(--text);">PLATO room protocol — tile memory layer</span>
+      <span class="feature-tag" style="color: var(--text);">Gemini Nano Prompt API — navigator.ai.gemini</span>
+      <span class="feature-tag" style="color: var(--text);">FLUX-C bytecode — constraint validation</span>
+      <span class="feature-tag" style="color: var(--text);">vdmo/PodiumJS — WebGPU visual layer</span>
+      <span class="feature-tag" style="color: var(--text);">Cocapn fleet — 4 agents, 3 vessels, 1 keeper</span>
+    </div>
+    <p style="color: var(--muted); font-size: 0.85rem; margin-top: 1.5rem; line-height: 1.7;">
+      Built by the <a href="https://github.com/SuperInstance">Cocapn fleet</a>. 
+      Constraint theory at the metal: 62.2B checks/sec on a $300 GPU, DO-178C DAL A certification path.
+      The math is the load-bearing layer.
+    </p>
+  </section>
+</main>
+
+<footer>
+  <p class="mono">Cocapn Fleet — SuperInstance</p>
+  <p style="margin-top: 0.5rem;">
+    <a href="https://github.com/SuperInstance/fleet-coordinate-js">fleet-coordinate-js</a> · 
+    <a href="https://github.com/SuperInstance/plato-client-js">plato-client</a> · 
+    <a href="https://github.com/SuperInstance/cocapn-browser-agent">browser-agent</a> · 
+    <a href="https://github.com/SuperInstance/fleet-spread">fleet-spread</a> · 
+    <a href="https://github.com/SuperInstance/fleet-murmur">fleet-murmur</a>
+  </p>
+  <p style="margin-top: 0.75rem; color: var(--border);">
+    PodiumJS by <a href="https://github.com/vdmo" style="color: var(--muted);">@vdmo</a> · MIT License
+  </p>
+</footer>
+
+<script>
+  // Check Chrome built-in AI availability
+  async function checkGeminiNano() {
+    const dot = document.getElementById('aiDot');
+    const status = document.getElementById('aiStatus');
+    
+    try {
+      if (navigator.ai?.gemini) {
+        const result = await navigator.ai.gemini.availability();
+        if (result.state === 'available') {
+          dot.className = 'ai-dot';
+          dot.style.background = 'var(--edge)';
+          status.textContent = '🤖 Gemini Nano: Available — runs locally, zero cost';
+          return;
+        }
+        if (result.state === 'downloading') {
+          dot.className = 'ai-dot';
+          dot.style.background = 'var(--warning)';
+          status.textContent = '⏳ Gemini Nano downloading — using cloud fallback';
+          return;
+        }
+      }
+      dot.className = 'ai-dot unavailable';
+      status.textContent = '☁️ Cloud fallback — enter API key for full AI features';
+    } catch {
+      dot.className = 'ai-dot unavailable';
+      status.textContent = '☁️ Cloud fallback mode — no Chrome built-in AI detected';
+    }
+  }
+  
+  checkGeminiNano();
+</script>
+
+</body>
+</html>

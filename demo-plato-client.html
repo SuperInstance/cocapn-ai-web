@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PLATO Room Protocol Demo — Browser-Native Fleet Memory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --trust: #3b82f6;
+    --emergence: #eab308;
+    --zhc: #22c55e;
+    --captain: #a855f7;
+    --inquiry: #06b6d4;
+    --danger: #f85149;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 16px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .input-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .input-group label {
+    color: var(--text-muted);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  input, select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    outline: none;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--trust);
+  }
+
+  select {
+    cursor: pointer;
+  }
+
+  .status-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Space Mono', monospace;
+    border: 1px solid var(--border);
+  }
+
+  .status-badge.connected {
+    border-color: var(--zhc);
+    color: var(--zhc);
+  }
+
+  .status-badge.offline {
+    border-color: var(--emergence);
+    color: var(--emergence);
+    background: rgba(234, 179, 8, 0.1);
+  }
+
+  .status-badge.error {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* Grid layout */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .panel-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .btn:hover { opacity: 0.85; }
+  .btn:active { opacity: 0.7; }
+
+  .btn-primary {
+    background: var(--trust);
+    color: #fff;
+  }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  /* Tile Builder */
+  .tile-builder-grid {
+    display: grid;
+    grid-template-columns: 140px 1fr 1fr 140px auto;
+    gap: 10px;
+    align-items: end;
+    margin-bottom: 12px;
+  }
+
+  @media (max-width: 700px) {
+    .tile-builder-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .tile-builder-grid .btn { grid-column: span 2; }
+  }
+
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+  }
+  .field input, .field select {
+    width: 100%;
+  }
+
+  /* JSON Preview */
+  .json-preview {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    min-height: 60px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .json-key { color: var(--trust); }
+  .json-string { color: var(--zhc); }
+  .json-number { color: var(--emergence); }
+  .json-bool { color: var(--captain); }
+
+  /* Room Status */
+  .room-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .stat-card {
+    background: var(--surface2);
+    border-radius: 6px;
+    padding: 12px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* Agent pills */
+  .agent-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .agent-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    color: var(--text-muted);
+  }
+
+  /* Tile feed */
+  .tile-feed {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    max-height: 320px;
+    overflow-y: auto;
+    min-height: 120px;
+  }
+
+  .tile-feed:empty::after {
+    content: 'No tiles yet. Submit your first tile or connect to a live server.';
+    display: block;
+    padding: 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  .tile-item {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 12px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .tile-item:last-child { border-bottom: none; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .tile-type-badge {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .tile-type-badge.trust { background: rgba(59,130,246,0.2); color: var(--trust); }
+  .tile-type-badge.emergence { background: rgba(234,179,8,0.2); color: var(--emergence); }
+  .tile-type-badge.zhc { background: rgba(34,197,94,0.2); color: var(--zhc); }
+  .tile-type-badge.captain { background: rgba(168,85,247,0.2); color: var(--captain); }
+  .tile-type-badge.inquiry { background: rgba(6,182,212,0.2); color: var(--inquiry); }
+
+  .tile-body { flex: 1; min-width: 0; }
+
+  .tile-summary {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text);
+    word-break: break-word;
+  }
+
+  .tile-meta {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .tile-synced {
+    font-size: 9px;
+    color: var(--zhc);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .tile-queued {
+    font-size: 9px;
+    color: var(--emergence);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* Protocol reference */
+  .protocol-ref {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    line-height: 2;
+    color: var(--text-muted);
+  }
+
+  .protocol-ref .method {
+    display: inline-block;
+    width: 80px;
+    font-weight: 700;
+    color: var(--trust);
+  }
+
+  .protocol-ref .method.post { color: var(--zhc); }
+  .protocol-ref .path { color: var(--text); }
+
+  /* Code panel */
+  .code-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .code-tab {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+
+  .code-tab.active {
+    background: var(--surface);
+    color: var(--text);
+    border-color: var(--trust);
+  }
+
+  .code-panel pre {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    line-height: 1.7;
+    overflow-x: auto;
+    white-space: pre;
+    color: var(--text-muted);
+  }
+
+  .code-panel pre .kw { color: var(--captain); }
+  .code-panel pre .fn { color: var(--trust); }
+  .code-panel pre .str { color: var(--zhc); }
+  .code-panel pre .cmt { color: var(--text-muted); font-style: italic; }
+  .code-panel pre .num { color: var(--emergence); }
+
+  /* Queue indicator */
+  .queue-bar {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(234, 179, 8, 0.1);
+    border: 1px solid var(--emergence);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    font-family: 'Space Mono', monospace;
+    color: var(--emergence);
+  }
+
+  .queue-bar.visible { display: flex; }
+
+  .queue-drain-btn {
+    margin-left: auto;
+    padding: 2px 8px;
+    background: var(--emergence);
+    color: var(--bg);
+    border: none;
+    border-radius: 4px;
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  /* Refresh bar */
+  .refresh-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .refresh-bar .info {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .refresh-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+  }
+
+  /* Tabs for sub-panels */
+  .main-tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+
+  .main-tab {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-family: 'Space Mono', monospace;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+
+  .main-tab.active {
+    background: var(--surface);
+    color: var(--text);
+    border-color: var(--border);
+    border-bottom-color: var(--surface);
+    margin-bottom: -1px;
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .actions-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-title">🏠 PLATO Room Protocol Demo — Browser-Native Fleet Memory</div>
+    <div class="header-controls">
+      <div class="input-group">
+        <label>Server</label>
+        <input type="text" id="serverUrl" value="http://localhost:8847" style="width:180px">
+      </div>
+      <div class="input-group">
+        <label>Room</label>
+        <input type="text" id="roomName" value="fleet_communication" style="width:160px">
+      </div>
+      <div class="status-badge connected" id="statusBadge">
+        <div class="status-dot"></div>
+        <span id="statusText">Connecting…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Queue bar -->
+  <div class="queue-bar" id="queueBar">
+    <span>🟡 Offline — <span id="queueCount">0</span> tiles queued</span>
+    <button class="queue-drain-btn" id="drainQueue">Retry now</button>
+  </div>
+
+  <!-- Main tab bar -->
+  <div class="main-tabs">
+    <div class="main-tab active" data-tab="builder">Tile Builder</div>
+    <div class="main-tab" data-tab="history">Room History</div>
+    <div class="main-tab" data-tab="code">Client Code</div>
+    <div class="main-tab" data-tab="protocol">Protocol</div>
+  </div>
+
+  <!-- TAB: Tile Builder -->
+  <div class="tab-content active" id="tab-builder">
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-title">Tile Builder — Submit to PLATO Room</div>
+
+      <div class="tile-builder-grid">
+        <div class="field">
+          <label>Type</label>
+          <select id="tileType" onchange="onTileTypeChange()">
+            <option value="trust">trust</option>
+            <option value="emergence">emergence</option>
+            <option value="zhc">zhc</option>
+            <option value="captain_decision">captain_decision</option>
+            <option value="inquiry">inquiry</option>
+          </select>
+        </div>
+        <div class="field" id="f1-field">
+          <label>Field 1</label>
+          <input type="text" id="f1" placeholder="from / beta_one / loop_residual / decision / question">
+        </div>
+        <div class="field" id="f2-field">
+          <label>Field 2</label>
+          <input type="text" id="f2" placeholder="to / V / cycle_id / reason / context">
+        </div>
+        <div class="field" id="f3-field">
+          <label>Field 3</label>
+          <input type="text" id="f3" placeholder="value / E / consensus / consulted / specialists">
+        </div>
+        <button class="btn btn-primary" onclick="submitTile()">Submit Tile</button>
+      </div>
+
+      <div class="json-preview" id="jsonPreview">// Tile JSON will appear here as you type</div>
+    </div>
+
+    <!-- Room status inline -->
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-title">Room Status</div>
+      <div class="room-stats">
+        <div class="stat-card">
+          <div class="stat-label">Agents in Room</div>
+          <div class="stat-value" id="agentCount">—</div>
+          <div class="agent-list" id="agentList"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Tiles</div>
+          <div class="stat-value" id="tileCount">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live feed -->
+    <div class="panel">
+      <div class="panel-title">Recent Tiles (live feed)</div>
+      <div class="tile-feed" id="tileFeed"></div>
+    </div>
+  </div>
+
+  <!-- TAB: History -->
+  <div class="tab-content" id="tab-history">
+    <div class="actions-bar">
+      <span class="info">Fetch full tile history from server</span>
+      <div class="refresh-actions">
+        <button class="btn btn-secondary" onclick="fetchHistory()">↻ Fetch History</button>
+        <div class="input-group">
+          <label>Limit</label>
+          <input type="number" id="historyLimit" value="50" style="width:80px">
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Room History — <span id="historyRoom">fleet_communication</span></div>
+      <div class="tile-feed" id="historyFeed"><span style="color:var(--text-muted);font-size:12px">Click "Fetch History" to load tiles from the server.</span></div>
+    </div>
+  </div>
+
+  <!-- TAB: Client Code -->
+  <div class="tab-content" id="tab-code">
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-title">@cocapn/plato-client — Usage Examples</div>
+      <div class="code-tabs">
+        <div class="code-tab active" data-code="basic" onclick="showCodeTab(this)">Basic</div>
+        <div class="code-tab" data-code="streaming" onclick="showCodeTab(this)">Streaming</div>
+        <div class="code-tab" data-code="trust" onclick="showCodeTab(this)">Trust Tiles</div>
+        <div class="code-tab" data-code="emergence" onclick="showCodeTab(this)">Emergence</div>
+      </div>
+      <div class="code-panel" id="codePanel">
+        <pre id="codeContent"></pre>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Install</div>
+      <div class="code-panel">
+        <pre style="color:var(--text)">npm install @cocapn/plato-client</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Protocol -->
+  <div class="tab-content" id="tab-protocol">
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-title">PLATO REST API — Room Protocol v1</div>
+      <div class="protocol-ref">
+        <div><span class="method">GET</span>  <span class="path">/room/{room}/status</span>        → { agents, tile_count }</div>
+        <div><span class="method">GET</span>  <span class="path">/room/{room}/history?limit=N</span> → [tiles]</div>
+        <div><span class="method post">POST</span> <span class="path">/room/{room}/tiles</span>      → { id }</div>
+        <div><span class="method">GET</span>  <span class="path">/room/{room}/tiles/stream</span>  → SSE / long-poll</div>
+      </div>
+    </div>
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-title">Tile Schema — All Types</div>
+      <div class="protocol-ref" style="font-size:10px">
+        <div style="margin-bottom:8px;font-weight:700">trust</div>
+        <div>{ from: string, to: string, value: number (0–1) }</div>
+        <div style="margin-top:12px;margin-bottom:8px;font-weight:700">emergence</div>
+        <div>{ beta_one: number, V: number, E: number, threshold: number, detected: boolean }</div>
+        <div style="margin-top:12px;margin-bottom:8px;font-weight:700">zhc (Zero-Hopping Consensus)</div>
+        <div>{ loop_residual: number, cycle_id: string, consensus_reached: boolean }</div>
+        <div style="margin-top:12px;margin-bottom:8px;font-weight:700">captain_decision</div>
+        <div>{ decision: string, reason: string, consulted: string[] }</div>
+        <div style="margin-top:12px;margin-bottom:8px;font-weight:700">inquiry</div>
+        <div>{ question: string, context: string, specialists_consulted: string[] }</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Tile Response Shape</div>
+      <div class="protocol-ref">
+        <div>{ id: string, room: string, type: string, data: object, timestamp: number, synced: boolean }</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────────────────────────────────────
+let isOnline = false;
+let tiles = [];            // all tiles (local + synced)
+let queuedTiles = [];      // offline queue
+let streamController = null;
+let pollInterval = null;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tile schemas
+// ─────────────────────────────────────────────────────────────────────────────
+const SCHEMAS = {
+  trust: {
+    fields: ['from', 'to', 'value'],
+    placeholders: ['alice', 'bob', '0.85'],
+    labels: ['From', 'To', 'Value (0–1)']
+  },
+  emergence: {
+    fields: ['beta_one', 'V', 'E', 'threshold', 'detected'],
+    placeholders: ['16', '10', '25', '8', 'true'],
+    labels: ['β₁', 'V', 'E', 'Threshold', 'Detected'],
+    fieldCount: 5
+  },
+  zhc: {
+    fields: ['loop_residual', 'cycle_id', 'consensus_reached'],
+    placeholders: ['0.0001', 'A-B-C', 'true'],
+    labels: ['Loop Residual', 'Cycle ID', 'Consensus Reached']
+  },
+  captain_decision: {
+    fields: ['decision', 'reason', 'consulted'],
+    placeholders: ['stable', 'Laman-rigid', 'geometric,geometric'],
+    labels: ['Decision', 'Reason', 'Consulted']
+  },
+  inquiry: {
+    fields: ['question', 'context', 'specialists_consulted'],
+    placeholders: ['Is this fleet rigid?', 'V=5,E=7,C=1', ''],
+    labels: ['Question', 'Context', 'Specialists']
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Tab switching
+  document.querySelectorAll('.main-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  onTileTypeChange();
+  updateJSONPreview();
+  connectToServer();
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tile type change
+// ─────────────────────────────────────────────────────────────────────────────
+function onTileTypeChange() {
+  const type = document.getElementById('tileType').value;
+  const schema = SCHEMAS[type];
+  const fields = ['f1', 'f2', 'f3', 'f4', 'f5'];
+  const labels = ['f1-field', 'f2-field', 'f3-field', 'f4-field', 'f5-field'];
+
+  // Hide all fields first
+  fields.forEach(f => { const el = document.getElementById(f); if (el) el.style.display = 'none'; });
+  labels.forEach(l => { const el = document.getElementById(l); if (el) el.style.display = 'none'; });
+
+  // Show needed fields
+  const count = schema.fieldCount || schema.fields.length;
+  for (let i = 0; i < count; i++) {
+    const inp = document.getElementById(fields[i]);
+    const lbl = document.getElementById(labels[i]);
+    if (inp) {
+      inp.style.display = '';
+      inp.placeholder = schema.placeholders[i];
+      const labelEl = lbl ? lbl.querySelector('label') : null;
+      if (labelEl) labelEl.textContent = schema.labels[i];
+    }
+    if (lbl) lbl.style.display = '';
+  }
+
+  updateJSONPreview();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// JSON preview
+// ─────────────────────────────────────────────────────────────────────────────
+function updateJSONPreview() {
+  const type = document.getElementById('tileType').value;
+  const schema = SCHEMAS[type];
+  const fields = ['f1', 'f2', 'f3', 'f4', 'f5'];
+  const data = {};
+  const count = schema.fieldCount || schema.fields.length;
+  for (let i = 0; i < count; i++) {
+    const val = document.getElementById(fields[i]).value;
+    if (val === '') continue;
+    const key = schema.fields[i];
+    if (key === 'value' || key === 'loop_residual') {
+      data[key] = parseFloat(val);
+    } else if (key === 'detected' || key === 'consensus_reached') {
+      data[key] = val === 'true';
+    } else if (key === 'consulted' || key === 'specialists_consulted') {
+      data[key] = val ? val.split(',').map(s => s.trim()) : [];
+    } else {
+      data[key] = val;
+    }
+  }
+
+  const tile = { type, data };
+  document.getElementById('jsonPreview').textContent = JSON.stringify(tile, null, 2);
+}
+
+// Attach listener to all field inputs
+['f1','f2','f3','f4','f5'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', updateJSONPreview);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Submit tile
+// ─────────────────────────────────────────────────────────────────────────────
+function submitTile() {
+  const type = document.getElementById('tileType').value;
+  const schema = SCHEMAS[type];
+  const fields = ['f1', 'f2', 'f3', 'f4', 'f5'];
+  const data = {};
+  const count = schema.fieldCount || schema.fields.length;
+  for (let i = 0; i < count; i++) {
+    const val = document.getElementById(fields[i]).value;
+    if (!val && schema.fields[i] !== 'specialists_consulted') continue;
+    const key = schema.fields[i];
+    if (key === 'value' || key === 'loop_residual') {
+      data[key] = parseFloat(val);
+    } else if (key === 'detected' || key === 'consensus_reached') {
+      data[key] = val === 'true';
+    } else if (key === 'consulted' || key === 'specialists_consulted') {
+      data[key] = val ? val.split(',').map(s => s.trim()) : [];
+    } else {
+      data[key] = val;
+    }
+  }
+
+  const room = document.getElementById('roomName').value;
+  const tile = {
+    id: 'local-' + Date.now(),
+    room,
+    type,
+    data,
+    timestamp: Date.now(),
+    synced: false
+  };
+
+  tiles.unshift(tile);
+  renderTiles();
+  drainQueue(); // try to sync
+
+  // Clear inputs
+  fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  updateJSONPreview();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Server communication
+// ─────────────────────────────────────────────────────────────────────────────
+function getServer() {
+  return document.getElementById('serverUrl').value.replace(/\/$/, '');
+}
+
+async function connectToServer() {
+  const server = getServer();
+  updateStatus('connecting');
+
+  try {
+    const res = await Promise.race([
+      fetch(`${server}/room/${document.getElementById('roomName').value}/status`),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+    ]);
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    isOnline = true;
+    updateStatus('online', json);
+    startPolling();
+  } catch (e) {
+    isOnline = false;
+    updateStatus('offline');
+    startOfflineQueueDrain();
+  }
+}
+
+function startPolling() {
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(async () => {
+    try {
+      const server = getServer();
+      const room = document.getElementById('roomName').value;
+      const res = await fetch(`${server}/room/${room}/status`);
+      if (!res.ok) throw new Error();
+      const json = await res.json();
+      isOnline = true;
+      updateStatus('online', json);
+    } catch (e) {
+      isOnline = false;
+      updateStatus('offline');
+    }
+  }, 5000);
+}
+
+function startOfflineQueueDrain() {
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(async () => {
+    if (queuedTiles.length === 0) return;
+    try {
+      const server = getServer();
+      const room = document.getElementById('roomName').value;
+      const res = await fetch(`${server}/room/${room}/status`);
+      if (!res.ok) throw new Error();
+      isOnline = true;
+      updateStatus('online');
+      drainQueue();
+    } catch (e) {
+      isOnline = false;
+      updateStatus('offline');
+    }
+  }, 8000);
+}
+
+async function drainQueue() {
+  if (queuedTiles.length === 0 || !isOnline) return;
+  const server = getServer();
+  const room = document.getElementById('roomName').value;
+  const toSync = [...queuedTiles];
+  queuedTiles = [];
+  updateQueueBar();
+
+  for (const tile of toSync) {
+    try {
+      const res = await fetch(`${server}/room/${room}/tiles`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: tile.type, data: tile.data })
+      });
+      if (res.ok) {
+        tile.synced = true;
+        tile.id = (await res.json()).id;
+      } else {
+        queuedTiles.push(tile);
+      }
+    } catch (e) {
+      queuedTiles.push(tile);
+    }
+  }
+  updateQueueBar();
+  renderTiles();
+}
+
+async function fetchHistory() {
+  const server = getServer();
+  const room = document.getElementById('roomName').value;
+  const limit = parseInt(document.getElementById('historyLimit').value) || 50;
+  const feed = document.getElementById('historyFeed');
+  feed.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Loading…</span>';
+
+  try {
+    const res = await fetch(`${server}/room/${room}/history?limit=${limit}`);
+    if (!res.ok) throw new Error();
+    const history = await res.json();
+    document.getElementById('historyRoom').textContent = room;
+    renderHistoryFeed(feed, history);
+  } catch (e) {
+    feed.innerHTML = '<span style="color:var(--danger);font-size:12px">Failed to fetch history. Server unreachable.</span>';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Status & queue bar
+// ─────────────────────────────────────────────────────────────────────────────
+function updateStatus(state, data) {
+  const badge = document.getElementById('statusBadge');
+  const text = document.getElementById('statusText');
+
+  badge.className = 'status-badge';
+  if (state === 'online') {
+    badge.classList.add('connected');
+    text.textContent = '● Connected';
+    if (data) {
+      document.getElementById('agentCount').textContent = data.agents ? data.agents.length : '—';
+      document.getElementById('tileCount').textContent = data.tile_count || '—';
+      const list = document.getElementById('agentList');
+      list.innerHTML = '';
+      if (data.agents) {
+        data.agents.forEach(a => {
+          const pill = document.createElement('span');
+          pill.className = 'agent-pill';
+          pill.textContent = a;
+          list.appendChild(pill);
+        });
+      }
+    }
+  } else if (state === 'offline') {
+    badge.classList.add('offline');
+    text.textContent = '○ Offline';
+  } else if (state === 'connecting') {
+    badge.classList.add('offline');
+    text.textContent = '◌ Connecting…';
+  }
+}
+
+function updateQueueBar() {
+  const bar = document.getElementById('queueBar');
+  const count = document.getElementById('queueCount');
+  count.textContent = queuedTiles.length;
+  if (queuedTiles.length > 0) {
+    bar.classList.add('visible');
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+document.getElementById('drainQueue').addEventListener('click', () => {
+  if (isOnline) drainQueue();
+  else connectToServer();
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Render tiles
+// ─────────────────────────────────────────────────────────────────────────────
+function renderTiles() {
+  const feed = document.getElementById('tileFeed');
+  feed.innerHTML = '';
+  tiles.slice(0, 50).forEach(tile => feed.appendChild(makeTileEl(tile)));
+}
+
+function renderHistoryFeed(el, history) {
+  el.innerHTML = '';
+  history.slice(0, 200).forEach(tile => el.appendChild(makeTileEl(tile)));
+}
+
+function makeTileEl(tile) {
+  const div = document.createElement('div');
+  div.className = 'tile-item';
+
+  const badge = document.createElement('span');
+  badge.className = 'tile-type-badge ' + tile.type;
+  badge.textContent = tile.type;
+
+  const body = document.createElement('div');
+  body.className = 'tile-body';
+
+  const summary = document.createElement('div');
+  summary.className = 'tile-summary';
+  summary.textContent = summarizeTile(tile);
+
+  const meta = document.createElement('div');
+  meta.className = 'tile-meta';
+  meta.textContent = timeAgo(tile.timestamp);
+
+  body.appendChild(summary);
+  body.appendChild(meta);
+
+  if (tile.synced) {
+    const synced = document.createElement('div');
+    synced.className = 'tile-synced';
+    synced.textContent = '✓ synced';
+    body.appendChild(synced);
+  } else if (!tile.synced && tile.id && tile.id.toString().startsWith('local')) {
+    const queued = document.createElement('div');
+    queued.className = 'tile-queued';
+    queued.textContent = '⏳ queued';
+    body.appendChild(queued);
+  }
+
+  div.appendChild(badge);
+  div.appendChild(body);
+  return div;
+}
+
+function summarizeTile(tile) {
+  const d = tile.data || {};
+  switch (tile.type) {
+    case 'trust': return `${d.from || '?'} → ${d.to || '?'}: ${d.value}`;
+    case 'emergence': return `β₁=${d.beta_one}, V=${d.V}, E=${d.E}, detected=${d.detected}`;
+    case 'zhc': return `loop_residual=${d.loop_residual}, consensus=${d.consensus_reached}`;
+    case 'captain_decision': return `decision=${d.decision}, reason=${d.reason}`;
+    case 'inquiry': return `${d.question}`;
+    default: return JSON.stringify(d);
+  }
+}
+
+function timeAgo(ts) {
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60) return diff + 's ago';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  return Math.floor(diff / 3600) + 'h ago';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Code tabs
+// ─────────────────────────────────────────────────────────────────────────────
+const CODE_EXAMPLES = {
+  basic: `<span class="cmt">// Basic PLATO room connection</span>
+<span class="kw">import</span> { PlatoRoom } <span class="kw">from</span> <span class="str">'@cocapn/plato-client'</span>;
+
+<span class="kw">const</span> room = <span class="kw">new</span> <span class="fn">PlatoRoom</span>({
+  url: <span class="str">'http://localhost:8847'</span>,
+  room: <span class="str">'fleet_communication'</span>,
+  onTile: tile => console.<span class="fn">log</span>(<span class="str">'tile:'</span>, tile)
+});
+
+<span class="kw">await</span> room.<span class="fn">join</span>();
+console.<span class="fn">log</span>(<span class="str">'Joined room:'</span>, room.<span class="fn">getStatus</span>());`,
+
+  streaming: `<span class="cmt">// Streaming tiles via SSE / long-poll</span>
+<span class="kw">import</span> { PlatoRoom } <span class="kw">from</span> <span class="str">'@cocapn/plato-client'</span>;
+
+<span class="kw">const</span> room = <span class="kw">new</span> <span class="fn">PlatoRoom</span>({
+  url: <span class="str">'http://localhost:8847'</span>,
+  room: <span class="str">'fleet_communication'</span>,
+  onTile: tile => console.<span class="fn">log</span>(<span class="str">'incoming:'</span>, tile)
+});
+
+<span class="cmt">// Stream tiles as they arrive (SSE or polling)</span>
+<span class="kw">await</span> room.<span class="fn">startStream</span>();
+
+<span class="cmt">// Stop streaming after 30 seconds</span>
+setTimeout(() => room.<span class="fn">stopStream</span>(), <span class="num">30_000</span>);`,
+
+  trust: `<span class="cmt">// Submit a trust tile</span>
+<span class="kw">import</span> { PlatoRoom, <span class="fn">makeTrustTile</span> } <span class="kw">from</span> <span class="str">'@cocapn/plato-client'</span>;
+
+<span class="kw">const</span> room = <span class="kw">new</span> <span class="fn">PlatoRoom</span>({
+  url: <span class="str">'http://localhost:8847'</span>,
+  room: <span class="str">'fleet_communication'</span>
+});
+
+<span class="kw">await</span> room.<span class="fn">join</span>();
+
+<span class="cmt">// Trust from alice → bob with value 0.85</span>
+<span class="kw">const</span> tile = <span class="fn">makeTrustTile</span>({
+  from: <span class="str">'alice'</span>,
+  to: <span class="str">'bob'</span>,
+  value: <span class="num">0.85</span>
+});
+
+<span class="kw">const</span> result = <span class="kw">await</span> room.<span class="fn">submitTile</span>(tile);
+console.<span class="fn">log</span>(<span class="str">'Trust tile submitted:'</span>, result.id);`,
+
+  emergence: `<span class="cmt">// Submit an emergence detection tile</span>
+<span class="kw">import</span> { PlatoRoom, <span class="fn">makeEmergenceTile</span> } <span class="kw">from</span> <span class="str">'@cocapn/plato-client'</span>;
+
+<span class="kw">const</span> room = <span class="kw">new</span> <span class="fn">PlatoRoom</span>({
+  url: <span class="str">'http://localhost:8847'</span>,
+  room: <span class="str">'fleet_communication'</span>
+});
+
+<span class="kw">await</span> room.<span class="fn">join</span>();
+
+<span class="kw">const</span> tile = <span class="fn">makeEmergenceTile</span>({
+  beta_one: <span class="num">16</span>,
+  V: <span class="num">10</span>,
+  E: <span class="num">25</span>,
+  threshold: <span class="num">8</span>,
+  detected: <span class="kw">true</span>
+});
+
+<span class="kw">await</span> room.<span class="fn">submitTile</span>(tile);`
+};
+
+function showCodeTab(tab) {
+  document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  const code = CODE_EXAMPLES[tab.dataset.code] || '';
+  document.getElementById('codeContent').innerHTML = code;
+}
+
+// Init code panel
+document.getElementById('codeContent').innerHTML = CODE_EXAMPLES.basic;
+</script>
+</body>
+</html>
