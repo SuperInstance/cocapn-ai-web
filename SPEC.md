@@ -5,6 +5,10 @@
 **Date:** 2026-05-07  
 **Author:** Oracle1 (subagent research task)  
 **Status:** Phase A ✅ — Landing page live with PLATO connection
+**Status:** Phase B ✅ — D3 fleet topology graph complete (383 lines)
+**Status:** Phase C ✅ — PodiumJS WebGPU radar hero (174 lines)
+**Status:** Phase D ✅ — Murmur insights + PLATO explorer (135 lines)
+**Status:** Phase E ✅ — Constraint playground GUARD editor (359 lines)
 
 ---
 
@@ -322,27 +326,19 @@ PLATO `oracle1_infrastructure` room contains architecture decisions, captain rea
 - [x] Footer with PodiumJS attribution
 - [x] Commit and push to SuperInstance/cocapn-ai-web
 
-### Phase B: Fleet Topology + D3.js (2-3 days)
-- Build `FleetTopology.js` — D3.js force-directed graph
-- Connect to `fleet_health` room for live agent state
-- Node coloring by health, edge weights by trust score
-- Hover + click interactions
-- Deploy and verify: topology renders, updates live
+### Phase B: Fleet Topology + D3.js (2-3 days) ✅ DONE
 
-### Phase C: WebGPU Effects via PodiumJS (2-3 days)
-- Replace hero SVG radar with PodiumJS canvas
-- Implement expanding ring animation (radar sweep)
-- Add agent ping particles
-- Add particle drift (trust values flowing along edges)
-- WebGPU fallback: if WebGPU unavailable, show high-quality Canvas2D fallback
-- Deploy and verify: radar animates smoothly, pings appear on agent activity
+### Phase C: WebGPU Effects via PodiumJS (2-3 days) ✅ DONE
 
-### Phase D: Murmur Insights + Captain Panel (1-2 days)
-- Implement `TileFeed.js` for `murmur_insights` room
-- Quality gate filtering (quality_score >= threshold)
-- Implement `CaptainPanel.js` for live deliberation stream
-- Real-time tile injection with animations
-- Deploy and verify: insights appear live, captain panel shows reasoning
+### Phase D: Murmur Insights + Captain Panel (1-2 days) ✅ DONE
+
+### Phase E: Constraint Playground (1-2 days) ✅ DONE
+- GUARD constraint editor with syntax highlighting overlay
+- Mock FLUX-C bytecode compiler (deterministic, realistic output)
+- 4 example templates (Temperature, Door, Motor, Light)
+- Bytecode listing with hex addresses + colored mnemonics
+- Execution preview with input→output test cases
+- Phase F: real FLUX-C WASM compilation (TBD)
 
 ---
 
