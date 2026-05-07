@@ -380,6 +380,39 @@
       gap: 0.3rem;
     }
 
+    #fleet-topology .topology-header .live-tag {
+      font-size: 0.75rem;
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    /* Murmur Insights */
+    .murmur-section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 2rem 0; }
+    .insights-container { min-height: 80px; }
+    .murmur-empty { color: var(--muted); font-size: 0.9rem; font-style: italic; padding: 0.5rem 0; }
+    .insight-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; animation: fadeSlideIn 0.4s ease-out; }
+    .insight-meta { display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.5rem; }
+    .quality-badge { background: var(--accent); color: white; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .insight-content { font-size: 0.9rem; line-height: 1.6; color: var(--text); }
+    .insight-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .tag { background: var(--border); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.7rem; color: var(--muted); }
+    @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* PLATO Explorer */
+    .explorer-section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 2rem 0; }
+    .explorer-controls { display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem; }
+    .room-select { padding: 0.5rem 0.75rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.85rem; min-width: 250px; }
+    .load-btn { padding: 0.5rem 1.25rem; background: var(--accent); border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer; }
+    .tile-list { max-height: 400px; overflow-y: auto; }
+    .tile-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; margin-bottom: 0.5rem; }
+    .tile-meta { display: flex; gap: 0.75rem; margin-bottom: 0.3rem; font-size: 0.8rem; }
+    .tile-meta .mono { color: var(--accent); }
+    .tile-meta .ts { color: var(--muted); }
+    .tile-content { font-size: 0.85rem; color: var(--text); line-height: 1.5; }
+    .tile-count { margin-bottom: 0.75rem; font-size: 0.85rem; color: var(--muted); }
+
     /* Responsive */
     @media (max-width: 768px) {
       .stats-bar { gap: 1.5rem; }
@@ -595,6 +628,35 @@
       </div>
     </section>
 
+    <!-- Murmur Insights Live Feed -->
+    <div class="murmur-section" id="murmur-insights">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem">
+        <h3 style="font-size:1.1rem;font-weight:600">Murmur Insights</h3>
+        <span class="live-tag" style="font-size:0.75rem;color:var(--success);display:flex;align-items:center;gap:0.3rem">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block;animation:livepulse 2s infinite"></span>
+          Live · quality ≥ 35%
+        </span>
+      </div>
+      <div id="insights-container" class="insights-container">
+        <div class="murmur-empty">Murmur is thinking... insights will appear here</div>
+      </div>
+    </div>
+
+    <!-- PLATO History Explorer -->
+    <div class="explorer-section" id="plato-explorer">
+      <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:1rem">PLATO History Explorer</h3>
+      <div class="explorer-controls">
+        <select class="room-select">
+          <!-- populated by JS -->
+        </select>
+        <button class="load-btn" type="button">Load</button>
+        <span class="tile-count" style="color:var(--muted);font-size:0.85rem">—</span>
+      </div>
+      <div class="tile-list" style="max-height:400px;overflow-y:auto">
+        <div class="loading">Select a room and click Load</div>
+      </div>
+    </div>
+
     <!-- FLUX Certify CTA -->
     <div class="section-header" id="learn">
       <h2>Start With FLUX Certify</h2>
@@ -693,6 +755,8 @@
   import { PlatoClient } from './app/plato-client.js';
   import { initFleetTopology } from './app/fleet-topology.js';
   import { initRadar } from './app/radar-canvas.js';
+  import { initMurmurInsights } from './app/murmur-insights.js';
+  import { initPlatoExplorer } from './app/plato-explorer.js';
 
   // Initialize WebGPU radar (falls back to CSS radar automatically)
   initRadar('radar-canvas');
@@ -765,6 +829,12 @@
 
   // Initialize fleet topology graph
   initFleetTopology('fleet-graph');
+
+  // Initialize Murmur insights live feed
+  initMurmurInsights('insights-container');
+
+  // Initialize PLATO history explorer
+  initPlatoExplorer('plato-explorer');
 </script>
 </body>
 </html>

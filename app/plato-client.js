@@ -88,4 +88,16 @@ class PlatoClient {
   }
 }
 
+// Standalone convenience functions using a shared instance
+const _shared = new PlatoClient();
+
+export async function getTiles(roomName) {
+  return _shared.getTiles(roomName);
+}
+
+export async function getRooms() {
+  return _shared.getRooms();
+}
+
+// Re-export class for direct use
 export { PlatoClient, PLATO_BASE };
