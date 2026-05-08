@@ -10,15 +10,12 @@
 body{background:var(--bg);color:#ccd;font-family:'SF Mono','Fira Code',monospace;overflow:hidden;height:100vh}
 #game{width:100%;height:100vh;position:relative}
 canvas{display:block;width:100%;height:100%}
-
 #hud{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none}
 #hud>*{pointer-events:auto}
-
-#title{position:absolute;top:12px;left:50%;transform:translateX(-50%);text-align:center;z-index:10}
+#title{position:absolute;top:12px;left:50%;transform:translateX(-50%);text-align:center;z-index:10;opacity:0;transition:opacity 1s ease 1.5s}
+#title.visible{opacity:1}
 #title h1{font-size:1.3em;font-weight:700;color:var(--safe);letter-spacing:1px}
 #title p{font-size:0.65em;color:var(--muted);margin-top:2px}
-
-/* Stats panels */
 .stats{position:absolute;top:60px;width:200px;padding:12px;background:rgba(0,0,0,0.75);border-radius:10px;border:1px solid rgba(255,255,255,0.06);font-size:0.7em;backdrop-filter:blur(4px)}
 .stats-left{left:12px;border-left:3px solid var(--safe)}
 .stats-right{right:12px;border-left:3px solid var(--danger)}
@@ -26,57 +23,37 @@ canvas{display:block;width:100%;height:100%}
 .stats .val{font-size:1.2em;font-weight:700}
 .stats .label{color:var(--muted);font-size:0.6em}
 .stats .row{margin-bottom:6px}
-.good{color:var(--safe)}
-.bad{color:var(--danger)}
-
-/* Narrative overlay */
-#narrative{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:15;transition:opacity 0.8s ease}
+.good{color:var(--safe)}.bad{color:var(--danger)}
+#narrative{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:15}
 #narrative .line{font-size:1.3em;font-weight:700;color:#fff;text-shadow:0 0 30px rgba(0,0,0,0.9),0 0 60px rgba(0,0,0,0.6);opacity:0;transition:opacity 0.6s ease;white-space:nowrap}
 #narrative .line.visible{opacity:1}
-
-/* Code compactness */
 #compact{position:absolute;bottom:70px;left:50%;transform:translateX(-50%);text-align:center;font-size:0.6em;background:rgba(0,0,0,0.75);padding:10px 20px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);min-width:340px;backdrop-filter:blur(4px)}
 #compact h4{font-size:0.8em;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
 .byte-row{display:flex;align-items:center;gap:8px;margin:4px 0;justify-content:center}
 .byte-bar{height:12px;border-radius:3px;transition:width 0.3s ease}
 .byte-label{font-size:0.7em;color:var(--muted);min-width:140px;text-align:left}
 .byte-size{font-size:0.8em;font-weight:700}
-
-/* Power meter */
 #power{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);text-align:center;background:rgba(0,0,0,0.75);padding:8px 20px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);backdrop-filter:blur(4px);max-width:500px}
 #power .summary{font-size:0.7em;line-height:1.5}
 #power .detail{font-size:0.6em;color:var(--muted);margin-top:2px}
-
-/* Outcome banner */
 #outcome{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;display:none;z-index:20;background:rgba(0,0,0,0.9);padding:32px;border-radius:16px;border:1px solid rgba(255,255,255,0.1)}
 #outcome h2{font-size:1.8em;margin-bottom:8px}
 #outcome p{font-size:0.8em;color:var(--muted);max-width:420px;line-height:1.6}
 #outcome button{margin-top:16px;background:var(--safe);color:var(--bg);border:none;padding:10px 28px;border-radius:6px;font-family:inherit;font-size:0.9em;font-weight:600;cursor:pointer}
-
-/* Mobile responsive */
-@media (max-width: 768px) {
+@media(max-width:768px){
   .stats{width:140px;padding:8px;font-size:0.6em;top:50px}
-  .stats-left{left:6px}
-  .stats-right{right:6px}
-  .stats .val{font-size:1em}
+  .stats-left{left:6px}.stats-right{right:6px}
   #title h1{font-size:1em}
   #narrative .line{font-size:0.9em}
   #compact{bottom:60px;min-width:260px;padding:8px 12px}
   #power{bottom:6px;max-width:95vw;padding:6px 12px}
-  #power .summary{font-size:0.6em}
-  #power .detail{font-size:0.5em}
 }
-@media (max-width: 480px) {
+@media(max-width:480px){
   .stats{width:110px;padding:6px;font-size:0.55em;top:44px}
   .stats .row{margin-bottom:3px}
-  .stats h3{font-size:0.6em;margin-bottom:4px}
   #title h1{font-size:0.85em}
-  #title p{font-size:0.55em}
   #narrative .line{font-size:0.75em}
   #compact{bottom:50px;min-width:200px}
-  #compact h4{font-size:0.65em}
-  .byte-label{min-width:100px;font-size:0.6em}
-  .byte-size{font-size:0.65em}
 }
 </style>
 </head>
@@ -84,11 +61,7 @@ canvas{display:block;width:100%;height:100%}
 <div id="game">
 <canvas id="c"></canvas>
 <div id="hud">
-  <div id="title">
-    <h1>⚓ Navigate the Narrows</h1>
-    <p>Same route. Same boat. Different math.</p>
-  </div>
-
+  <div id="title"><h1>⚓ Navigate the Narrows</h1><p>Same route. Same boat. Different math.</p></div>
   <div class="stats stats-left">
     <h3 class="good">Eisenstein E12</h3>
     <div class="row"><div class="label">Waypoints</div><div class="val good" id="e-wp">0 / 12</div></div>
@@ -96,7 +69,6 @@ canvas{display:block;width:100%;height:100%}
     <div class="row"><div class="label">Power used</div><div class="val good" id="e-pwr">0 mJ</div></div>
     <div class="row"><div class="label">Status</div><div class="val good" id="e-status">Underway</div></div>
   </div>
-
   <div class="stats stats-right">
     <h3 class="bad">IEEE 754 Float</h3>
     <div class="row"><div class="label">Waypoints</div><div class="val bad" id="f-wp">0 / 12</div></div>
@@ -104,447 +76,173 @@ canvas{display:block;width:100%;height:100%}
     <div class="row"><div class="label">Power used</div><div class="val bad" id="f-pwr">0 mJ</div></div>
     <div class="row"><div class="label">Status</div><div class="val bad" id="f-status">Underway</div></div>
   </div>
-
   <div id="narrative">
-    <div class="line" id="nar-0">Both boats start at the harbor mouth</div>
+    <div class="line" id="nar-0">Both boats enter the channel</div>
     <div class="line" id="nar-1">The channel narrows…</div>
     <div class="line" id="nar-2">Float boat is drifting off course…</div>
-    <div class="line" id="nar-3">E12 boat: still on the exact path</div>
-    <div class="line" id="nar-4">💥 Float boat hits a rock!</div>
-    <div class="line" id="nar-5">⚓ E12 boat reaches harbor safely</div>
+    <div class="line" id="nar-3">E12 boat: exactly on the dead-reckoning path</div>
+    <div class="line" id="nar-4">💥 Float boat grounded — 0.003 rad of accumulated drift</div>
+    <div class="line" id="nar-5">⚓ E12 boat reaches harbor — zero drift, 4 bytes per fix</div>
   </div>
-
   <div id="compact">
     <h4>Bytes per navigation fix</h4>
-    <div class="byte-row">
-      <span class="byte-size good">4 B</span>
-      <div class="byte-bar" id="bar-e" style="width:40px;background:var(--safe)"></div>
-      <span class="byte-label">E12: INT32 × 2 — exact integer add</span>
-    </div>
-    <div class="byte-row">
-      <span class="byte-size bad">16 B</span>
-      <div class="byte-bar" id="bar-f" style="width:160px;background:var(--danger)"></div>
-      <span class="byte-label">Float: F64 × 2 — IEEE 754 multiply + round</span>
-    </div>
+    <div class="byte-row"><span class="byte-size good">4 B</span><div class="byte-bar" style="width:40px;background:var(--safe)"></div><span class="byte-label">E12: INT32 × 2 — exact integer add</span></div>
+    <div class="byte-row"><span class="byte-size bad">16 B</span><div class="byte-bar" style="width:160px;background:var(--danger)"></div><span class="byte-label">Float: F64 × 2 — multiply + round</span></div>
   </div>
-
   <div id="power">
-    <div class="summary">
-      <span class="good" id="pwr-e">E12: 0.0 mJ — enough for 2,500 more fixes</span><br>
-      <span class="bad" id="pwr-f">Float: 0.0 mJ — and still drifting</span>
-    </div>
-    <div class="detail" id="pwr-detail">4× less memory · 4× less bus traffic · zero drift</div>
+    <div class="summary"><span class="good" id="pwr-e">E12: 0.0 mJ</span><br><span class="bad" id="pwr-f">Float: 0.0 mJ</span></div>
+    <div class="detail">4× less memory · 4× less bus traffic · zero drift</div>
   </div>
-
-  <div id="outcome">
-    <h2 id="out-title"></h2>
-    <p id="out-text"></p>
-    <button onclick="restart()">Navigate Again</button>
-  </div>
+  <div id="outcome"><h2 id="out-title"></h2><p id="out-text"></p><button onclick="restart()">↻ Navigate Again</button></div>
 </div>
 </div>
-
 <script>
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-let W, H;
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+let W,H;
+function resize(){W=canvas.width=window.innerWidth*2;H=canvas.height=window.innerHeight*2}
+resize();window.addEventListener('resize',resize);
 
-function resize() {
-  W = canvas.width = window.innerWidth * 2;
-  H = canvas.height = window.innerHeight * 2;
-}
-resize();
-window.addEventListener('resize', resize);
+const CHANNEL_WIDTH=40;
+const waypoints=[{x:100,y:850},{x:200,y:750},{x:320,y:680},{x:400,y:600},{x:480,y:520},{x:520,y:420},{x:580,y:320},{x:650,y:260},{x:730,y:200},{x:800,y:160},{x:870,y:130},{x:950,y:110}];
+const rocks=[{x:150,y:700,r:25},{x:280,y:720,r:30},{x:350,y:750,r:20},{x:420,y:670,r:28},{x:370,y:640,r:22},{x:500,y:580,r:25},{x:550,y:480,r:30},{x:460,y:470,r:20},{x:600,y:380,r:25},{x:530,y:350,r:22},{x:660,y:310,r:28},{x:700,y:240,r:20},{x:760,y:260,r:25},{x:820,y:220,r:22},{x:850,y:170,r:18},{x:910,y:160,r:20},{x:980,y:140,r:22},{x:250,y:660,r:20},{x:340,y:620,r:18},{x:440,y:540,r:22},{x:560,y:440,r:18},{x:620,y:340,r:22},{x:680,y:280,r:18}];
 
-// === Map ===
-const CHANNEL_WIDTH = 40;
-const waypoints = [
-  {x:100,y:850},{x:200,y:750},{x:320,y:680},{x:400,y:600},{x:480,y:520},
-  {x:520,y:420},{x:580,y:320},{x:650,y:260},{x:730,y:200},{x:800,y:160},
-  {x:870,y:130},{x:950,y:110},
+function sx(x){return x*W/1100}function sy(y){return y*H/1000}function sr(r){return r*Math.min(W/1100,H/1000)}
+
+// Narrative system
+const nars=[
+  {id:'nar-0',trigger:(t,e,f)=>t>=30,shown:false,dur:100},
+  {id:'nar-1',trigger:(t,e,f)=>t>=120,shown:false,dur:100},
+  {id:'nar-2',trigger:(t,e,f)=>f&&f.error>0.05&&!f.grounded,shown:false,dur:100},
+  {id:'nar-3',trigger:(t,e,f)=>f&&f.error>0.05&&!f.grounded,shown:false,dur:100},
+  {id:'nar-4',trigger:(t,e,f)=>f&&f.grounded,shown:false,dur:200},
+  {id:'nar-5',trigger:(t,e,f)=>e&&e.finished,shown:false,dur:250},
 ];
+let narTimers={};
+function updateNarr(tick,boatE,boatF){
+  for(const n of nars){if(!n.shown&&n.trigger(tick,boatE,boatF)){n.shown=true;document.getElementById(n.id).classList.add('visible');narTimers[n.id]=n.dur}}
+  for(const[id,t]of Object.entries(narTimers)){if(t<=0)document.getElementById(id).classList.remove('visible');else narTimers[id]--}
+}
 
-const rocks = [
-  {x:150,y:700,r:25},{x:280,y:720,r:30},{x:350,y:750,r:20},
-  {x:420,y:670,r:28},{x:370,y:640,r:22},{x:500,y:580,r:25},
-  {x:550,y:480,r:30},{x:460,y:470,r:20},{x:600,y:380,r:25},
-  {x:530,y:350,r:22},{x:660,y:310,r:28},{x:700,y:240,r:20},
-  {x:760,y:260,r:25},{x:820,y:220,r:22},{x:850,y:170,r:18},
-  {x:910,y:160,r:20},{x:980,y:140,r:22},
-  {x:250,y:660,r:20},{x:340,y:620,r:18},{x:440,y:540,r:22},
-  {x:560,y:440,r:18},{x:620,y:340,r:22},{x:680,y:280,r:18},
-];
-
-const scaleX = () => W / 1100;
-const scaleY = () => H / 1000;
-function sx(x) { return x * scaleX(); }
-function sy(y) { return y * scaleY(); }
-function sr(r) { return r * Math.min(scaleX(), scaleY()); }
-
-// === Narrative System ===
-const narratives = [
-  { id:'nar-0', trigger: (t,e,f) => t >= 0, shown: false, duration: 120 },
-  { id:'nar-1', trigger: (t,e,f) => t >= 100, shown: false, duration: 120 },
-  { id:'nar-2', trigger: (t,e,f) => f && f.error > 0.05 && !f.grounded, shown: false, duration: 100 },
-  { id:'nar-3', trigger: (t,e,f) => f && f.error > 0.05 && !f.grounded, shown: false, duration: 100 },
-  { id:'nar-4', trigger: (t,e,f) => f && f.grounded, shown: false, duration: 200 },
-  { id:'nar-5', trigger: (t,e,f) => e && e.finished, shown: false, duration: 250 },
-];
-let narrativeTimers = {};
-
-function updateNarratives(tick, boatE, boatF) {
-  for (const nar of narratives) {
-    if (!nar.shown && nar.trigger(tick, boatE, boatF)) {
-      nar.shown = true;
-      const el = document.getElementById(nar.id);
-      el.classList.add('visible');
-      narrativeTimers[nar.id] = nar.duration;
+class Boat{
+  constructor(exact){this.exact=exact;this.wp=0;this.x=waypoints[0].x;this.y=waypoints[0].y;this.angle=0;this.speed=1.5;this.error=0;this.power=0;this.fixes=0;this.grounded=false;this.finished=false;this.trail=[];this.wpHit=0;this.driftX=0;this.driftY=0}
+  update(){
+    if(this.grounded||this.finished)return;
+    if(this.wp>=waypoints.length-1){this.finished=true;return}
+    const t=waypoints[this.wp+1],dx=t.x-this.x,dy=t.y-this.y,dist=Math.sqrt(dx*dx+dy*dy),ta=Math.atan2(dy,dx);
+    if(dist<15){this.wp++;this.wpHit++;return}
+    this.fixes++;
+    if(this.exact){
+      this.angle=this.snap(ta);
+      this.x+=Math.cos(this.angle)*this.speed;this.y+=Math.sin(this.angle)*this.speed;
+      this.power+=0.0004;
+    }else{
+      const p=(Math.random()-0.5)*0.004;
+      this.driftX+=p*Math.cos(ta)*this.speed;this.driftY+=p*Math.sin(ta)*this.speed;
+      const sx=Math.cos(ta)*this.speed+this.driftX*0.012,sy=Math.sin(ta)*this.speed+this.driftY*0.012;
+      this.x+=sx;this.y+=sy;this.angle=Math.atan2(sy,sx);
+      this.power+=0.0016;this.error+=Math.abs(p);
     }
+    this.trail.push({x:this.x,y:this.y});if(this.trail.length>800)this.trail.shift();
+    for(const r of rocks){const rx=this.x-r.x,ry=this.y-r.y;if(Math.sqrt(rx*rx+ry*ry)<r.r+5){this.grounded=true;return}}
   }
-  // Fade out
-  for (const [id, timer] of Object.entries(narrativeTimers)) {
-    if (timer <= 0) {
-      document.getElementById(id).classList.remove('visible');
-    } else {
-      narrativeTimers[id]--;
-    }
+  snap(a){const h=[0,Math.PI/3,2*Math.PI/3,Math.PI,-2*Math.PI/3,-Math.PI/3];let b=h[0],bd=Math.abs(a-h[0]);for(const x of h){let d=Math.abs(a-x);if(d>Math.PI)d=2*Math.PI-d;if(d<bd){bd=d;b=x}}return bd<0.2?b:a}
+}
+
+let boatE,boatF,tick=0,outcomeShown=false;
+function init(){boatE=new Boat(true);boatF=new Boat(false);tick=0;outcomeShown=false;document.getElementById('outcome').style.display='none';
+  document.getElementById('title').classList.remove('visible');
+  setTimeout(()=>document.getElementById('title').classList.add('visible'),100);
+  for(const n of nars){n.shown=false;document.getElementById(n.id).classList.remove('visible')}
+  narTimers={};
+}
+function restart(){init()}
+
+function drawWater(){
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#060d14');g.addColorStop(1,'#0a1a2a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(30,60,80,0.12)';ctx.lineWidth=1;
+  const t=tick*0.02;
+  for(let y=0;y<H;y+=20){ctx.beginPath();for(let x=0;x<W;x+=4){const wy=y+Math.sin(x*0.01+t+y*0.005)*3;if(x===0)ctx.moveTo(x,wy);else ctx.lineTo(x,wy)}ctx.stroke()}
+}
+
+function drawChannel(){
+  ctx.strokeStyle='rgba(0,255,136,0.06)';ctx.lineWidth=CHANNEL_WIDTH*2*Math.min(W/1100,H/1000);ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.beginPath();ctx.moveTo(sx(waypoints[0].x),sy(waypoints[0].y));for(let i=1;i<waypoints.length;i++)ctx.lineTo(sx(waypoints[i].x),sy(waypoints[i].y));ctx.stroke();
+  ctx.strokeStyle='rgba(0,255,136,0.12)';ctx.lineWidth=1;ctx.setLineDash([6,6]);
+  ctx.beginPath();ctx.moveTo(sx(waypoints[0].x),sy(waypoints[0].y));for(let i=1;i<waypoints.length;i++)ctx.lineTo(sx(waypoints[i].x),sy(waypoints[i].y));ctx.stroke();ctx.setLineDash([]);
+}
+
+function drawRocks(){
+  for(const r of rocks){
+    const rx=sx(r.x),ry=sy(r.y),rr=sr(r.r);
+    const g=ctx.createRadialGradient(rx,ry,0,rx,ry,rr*2.5);g.addColorStop(0,'rgba(255,50,30,0.12)');g.addColorStop(1,'rgba(255,50,30,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(rx,ry,rr*2.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#1a1208';ctx.beginPath();ctx.arc(rx,ry,rr,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='rgba(80,50,20,0.4)';ctx.lineWidth=2;ctx.stroke();
   }
 }
 
-// === Boat ===
-class Boat {
-  constructor(useExact) {
-    this.useExact = useExact;
-    this.wpIndex = 0;
-    this.x = waypoints[0].x;
-    this.y = waypoints[0].y;
-    this.angle = 0;
-    this.speed = 1.5;
-    this.error = 0;
-    this.totalPower = 0; // in mJ
-    this.fixCount = 0;
-    this.grounded = false;
-    this.finished = false;
-    this.trail = [];
-    this.wpHit = 0;
-    this.driftX = 0;
-    this.driftY = 0;
-  }
-
-  update() {
-    if (this.grounded || this.finished) return;
-    if (this.wpIndex >= waypoints.length - 1) { this.finished = true; return; }
-
-    const target = waypoints[this.wpIndex + 1];
-    const dx = target.x - this.x;
-    const dy = target.y - this.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const targetAngle = Math.atan2(dy, dx);
-
-    if (dist < 15) { this.wpIndex++; this.wpHit++; return; }
-
-    this.fixCount++;
-
-    if (this.useExact) {
-      const snappedAngle = this.snapExact(targetAngle);
-      this.angle = snappedAngle;
-      this.x += Math.cos(this.angle) * this.speed;
-      this.y += Math.sin(this.angle) * this.speed;
-      this.totalPower += 0.0004; // 0.4 mJ per fix
-    } else {
-      const floatAngle = targetAngle;
-      const perturbation = (Math.random() - 0.5) * 0.004;
-      this.driftX += perturbation * Math.cos(floatAngle) * this.speed;
-      this.driftY += perturbation * Math.sin(floatAngle) * this.speed;
-      const stepX = Math.cos(floatAngle) * this.speed + this.driftX * 0.012;
-      const stepY = Math.sin(floatAngle) * this.speed + this.driftY * 0.012;
-      this.x += stepX;
-      this.y += stepY;
-      this.angle = Math.atan2(stepY, stepX);
-      this.totalPower += 0.0016; // 1.6 mJ per fix
-      this.error += Math.abs(perturbation);
-    }
-
-    this.trail.push({x: this.x, y: this.y});
-    if (this.trail.length > 800) this.trail.shift();
-
-    for (const rock of rocks) {
-      const rdx = this.x - rock.x;
-      const rdy = this.y - rock.y;
-      if (Math.sqrt(rdx * rdx + rdy * rdy) < rock.r + 5) {
-        this.grounded = true;
-        return;
-      }
-    }
-  }
-
-  snapExact(angle) {
-    const hexAngles = [0, Math.PI/3, 2*Math.PI/3, Math.PI, -2*Math.PI/3, -Math.PI/3];
-    let best = hexAngles[0], bestDiff = Math.abs(angle - hexAngles[0]);
-    for (const ha of hexAngles) {
-      let diff = Math.abs(angle - ha);
-      if (diff > Math.PI) diff = 2 * Math.PI - diff;
-      if (diff < bestDiff) { bestDiff = diff; best = ha; }
-    }
-    if (bestDiff < 0.2) return best;
-    return angle;
-  }
-}
-
-// === State ===
-let boatE, boatF, tick = 0, outcomeShown = false;
-
-function init() {
-  boatE = new Boat(true);
-  boatF = new Boat(false);
-  tick = 0;
-  outcomeShown = false;
-  document.getElementById('outcome').style.display = 'none';
-  for (const nar of narratives) { nar.shown = false; }
-  narrativeTimers = {};
-  for (const el of document.querySelectorAll('#narrative .line')) { el.classList.remove('visible'); }
-}
-function restart() { init(); }
-
-// === Rendering ===
-function drawWater() {
-  const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, '#060d14');
-  grad.addColorStop(1, '#0a1a2a');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.strokeStyle = 'rgba(30, 60, 80, 0.15)';
-  ctx.lineWidth = 1;
-  const time = tick * 0.02;
-  for (let y = 0; y < H; y += 20) {
-    ctx.beginPath();
-    for (let x = 0; x < W; x += 4) {
-      const wy = y + Math.sin(x * 0.01 + time + y * 0.005) * 3;
-      if (x === 0) ctx.moveTo(x, wy); else ctx.lineTo(x, wy);
-    }
-    ctx.stroke();
-  }
-}
-
-function drawChannel() {
-  ctx.strokeStyle = 'rgba(0, 255, 136, 0.08)';
-  ctx.lineWidth = CHANNEL_WIDTH * 2 * Math.min(scaleX(), scaleY());
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.beginPath();
-  ctx.moveTo(sx(waypoints[0].x), sy(waypoints[0].y));
-  for (let i = 1; i < waypoints.length; i++) ctx.lineTo(sx(waypoints[i].x), sy(waypoints[i].y));
-  ctx.stroke();
-
-  ctx.strokeStyle = 'rgba(0, 255, 136, 0.15)';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([6, 6]);
-  ctx.beginPath();
-  ctx.moveTo(sx(waypoints[0].x), sy(waypoints[0].y));
-  for (let i = 1; i < waypoints.length; i++) ctx.lineTo(sx(waypoints[i].x), sy(waypoints[i].y));
-  ctx.stroke();
-  ctx.setLineDash([]);
-}
-
-function drawRocks() {
-  for (const rock of rocks) {
-    const rx = sx(rock.x), ry = sy(rock.y), rr = sr(rock.r);
-    const glow = ctx.createRadialGradient(rx, ry, 0, rx, ry, rr * 2);
-    glow.addColorStop(0, 'rgba(255, 50, 30, 0.15)');
-    glow.addColorStop(1, 'rgba(255, 50, 30, 0)');
-    ctx.fillStyle = glow;
-    ctx.beginPath(); ctx.arc(rx, ry, rr * 2, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#1a1208';
-    ctx.beginPath(); ctx.arc(rx, ry, rr, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = 'rgba(80, 50, 20, 0.5)';
-    ctx.lineWidth = 2; ctx.stroke();
-  }
-}
-
-function drawBoat(boat, color, label) {
-  if (!boat) return;
-  const bx = sx(boat.x), by = sy(boat.y);
-  const size = sr(8);
-
-  // Accumulating error glow for float boat
-  if (!boat.useExact && boat.error > 0) {
-    const intensity = Math.min(0.6, boat.error * 3);
-    const glowR = sr(15 + boat.error * 200);
-    const errGlow = ctx.createRadialGradient(bx, by, 0, bx, by, glowR);
-    errGlow.addColorStop(0, `rgba(255, 40, 40, ${intensity})`);
-    errGlow.addColorStop(0.5, `rgba(255, 20, 20, ${intensity * 0.3})`);
-    errGlow.addColorStop(1, 'rgba(255, 0, 0, 0)');
-    ctx.fillStyle = errGlow;
-    ctx.beginPath(); ctx.arc(bx, by, glowR, 0, Math.PI * 2); ctx.fill();
-  }
-
+function drawBoat(boat,color,label){
+  if(!boat)return;const bx=sx(boat.x),by=sy(boat.y),sz=sr(8);
   // Trail
-  if (boat.trail.length > 1) {
-    for (let i = 1; i < boat.trail.length; i++) {
-      const alpha = (i / boat.trail.length) * 0.4;
-      ctx.strokeStyle = color === '#00ff88'
-        ? `rgba(0,255,136,${alpha})`
-        : `rgba(255,68,68,${alpha})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(sx(boat.trail[i-1].x), sy(boat.trail[i-1].y));
-      ctx.lineTo(sx(boat.trail[i].x), sy(boat.trail[i].y));
-      ctx.stroke();
-    }
-  }
-
+  if(boat.trail.length>1){for(let i=1;i<boat.trail.length;i++){const a=(i/boat.trail.length)*0.4;ctx.strokeStyle=color==='#00ff88'?`rgba(0,255,136,${a})`:`rgba(255,68,68,${a})`;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(sx(boat.trail[i-1].x),sy(boat.trail[i-1].y));ctx.lineTo(sx(boat.trail[i].x),sy(boat.trail[i].y));ctx.stroke()}}
   // Wake
-  if (!boat.grounded && !boat.finished) {
-    ctx.strokeStyle = color === '#00ff88' ? 'rgba(0,255,136,0.1)' : 'rgba(255,68,68,0.1)';
-    ctx.lineWidth = 3;
-    const wakeAngle = boat.angle + Math.PI;
-    for (let i = 1; i <= 3; i++) {
-      ctx.beginPath();
-      ctx.arc(bx + Math.cos(wakeAngle) * size * i * 1.5, by + Math.sin(wakeAngle) * size * i * 1.5, size * (0.5 + i * 0.3), 0, Math.PI * 2);
-      ctx.stroke();
-    }
-  }
-
-  // Boat body
-  ctx.save();
-  ctx.translate(bx, by);
-  ctx.rotate(boat.angle);
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(size, 0);
-  ctx.lineTo(-size * 0.6, -size * 0.5);
-  ctx.lineTo(-size * 0.4, 0);
-  ctx.lineTo(-size * 0.6, size * 0.5);
-  ctx.closePath();
-  ctx.fill();
-  ctx.shadowColor = color;
-  ctx.shadowBlur = 12;
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.restore();
-
-  if (boat.grounded) {
-    ctx.strokeStyle = '#ff4444'; ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(bx - 12, by - 12); ctx.lineTo(bx + 12, by + 12);
-    ctx.moveTo(bx + 12, by - 12); ctx.lineTo(bx - 12, by + 12);
-    ctx.stroke();
-  }
-
-  ctx.fillStyle = color;
-  ctx.font = `bold ${Math.round(sr(10))}px monospace`;
-  ctx.textAlign = 'center';
-  ctx.fillText(label, bx, by - size - sr(6));
+  if(!boat.grounded&&!boat.finished){ctx.strokeStyle=color==='#00ff88'?'rgba(0,255,136,0.08)':'rgba(255,68,68,0.08)';ctx.lineWidth=3;const wa=boat.angle+Math.PI;for(let i=1;i<=3;i++){const wx=bx+Math.cos(wa)*sz*i*1.5,wy=by+Math.sin(wa)*sz*i*1.5;ctx.beginPath();ctx.arc(wx,wy,sz*(0.5+i*0.3),0,Math.PI*2);ctx.stroke()}}
+  // Hull
+  ctx.save();ctx.translate(bx,by);ctx.rotate(boat.angle);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(sz,0);ctx.lineTo(-sz*0.6,-sz*0.5);ctx.lineTo(-sz*0.4,0);ctx.lineTo(-sz*0.6,sz*0.5);ctx.closePath();ctx.fill();ctx.shadowColor=color;ctx.shadowBlur=12;ctx.fill();ctx.shadowBlur=0;ctx.restore();
+  // Grounded X
+  if(boat.grounded){ctx.strokeStyle='#ff4444';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(bx-14,by-14);ctx.lineTo(bx+14,by+14);ctx.moveTo(bx+14,by-14);ctx.lineTo(bx-14,by+14);ctx.stroke()}
+  // Label
+  ctx.fillStyle=color;ctx.font=`bold ${Math.round(sr(9))}px monospace`;ctx.textAlign='center';ctx.fillText(label,bx,by-sz-sr(6));
 }
 
-function drawWaypoints() {
-  for (let i = 0; i < waypoints.length; i++) {
-    const wx = sx(waypoints[i].x), wy = sy(waypoints[i].y);
-    ctx.fillStyle = 'rgba(0,255,136,0.3)';
-    ctx.beginPath(); ctx.arc(wx, wy, sr(4), 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(0,255,136,0.6)';
-    ctx.font = `${Math.round(sr(7))}px monospace`;
-    ctx.textAlign = 'center';
-    ctx.fillText(i + 1, wx, wy - sr(7));
-  }
+function drawWaypoints(){for(let i=0;i<waypoints.length;i++){const wp=waypoints[i];ctx.fillStyle='rgba(0,255,136,0.25)';ctx.beginPath();ctx.arc(sx(wp.x),sy(wp.y),sr(4),0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(0,255,136,0.5)';ctx.font=`${Math.round(sr(7))}px monospace`;ctx.textAlign='center';ctx.fillText(i+1,sx(wp.x),sy(wp.y)-sr(7))}}
+
+function drawHarbor(){
+  const last=waypoints[waypoints.length-1],lx=sx(last.x),ly=sy(last.y);
+  const pulse=Math.sin(tick*0.05)*0.3+0.7;
+  const g=ctx.createRadialGradient(lx,ly,0,lx,ly,sr(50));g.addColorStop(0,`rgba(255,200,50,${0.2*pulse})`);g.addColorStop(1,'rgba(255,200,50,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(lx,ly,sr(50),0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=`rgba(255,200,50,${0.8*pulse})`;ctx.beginPath();ctx.arc(lx,ly,sr(3),0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,200,50,0.5)';ctx.font=`bold ${Math.round(sr(9))}px monospace`;ctx.textAlign='center';ctx.fillText('⚓ HARBOR',lx,ly+sr(18));
 }
 
-function drawHarbor() {
-  const last = waypoints[waypoints.length - 1];
-  const lx = sx(last.x), ly = sy(last.y);
-  const pulse = Math.sin(tick * 0.05) * 0.3 + 0.7;
-  const glow = ctx.createRadialGradient(lx, ly, 0, lx, ly, sr(50));
-  glow.addColorStop(0, `rgba(255,200,50,${0.2 * pulse})`);
-  glow.addColorStop(1, 'rgba(255,200,50,0)');
-  ctx.fillStyle = glow;
-  ctx.beginPath(); ctx.arc(lx, ly, sr(50), 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = `rgba(255,200,50,${0.8 * pulse})`;
-  ctx.beginPath(); ctx.arc(lx, ly, sr(3), 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = 'rgba(255,200,50,0.5)';
-  ctx.font = `bold ${Math.round(sr(9))}px monospace`;
-  ctx.textAlign = 'center';
-  ctx.fillText('⚓ HARBOR', lx, ly + sr(18));
+function updateHUD(){
+  if(!boatE||!boatF)return;
+  document.getElementById('e-wp').textContent=`${boatE.wpHit} / ${waypoints.length-1}`;
+  document.getElementById('f-wp').textContent=`${boatF.wpHit} / ${waypoints.length-1}`;
+  document.getElementById('e-err').textContent=boatE.error.toFixed(6);
+  document.getElementById('f-err').textContent=boatF.error.toFixed(4);
+  document.getElementById('e-pwr').textContent=`${boatE.power.toFixed(2)} mJ`;
+  document.getElementById('f-pwr').textContent=`${boatF.power.toFixed(2)} mJ`;
+  document.getElementById('e-status').textContent=boatE.finished?'⚓ Docked':boatE.grounded?'💥 Grounded':'Underway';
+  document.getElementById('f-status').textContent=boatF.finished?'⚓ Docked':boatF.grounded?'💥 Grounded':'Underway';
+  const eFix=Math.floor(Math.max(0,1-boatE.power)/0.0004);
+  document.getElementById('pwr-e').textContent=`E12: ${boatE.power.toFixed(2)} mJ — enough for ${eFix.toLocaleString()} more fixes`;
+  document.getElementById('pwr-f').textContent=boatF.grounded?`Float: ${boatF.power.toFixed(2)} mJ — grounded`:`Float: ${boatF.power.toFixed(2)} mJ — drifting`;
+  if(!outcomeShown&&(boatE.grounded||boatE.finished)&&(boatF.grounded||boatF.finished)){outcomeShown=true;showOutcome()}
 }
 
-// === HUD ===
-function updateHUD() {
-  if (!boatE || !boatF) return;
-
-  document.getElementById('e-wp').textContent = `${boatE.wpHit} / ${waypoints.length - 1}`;
-  document.getElementById('f-wp').textContent = `${boatF.wpHit} / ${waypoints.length - 1}`;
-  document.getElementById('e-err').textContent = boatE.error.toFixed(6);
-  document.getElementById('f-err').textContent = boatF.error.toFixed(4);
-  document.getElementById('e-pwr').textContent = `${boatE.totalPower.toFixed(2)} mJ`;
-  document.getElementById('f-pwr').textContent = `${boatF.totalPower.toFixed(2)} mJ`;
-
-  if (boatE.finished) document.getElementById('e-status').textContent = '⚓ Docked';
-  else if (boatE.grounded) document.getElementById('e-status').textContent = '💥 Grounded';
-  else document.getElementById('e-status').textContent = 'Underway';
-
-  if (boatF.finished) document.getElementById('f-status').textContent = '⚓ Docked';
-  else if (boatF.grounded) document.getElementById('f-status').textContent = '💥 Grounded';
-  else document.getElementById('f-status').textContent = 'Underway';
-
-  // Power meter with meaning
-  const eRemaining = Math.max(0, 1.0 - boatE.totalPower);
-  const eFixesLeft = Math.floor(eRemaining / 0.0004);
-  document.getElementById('pwr-e').textContent = `E12 used ${boatE.totalPower.toFixed(2)} mJ — enough to run ${eFixesLeft.toLocaleString()} more fixes`;
-  if (boatF.grounded) {
-    document.getElementById('pwr-f').textContent = `Float used ${boatF.totalPower.toFixed(2)} mJ — and still grounded`;
-  } else if (boatF.finished) {
-    document.getElementById('pwr-f').textContent = `Float used ${boatF.totalPower.toFixed(2)} mJ — arrived with ${(boatF.error * 1000).toFixed(1)}mm drift`;
-  } else {
-    document.getElementById('pwr-f').textContent = `Float used ${boatF.totalPower.toFixed(2)} mJ — and still drifting`;
-  }
-
-  // Check outcome
-  if (!outcomeShown && (boatE.grounded || boatE.finished) && (boatF.grounded || boatF.finished)) {
-    outcomeShown = true;
-    showOutcome();
-  }
+function showOutcome(){
+  const el=document.getElementById('outcome');el.style.display='block';
+  let t='',p='';
+  if(boatE.finished&&boatF.grounded){t='⚓ Safe Passage vs. Grounding';p=`E12 navigated all ${waypoints.length-1} waypoints on ${boatE.power.toFixed(2)} mJ with 4-byte exact fixes. Float grounded after ${(boatF.error*1000).toFixed(1)}mm drift, burning ${boatF.power.toFixed(2)} mJ on 16-byte computations.`}
+  else if(boatE.finished&&boatF.finished){t='⚡ Both Made It — At What Cost?';p=`E12: ${boatE.power.toFixed(2)} mJ, ${(boatE.error*1000).toFixed(3)}mm error. Float: ${boatF.power.toFixed(2)} mJ, ${(boatF.error*1000).toFixed(1)}mm error. Float used ${(boatF.power/boatE.power).toFixed(1)}× more power.`}
+  else{t='💥 Both Grounded';p=`E12 used ${boatE.power.toFixed(2)} mJ vs float's ${boatF.power.toFixed(2)} mJ.`}
+  document.getElementById('out-title').textContent=t;document.getElementById('out-text').textContent=p;
+  document.getElementById('out-title').style.color=boatE.finished?'#00ff88':'#ff4444';
 }
 
-function showOutcome() {
-  const el = document.getElementById('outcome');
-  el.style.display = 'block';
-  let title = '', text = '';
-  if (boatE.finished && boatF.grounded) {
-    title = '⚓ Safe Passage vs. Grounding';
-    text = `The E12 boat navigated all ${waypoints.length - 1} waypoints using ${boatE.totalPower.toFixed(2)} mJ on 4-byte exact fixes. The float boat grounded on a rock after accumulating ${(boatF.error * 1000).toFixed(1)}mm of drift, burning ${boatF.totalPower.toFixed(2)} mJ on 16-byte computations.`;
-  } else if (boatE.finished && boatF.finished) {
-    title = '⚡ Both Made It — But At What Cost?';
-    text = `E12: ${boatE.totalPower.toFixed(2)} mJ, ${(boatE.error * 1000).toFixed(3)}mm error. Float: ${boatF.totalPower.toFixed(2)} mJ, ${(boatF.error * 1000).toFixed(1)}mm error. Float used ${(boatF.totalPower / boatE.totalPower).toFixed(1)}× more power and drifted ${(boatF.error / Math.max(boatE.error, 0.001)).toFixed(0)}× further.`;
-  } else {
-    title = '💥 Both Grounded';
-    text = `Even E12 couldn't make it. But notice: E12 used ${boatE.totalPower.toFixed(2)} mJ vs float's ${boatF.totalPower.toFixed(2)} mJ before grounding.`;
-  }
-  document.getElementById('out-title').textContent = title;
-  document.getElementById('out-text').textContent = text;
-  document.getElementById('out-title').style.color = boatE.finished ? '#00ff88' : '#ff4444';
-}
-
-// === Main Loop ===
-function frame() {
+function frame(){
   tick++;
-  if (boatE && boatF) {
-    for (let i = 0; i < 2; i++) { boatE.update(); boatF.update(); }
-  }
-  drawWater();
-  drawChannel();
-  drawRocks();
-  drawWaypoints();
-  drawHarbor();
-  drawBoat(boatE, '#00ff88', 'E12');
-  drawBoat(boatF, '#ff4444', 'FLOAT');
-  updateHUD();
-  updateNarratives(tick, boatE, boatF);
+  if(boatE&&boatF){for(let i=0;i<2;i++){boatE.update();boatF.update()}}
+  drawWater();drawChannel();drawRocks();drawWaypoints();drawHarbor();
+  drawBoat(boatE,'#00ff88','E12');drawBoat(boatF,'#ff4444','FLOAT');
+  updateHUD();updateNarr(tick,boatE,boatF);
   requestAnimationFrame(frame);
 }
 
-// Auto-start immediately — no button needed
-init();
-frame();
+// Auto-start immediately — visitors see boats moving before reading anything
+init();frame();
 </script>
 </body>
 </html>
