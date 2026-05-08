@@ -6,6 +6,7 @@ Browser-native interactive demos for constraint theory and fleet visualization. 
 
 | Demo | What It Shows |
 |------|--------------|
+| [**Eisenstein Explorer**](https://superinstance.github.io/cocapn-ai-web/demo-eisenstein.html) | Drift race, hex lattice explorer, playground, side-by-side comparison |
 | [Divergence Tolerance](https://superinstance.github.io/cocapn-ai-web/demo-divergence-tolerance.html) | 9-channel drift simulation with live tolerance bars |
 | [Fleet Murmur](https://superinstance.github.io/cocapn-ai-web/demo-fleet-murmur.html) | Thinking strategies and quality-gated insights |
 | [Fleet Spread](https://superinstance.github.io/cocapn-ai-web/demo-fleet-spread.html) | Graph topology and library gate architecture |
@@ -16,11 +17,8 @@ All demos are self-contained HTML — zero dependencies, zero build step. Open d
 ## Quick Start
 
 ```bash
-# Clone and open any demo
 git clone https://github.com/SuperInstance/cocapn-ai-web.git
-open cocapn-ai-web/demo-divergence-tolerance.html
+open cocapn-ai-web/demo-eisenstein.html
 ```
-
-Or just click the links above.
 
 ## Part of [SuperInstance](https://github.com/SuperInstance)
