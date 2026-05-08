@@ -85,15 +85,15 @@ footer a{color:var(--dim)}footer a:hover{color:var(--ok)}
 <h2 id="the-problem">The Problem</h2>
 
 <p>
-Floating-point numbers drift. Not sometimes, not in edge cases — every single operation adds a tiny error. Multiply that by thousands of operations and your position is wrong. Your rotation is off. Your game desyncs.
+Every floating-point operation embeds a tiny error. Add a thousand of them and your position drifts. Rotate ten thousand times and your heading is off — not by a little, by a lot. Games desync. Robots mis-navigate. Simulations diverge.
 </p>
 
 <p>
-You can't fix this by throwing more bits at it. F64 uses 16 bytes per coordinate pair. It drifts less than F32's 8 bytes. But it still drifts. And you're paying 4× the memory, 4× the bandwidth, 4× the disk — for something that's <em>still not exact</em>.
+More bits helps but doesn't fix it. F64 drifts less than F32 — 52 mantissa bits instead of 23 — but it still drifts. And you're paying 4× the memory, 4× the bandwidth, 4× the time for something that's <em>still an approximation</em>.
 </p>
 
 <p>
-The demo above shows this in action. The green boat (E12) uses integer arithmetic. The orange boat uses standard 32-bit floats. The red boat "turns up the precision" to 64-bit floats — four times the data per fix — and still can't match the integer boat.
+The demo above shows three boats navigating the same channel. The green one uses integer arithmetic — Eisenstein integers, 4 bytes per coordinate. The orange uses 32-bit floats, 8 bytes. The red uses 64-bit floats, 16 bytes — double the data of F32, quadruple the data of E12 — and still can't match it.
 </p>
 
 <div class="diagram">
@@ -228,7 +228,7 @@ prod = a * b   # (1, 7)</pre>
 </div>
 
 <p>
-No floats anywhere. The norm <code>a² - ab + b²</code> is computed with integer multiplication and subtraction. Rotation by 60° is a coordinate transform: <code>(a, b) → (-b, a - b)</code>. No trig functions involved. The result is always another pair of integers.
+The norm <code>a² - ab + b²</code> is just integer multiplication and subtraction. Rotation by 60° is a coordinate transform: <code>(a, b) → (-b, a - b)</code>. Two integer subtractions and a negation. The result is always another pair of integers.
 </p>
 
 <!-- ============================================ -->
@@ -456,7 +456,7 @@ On a satellite link at $1/MB, E12 saves $43K/year vs F64. But the real cost isn'
 <h2 id="what-doesnt-work">What Doesn't Work</h2>
 
 <p>
-We publish our <a href="https://github.com/SuperInstance/constraint-theory-math/blob/main/ERRATA.md">negative results</a> alongside the positive ones. Some things we tried that didn't pan out:
+Some things we tried didn't pan out. We publish <a href="https://github.com/SuperInstance/constraint-theory-math/blob/main/ERRATA.md">negative results</a> alongside the positive ones — here are the biggest misses:
 </p>
 
 <ul style="margin:.4em 0 .4em 1.5em;font-size:.9em;line-height:1.8">
@@ -466,8 +466,8 @@ We publish our <a href="https://github.com/SuperInstance/constraint-theory-math/
 <li><strong>Intent-Holonomy Duality</strong> — originally claimed as a theorem. It's false on partial orders. True on total orders (which is what we use in practice). Downgraded to "open problem."</li>
 </ul>
 
-<p>
-Negative results are data. We document them <a href="errata.html">publicly</a>. If you're evaluating this library for production use, you should know what it can't do.
+<p style="font-size:.9em">
+All negative results are documented in the <a href="errata.html">errata page</a> — everything we tried that didn't work, with the data to prove it.
 </p>
 
 <!-- ============================================ -->
@@ -559,12 +559,10 @@ Each link is a standalone repo. Clone any one and try it — no monorepo, no wor
 
 <h3>CUDA Benchmarks</h3>
 <p>
-We ran 54 GPU experiments on an RTX 4050 (Ada) measuring constraint throughput with Eisenstein integer operations. The results are in <a href="https://github.com/SuperInstance/constraint-theory-ecosystem">constraint-theory-ecosystem</a>. Highlights: INT8×8 achieves 341B constraints/sec, differential testing across 61M inputs produced zero mismatches, and CUDA Graphs gave 18× kernel launch speedup. The negative results (FP16 unsafe past 2048, tensor cores marginal, bank padding counterproductive) are documented in our <a href="errata.html">errata</a>.
+We ran 54 GPU experiments on an RTX 4050 (Ada) measuring constraint throughput with Eisenstein integer operations. The results are in <a href="https://github.com/SuperInstance/constraint-theory-ecosystem">constraint-theory-ecosystem</a>. Highlights: INT8×8 achieves 341B constraints/sec, differential testing across 61M inputs produced zero mismatches, and CUDA Graphs gave 18× kernel launch speedup. Full negative results (FP16 unsafe past 2048, tensor cores marginal, bank padding counterproductive) are in the <a href="errata.html">errata page</a>.
 </p>
 
-<p style="font-size:.9em">
-Negative results are data. Full list at <a href="https://github.com/SuperInstance/constraint-theory-math/blob/main/ERRATA.md">ERRATA.md</a> and <a href="errata.html">our errata page</a>.
-</p>
+
 
 </div>
 
@@ -579,9 +577,6 @@ Negative results are data. Full list at <a href="https://github.com/SuperInstanc
 <a href="demo-eisenstein-3d.html">3D Visualizer</a> ·
 <a href="demo-voxel-v2.html">Voxel Engine</a> ·
 <a href="demo-divergence-tolerance.html">DAT Demo</a> ·
-<a href="errata.html">Errata</a>
-</p>
-<p style="margin-top:8px">
 <a href="https://github.com/SuperInstance/eisenstein">eisenstein</a> ·
 <a href="https://github.com/SuperInstance/eisenstein-c">eisenstein-c</a> ·
 <a href="https://github.com/SuperInstance/eisenstein-wasm">eisenstein-wasm</a> ·
