@@ -71,8 +71,8 @@ canvas{display:block;width:100%;height:100%}
 </div>
 <div id="cmp">
 <div class="cr"><span class="cs ok">4B</span><div class="cb" style="width:24px;background:var(--ok)"></div><span class="cl">E12: INT32 pair</span></div>
-<div class="cr"><span class="cs wrn">8B</span><div class="cb" style="width:48px;background:var(--warn)"></div><span class="cl">F32: "turn up precision"</span></div>
-<div class="cr"><span class="cs bad">16B</span><div class="cb" style="width:96px;background:var(--bad)"></div><span class="cl">F64: standard float</span></div>
+<div class="cr"><span class="cs wrn">8B</span><div class="cb" style="width:48px;background:var(--warn)"></div><span class="cl">F32: standard float</span></div>
+<div class="cr"><span class="cs bad">16B</span><div class="cb" style="width:96px;background:var(--bad)"></div><span class="cl">F64: "turn up precision"</span></div>
 </div>
 <div id="ftr">
 <span class="ok" id="s1">E12: 0</span> &middot; <span class="wrn" id="s2">F32: 0</span> &middot; <span class="bad" id="s3">F64: 0</span>
@@ -124,8 +124,8 @@ var cumE=0,cumF32=0,cumF64=0,cumOkE=0,cumOkF32=0,cumOkF64=0,cumTracks=0;
 function init(){
   var t=T[ci];
   bE=new B(true,0,4,"#00ff88","E12");
-  bF32=new B(false,1.5,8,"#ffaa22","F32");
-  bF64=new B(false,3.0,16,"#ff4444","F64");
+  bF32=new B(false,2.5,8,"#ffaa22","F32");
+  bF64=new B(false,1.0,16,"#ff4444","F64");
   bE.init(t.wps);bF32.init(t.wps);bF64.init(t.wps);
   tick=0;outS=false;document.getElementById("out").style.display="none";
   document.getElementById("hdr").querySelector("h1").textContent="\u2693 "+t.name;
@@ -197,8 +197,8 @@ function updateHUD(){
   document.getElementById("s3").textContent="F64: "+bF64.hit+"/"+n+" "+fmtB(f64D)+(f64D>eD?" ("+Math.round(f64D/eD)+"\u00D7)":"");
   var parts=[];
   if(cumTracks>0)parts.push("After "+cumTracks+" track"+(cumTracks>1?"s":"")+": E12 used "+fmtB(cumE)+", F32 used "+fmtB(cumF32)+" ("+Math.round(cumF32/Math.max(cumE,1))+"\u00D7), F64 used "+fmtB(cumF64)+" ("+Math.round(cumF64/Math.max(cumE,1))+"\u00D7)");
-  if(bF32.dead&&bE.done)parts.push("F32 grounded despite double precision");
-  if(bF64.dead&&bE.done)parts.push("F64 grounded at 4\u00D7 data cost");
+  if(bF32.dead&&bE.done)parts.push("F32 grounded — standard float can not hold course");
+  if(bF64.dead&&bE.done)parts.push("F64 grounded despite 400D7 data cost — turning up precision is not exactness");
   document.getElementById("sd").textContent=parts.length?parts.join(". ")+".":"More precision = more data. E12 needs neither.";
   if(!outS&&(bE.dead||bE.done)&&(bF32.dead||bF32.done)&&(bF64.dead||bF64.done)){outS=true;showOut()}
 }
@@ -209,10 +209,10 @@ function showOut(){
   var eOk=bE.done,f32Ok=bF32.done,f64Ok=bF64.done;
   if(eOk&&!f32Ok&&!f64Ok){
     ti="\u2693 Only E12 Made It";
-    p="E12: all "+n+" waypoints, "+fmtB(eD)+". F32 grounded ("+fmtB(f32D)+" wasted). F64 grounded ("+fmtB(f64D)+" wasted). Turning up precision didn't help.";
+    p="E12: all "+n+" waypoints, "+fmtB(eD)+". F32 grounded ("+fmtB(f32D)+" wasted). F64 grounded ("+fmtB(f64D)+" wasted). Turning up precision to F64 did not help — it is still not exact.";
   }else if(eOk&&f32Ok&&!f64Ok){
     ti="\u26A1 F32 Survived \u2014 At 2\u00D7 The Cost";
-    p="E12: "+fmtB(eD)+". F32: "+fmtB(f32D)+" ("+Math.round(f32D/eD)+"\u00D7). F64 grounded. F32 survived by spending 2\u00D7 more data. E12 needs neither extra precision nor extra bytes.";
+    p="E12: "+fmtB(eD)+". F32: "+fmtB(f32D)+" ("+Math.round(f32D/eD)+"\u00D7). F64 grounded. F64 survived by using 4x more data per fix. F32 could not. E12 needs neither extra precision nor extra bytes.";
   }else if(eOk&&f32Ok&&f64Ok){
     ti="\u26A1 All Three Made It \u2014 Compare The Cost";
     p="E12: "+fmtB(eD)+". F32: "+fmtB(f32D)+" ("+Math.round(f32D/eD)+"\u00D7). F64: "+fmtB(f64D)+" ("+Math.round(f64D/eD)+"\u00D7). Same route, 4\u00D7 data difference between E12 and F64.";
