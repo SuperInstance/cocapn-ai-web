@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eisenstein 3D — Hexagonal Lattice Visualizer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; overflow: hidden; font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; color: #e0e0e0; }
+  canvas { display: block; }
+  #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+  #overlay > * { pointer-events: auto; }
+
+  #title-panel {
+    position: absolute; top: 20px; left: 24px;
+  }
+  #title-panel h1 {
+    font-size: 28px; font-weight: 700; letter-spacing: 2px;
+    background: linear-gradient(135deg, #00ff88, #00ccff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  #title-panel .sub { font-size: 12px; color: #666; margin-top: 4px; letter-spacing: 1px; }
+  #title-panel .mode-label { font-size: 13px; color: #ff6600; margin-top: 8px; font-weight: 600; display: none; }
+
+  #info-panel {
+    position: absolute; top: 20px; right: 24px;
+    background: rgba(10,10,10,0.85); border: 1px solid #1a3a2a;
+    border-radius: 8px; padding: 16px 20px; min-width: 240px;
+    display: none; backdrop-filter: blur(8px);
+  }
+  #info-panel h3 { color: #00ff88; font-size: 14px; margin-bottom: 8px; letter-spacing: 1px; }
+  #info-panel .row { font-size: 12px; margin: 4px 0; display: flex; justify-content: space-between; }
+  #info-panel .row .label { color: #666; }
+  #info-panel .row .value { color: #ccc; font-weight: 600; }
+
+  #controls {
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+  }
+  .btn {
+    background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.25);
+    color: #00ff88; padding: 8px 16px; border-radius: 6px;
+    font-family: inherit; font-size: 12px; cursor: pointer;
+    transition: all 0.2s; letter-spacing: 0.5px; white-space: nowrap;
+  }
+  .btn:hover { background: rgba(0,255,136,0.18); border-color: #00ff88; }
+  .btn.active { background: rgba(0,255,136,0.22); border-color: #00ff88; box-shadow: 0 0 12px rgba(0,255,136,0.3); }
+  .btn.danger { border-color: rgba(255,80,80,0.4); color: #ff5050; background: rgba(255,80,80,0.08); }
+  .btn.danger:hover { background: rgba(255,80,80,0.18); }
+  .btn.warn { border-color: rgba(255,165,0,0.4); color: #ffa500; background: rgba(255,165,0,0.08); }
+  .btn.warn:hover { background: rgba(255,165,0,0.18); }
+  .btn-sep { width: 1px; background: #1a3a2a; padding: 0; margin: 0 4px; pointer-events: none; }
+
+  #stats {
+    position: absolute; bottom: 70px; left: 24px;
+    font-size: 11px; color: #444; line-height: 1.6;
+  }
+
+  #preset-menu {
+    position: absolute; bottom: 68px; left: 50%; transform: translateX(-50%);
+    background: rgba(10,10,10,0.92); border: 1px solid #1a3a2a;
+    border-radius: 8px; padding: 12px; display: none; backdrop-filter: blur(8px);
+    min-width: 200px;
+  }
+  #preset-menu .preset-btn {
+    display: block; width: 100%; text-align: left;
+    background: none; border: none; color: #00ff88; padding: 8px 12px;
+    font-family: inherit; font-size: 12px; cursor: pointer; border-radius: 4px;
+  }
+  #preset-menu .preset-btn:hover { background: rgba(0,255,136,0.1); }
+  #preset-menu .preset-btn small { color: #555; margin-left: 8px; }
+
+  #drift-indicator {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 18px; color: #ff5050; font-weight: 700; display: none;
+    text-align: center; text-shadow: 0 0 20px rgba(255,80,80,0.5);
+    letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div id="overlay">
+  <div id="title-panel">
+    <h1>EISENSTEIN 3D</h1>
+    <div class="sub">E₁₂ HEXAGONAL LATTICE VISUALIZER</div>
+    <div class="mode-label" id="mode-label"></div>
+  </div>
+
+  <div id="info-panel">
+    <h3>◆ SELECTED PRISM</h3>
+    <div class="row"><span class="label">E₁₂ Coord</span><span class="value" id="info-e12">—</span></div>
+    <div class="row"><span class="label">Norm</span><span class="value" id="info-norm">—</span></div>
+    <div class="row"><span class="label">Cartesian</span><span class="value" id="info-cart">—</span></div>
+    <div class="row"><span class="label">Layer</span><span class="value" id="info-layer">—</span></div>
+    <div class="row"><span class="label">E₁₂ Value</span><span class="value" id="info-val">—</span></div>
+  </div>
+
+  <div id="stats">
+    <div id="stat-count">Prisms: 0</div>
+    <div id="stat-fps">FPS: 60</div>
+    <div id="stat-mode">Mode: View</div>
+  </div>
+
+  <div id="controls">
+    <button class="btn" id="btn-build">🔧 Build</button>
+    <button class="btn" id="btn-rotate">↻ Rotate 60°</button>
+    <button class="btn warn" id="btn-drift">⚡ Float Drift</button>
+    <div class="btn btn-sep"></div>
+    <button class="btn" id="btn-presets">⬡ Presets</button>
+    <button class="btn" id="btn-explode">💥 Explode</button>
+    <button class="btn danger" id="btn-clear">✕ Clear</button>
+  </div>
+
+  <div id="preset-menu">
+    <button class="preset-btn" data-preset="honeycomb">⬡ Honeycomb<small>hex grid</small></button>
+    <button class="preset-btn" data-preset="graphene">◇ Graphene Lattice<small>2D sheet</small></button>
+    <button class="preset-btn" data-preset="hcp">⬢ Hex Close-Packed<small>3D layers</small></button>
+    <button class="preset-btn" data-preset="ice">❄ Ice Crystal<small>layered</small></button>
+    <button class="preset-btn" data-preset="wurtzite">◈ Wurtzite<small>ABAB stacking</small></button>
+    <button class="preset-btn" data-preset="snowflake">✻ Snowflake<small>6-fold symmetry</small></button>
+  </div>
+
+  <div id="drift-indicator">⚡ FLOAT DRIFT MODE<br><small style="font-size:12px;font-weight:400;color:#ff8080">Watch the pieces drift apart</small></div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+// ─── State ───
+const state = {
+  prisms: [],          // { a, b, layer, mesh, originalPos, floatPos }
+  buildMode: false,
+  floatMode: false,
+  selected: null,
+  exploding: false,
+  explodeFactor: 0,
+  animating: false,
+  rotationAngle: 0,
+  targetRotation: 0,
+  isMobile: /Mobi|Android/i.test(navigator.userAgent)
+};
+
+const SQRT3_2 = Math.sqrt(3) / 2;
+const PRISM_RADIUS = 0.42;
+const PRISM_HEIGHT = 0.3;
+const GAP = 0.08;
+const MAX_RANGE = state.isMobile ? 5 : 8;
+
+// ─── Scene Setup ───
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0a0a0a, 0.018);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(8, 10, 12);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x0a0a0a);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.body.prepend(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.4;
+controls.minDistance = 3;
+controls.maxDistance = 40;
+
+// ─── Bloom ───
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.5, 0.3
+);
+composer.addPass(bloomPass);
+
+// ─── Lighting ───
+scene.add(new THREE.AmbientLight(0x223322, 0.5));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+dirLight.position.set(5, 10, 7);
+scene.add(dirLight);
+const pointLight = new THREE.PointLight(0x00ff88, 1.5, 30);
+pointLight.position.set(0, 5, 0);
+scene.add(pointLight);
+
+// ─── Particles ───
+const particleCount = state.isMobile ? 300 : 800;
+const pGeo = new THREE.BufferGeometry();
+const pPositions = new Float32Array(particleCount * 3);
+const pSizes = new Float32Array(particleCount);
+for (let i = 0; i < particleCount; i++) {
+  pPositions[i * 3]     = (Math.random() - 0.5) * 40;
+  pPositions[i * 3 + 1] = (Math.random() - 0.5) * 40;
+  pPositions[i * 3 + 2] = (Math.random() - 0.5) * 40;
+  pSizes[i] = Math.random() * 2 + 0.5;
+}
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+pGeo.setAttribute('size', new THREE.BufferAttribute(pSizes, 1));
+const pMat = new THREE.PointsMaterial({
+  color: 0x00ff88, size: 0.04, transparent: true, opacity: 0.3,
+  blending: THREE.AdditiveBlending, depthWrite: false
+});
+const particles = new THREE.Points(pGeo, pMat);
+scene.add(particles);
+
+// ─── Ground grid ───
+const gridHelper = new THREE.GridHelper(30, 30, 0x0a1a0a, 0x0a1a0a);
+gridHelper.position.y = -0.5;
+scene.add(gridHelper);
+
+// ─── Geometry / Materials ───
+const hexGeo = new THREE.CylinderGeometry(PRISM_RADIUS, PRISM_RADIUS, PRISM_HEIGHT, 6);
+hexGeo.rotateY(Math.PI / 6);
+const matNormal = new THREE.MeshStandardMaterial({
+  color: 0x004422, emissive: 0x002211, metalness: 0.6, roughness: 0.3
+});
+const matActive = new THREE.MeshStandardMaterial({
+  color: 0x00ff88, emissive: 0x00aa55, emissiveIntensity: 1.5,
+  metalness: 0.8, roughness: 0.2
+});
+const matSelected = new THREE.MeshStandardMaterial({
+  color: 0x00ccff, emissive: 0x0088aa, emissiveIntensity: 2.0,
+  metalness: 0.9, roughness: 0.1
+});
+
+// ─── E12 Math ───
+function e12toCart(a, b, layer = 0) {
+  return new THREE.Vector3(a - b * 0.5, layer * (PRISM_HEIGHT + GAP), b * SQRT3_2);
+}
+
+function e12Rotate60(a, b) {
+  // Rotation by 60°: (a,b) → (a-b, a)
+  return { a: a - b, b: a };
+}
+
+function e12Norm(a, b) {
+  return a * a + b * b - a * b;
+}
+
+// ─── Prism Management ───
+const prismGroup = new THREE.Group();
+scene.add(prismGroup);
+
+function createPrism(a, b, layer = 0, active = true) {
+  const mesh = new THREE.Mesh(hexGeo, active ? matActive.clone() : matNormal.clone());
+  const pos = e12toCart(a, b, layer);
+  mesh.position.copy(pos);
+  mesh.userData = { a, b, layer, active, originalPos: pos.clone() };
+  prismGroup.add(mesh);
+  state.prisms.push(mesh);
+  return mesh;
+}
+
+function clearPrisms() {
+  while (state.prisms.length) {
+    const m = state.prisms.pop();
+    m.geometry = undefined;
+    prismGroup.remove(m);
+    if (m.material.dispose) m.material.dispose();
+  }
+  state.selected = null;
+  hideInfo();
+  updateStats();
+}
+
+function removePrism(mesh) {
+  const idx = state.prisms.indexOf(mesh);
+  if (idx >= 0) {
+    state.prisms.splice(idx, 1);
+    prismGroup.remove(mesh);
+    if (mesh.material.dispose) mesh.material.dispose();
+    if (state.selected === mesh) { state.selected = null; hideInfo(); }
+    updateStats();
+  }
+}
+
+// ─── Presets ───
+function loadPreset(name) {
+  clearPrisms();
+  const R = state.isMobile ? 4 : 6;
+  switch (name) {
+    case 'honeycomb':
+      for (let a = -R; a <= R; a++)
+        for (let b = -R; b <= R; b++)
+          if (e12Norm(a, b) <= R * R) createPrism(a, b, 0);
+      break;
+
+    case 'graphene': {
+      // Two-atom basis per hex cell
+      for (let a = -R; a <= R; a++) {
+        for (let b = -R; b <= R; b++) {
+          if (e12Norm(a, b) <= R * R) {
+            createPrism(a, b, 0);
+            // Offset atom (basis vector)
+            const a2 = a, b2 = b + 0.33;
+            if (e12Norm(a2, b2) <= R * R) createPrism(a2, b2, 0, false);
+          }
+        }
+      }
+      break;
+    }
+
+    case 'hcp':
+      for (let layer = 0; layer < 4; layer++) {
+        const offset = layer % 2 === 1 ? 1 : 0;
+        const lr = R - layer;
+        for (let a = -lr; a <= lr; a++)
+          for (let b = -lr; b <= lr; b++)
+            if (e12Norm(a + offset, b) <= lr * lr) createPrism(a + offset * 0.5, b, layer);
+      }
+      break;
+
+    case 'ice':
+      for (let layer = 0; layer < 5; layer++) {
+        const lr = Math.max(1, R - layer * 1.2);
+        const count = Math.floor(lr * 2.5);
+        for (let i = 0; i < count; i++) {
+          const angle = (i / count) * Math.PI * 2 + layer * 0.3;
+          const dist = lr * (0.3 + Math.random() * 0.7);
+          const a = Math.round(dist * Math.cos(angle));
+          const b = Math.round(dist * Math.sin(angle) / SQRT3_2);
+          createPrism(a, b, layer, Math.random() > 0.4);
+        }
+      }
+      break;
+
+    case 'wurtzite':
+      for (let layer = 0; layer < 4; layer++) {
+        const lr = R - Math.floor(layer / 2);
+        const shift = layer % 2 === 0 ? 0 : 0.5;
+        for (let a = -lr; a <= lr; a++) {
+          for (let b = -lr; b <= lr; b++) {
+            if (e12Norm(a, b) <= lr * lr) {
+              createPrism(a + shift, b, layer, layer % 2 === 0);
+            }
+          }
+        }
+      }
+      break;
+
+    case 'snowflake': {
+      // 6-fold symmetric snowflake
+      const arms = 6;
+      const armLen = R;
+      // Center
+      createPrism(0, 0, 0);
+      for (let arm = 0; arm < arms; arm++) {
+        for (let d = 1; d <= armLen; d++) {
+          // Rotate (1,0) by arm*60°
+          let a = d, b = 0;
+          for (let r = 0; r < arm; r++) {
+            const nr = e12Rotate60(a, b);
+            a = nr.a; b = nr.b;
+          }
+          createPrism(a, b, 0);
+          // Branch tips
+          if (d > 2 && d % 2 === 0) {
+            let ba = a + 1, bb = b;
+            for (let r = 0; r < arm; r++) {
+              const nr = e12Rotate60(ba, bb);
+              ba = nr.a; bb = nr.b;
+            }
+            createPrism(ba, bb, 0);
+          }
+        }
+      }
+      // Layer 1: smaller version
+      const r1 = Math.floor(armLen * 0.6);
+      for (let arm = 0; arm < arms; arm++) {
+        for (let d = 1; d <= r1; d++) {
+          let a = d, b = 0;
+          for (let r = 0; r < arm; r++) {
+            const nr = e12Rotate60(a, b);
+            a = nr.a; b = nr.b;
+          }
+          createPrism(a, b, 1);
+        }
+      }
+      break;
+    }
+  }
+  updateStats();
+}
+
+// ─── Initial scene ───
+loadPreset('honeycomb');
+
+// ─── Raycaster ───
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+function onCanvasClick(event) {
+  // Prevent click during orbit drag
+  if (event.target !== renderer.domElement) return;
+
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+
+  const hits = raycaster.intersectObjects(state.prisms);
+
+  if (state.buildMode) {
+    if (event.button === 2 && hits.length > 0) {
+      // Right click = remove
+      removePrism(hits[0].object);
+      return;
+    }
+    if (hits.length > 0) {
+      // Click existing = select
+      selectPrism(hits[0].object);
+    } else {
+      // Click empty = place at nearest hex grid position
+      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+      const pt = new THREE.Vector3();
+      raycaster.ray.intersectPlane(plane, pt);
+      if (pt) {
+        const b = Math.round(pt.z / SQRT3_2);
+        const a = Math.round(pt.x + b * 0.5);
+        if (Math.abs(a) <= MAX_RANGE && Math.abs(b) <= MAX_RANGE) {
+          // Check not already occupied
+          const exists = state.prisms.some(p => p.userData.a === a && p.userData.b === b && p.userData.layer === 0);
+          if (!exists) createPrism(a, b, 0);
+          updateStats();
+        }
+      }
+    }
+  } else {
+    if (hits.length > 0) selectPrism(hits[0].object);
+    else { deselectAll(); hideInfo(); }
+  }
+}
+
+renderer.domElement.addEventListener('click', onCanvasClick);
+renderer.domElement.addEventListener('contextmenu', e => { e.preventDefault(); });
+
+function selectPrism(mesh) {
+  deselectAll();
+  mesh.material = matSelected.clone();
+  mesh.material.emissiveIntensity = 2.0;
+  state.selected = mesh;
+  showInfo(mesh);
+}
+
+function deselectAll() {
+  state.prisms.forEach(m => {
+    if (m.userData.active) m.material = matActive.clone();
+    else m.material = matNormal.clone();
+  });
+  state.selected = null;
+}
+
+function showInfo(mesh) {
+  const { a, b, layer } = mesh.userData;
+  const norm = e12Norm(a, b);
+  const cart = e12toCart(a, b, layer);
+  document.getElementById('info-e12').textContent = `(${a}, ${b})`;
+  document.getElementById('info-norm').textContent = norm.toString();
+  document.getElementById('info-cart').textContent = `(${cart.x.toFixed(2)}, ${cart.y.toFixed(2)}, ${cart.z.toFixed(2)})`;
+  document.getElementById('info-layer').textContent = layer.toString();
+  // E12 value as complex: a + b*omega
+  document.getElementById('info-val').textContent = `${a} + ${b}ω`;
+  document.getElementById('info-panel').style.display = 'block';
+}
+
+function hideInfo() {
+  document.getElementById('info-panel').style.display = 'none';
+}
+
+// ─── UI Buttons ───
+const btnBuild = document.getElementById('btn-build');
+const btnRotate = document.getElementById('btn-rotate');
+const btnDrift = document.getElementById('btn-drift');
+const btnPresets = document.getElementById('btn-presets');
+const btnExplode = document.getElementById('btn-explode');
+const btnClear = document.getElementById('btn-clear');
+const presetMenu = document.getElementById('preset-menu');
+const modeLabel = document.getElementById('mode-label');
+const driftIndicator = document.getElementById('drift-indicator');
+
+btnBuild.addEventListener('click', () => {
+  state.buildMode = !state.buildMode;
+  btnBuild.classList.toggle('active', state.buildMode);
+  modeLabel.style.display = state.buildMode ? 'block' : 'none';
+  modeLabel.textContent = state.buildMode ? '🔧 BUILD MODE — Click to place, Right-click to remove' : '';
+  document.getElementById('stat-mode').textContent = `Mode: ${state.buildMode ? 'Build' : 'View'}`;
+  controls.autoRotate = !state.buildMode;
+});
+
+btnRotate.addEventListener('click', () => {
+  if (state.animating) return;
+  rotateExact();
+});
+
+btnDrift.addEventListener('click', () => {
+  if (state.animating) return;
+  state.floatMode = !state.floatMode;
+  btnDrift.classList.toggle('active', state.floatMode);
+  driftIndicator.style.display = state.floatMode ? 'block' : 'none';
+  if (state.floatMode) {
+    // Show float drift by rotating each prism with float math
+    rotateFloatDrift();
+  } else {
+    // Snap back to exact
+    state.prisms.forEach(m => {
+      const { a, b, layer } = m.userData;
+      m.position.copy(e12toCart(a, b, layer));
+    });
+  }
+});
+
+btnPresets.addEventListener('click', () => {
+  presetMenu.style.display = presetMenu.style.display === 'block' ? 'none' : 'block';
+});
+
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    loadPreset(btn.dataset.preset);
+    presetMenu.style.display = 'none';
+    controls.autoRotate = true;
+  });
+});
+
+btnExplode.addEventListener('click', () => {
+  state.exploding = !state.exploding;
+  btnExplode.classList.toggle('active', state.exploding);
+});
+
+btnClear.addEventListener('click', clearPrisms);
+
+// ─── Exact Rotation ───
+function rotateExact() {
+  state.animating = true;
+  state.targetRotation = state.rotationAngle + Math.PI / 3; // 60 degrees
+  animateRotation();
+}
+
+function animateRotation() {
+  const diff = state.targetRotation - state.rotationAngle;
+  if (Math.abs(diff) < 0.001) {
+    // Snap to exact
+    state.rotationAngle = state.targetRotation;
+    state.prisms.forEach(m => {
+      const { a, b, layer } = m.userData;
+      const rot = e12Rotate60(a, b);
+      m.userData.a = rot.a;
+      m.userData.b = rot.b;
+      m.userData.originalPos = e12toCart(rot.a, rot.b, layer);
+      m.position.copy(m.userData.originalPos);
+    });
+    state.prismRotOffset = 0;
+    state.animating = false;
+    // Update selected info
+    if (state.selected) showInfo(state.selected);
+    updateStats();
+    return;
+  }
+
+  state.rotationAngle += diff * 0.08;
+  // Rotate visually around Y axis
+  prismGroup.rotation.y = state.rotationAngle - (state.targetRotation - Math.PI / 3);
+  requestAnimationFrame(animateRotation);
+}
+
+// ─── Float Drift Rotation ───
+function rotateFloatDrift() {
+  // Use float rotation matrix and accumulate error
+  const angle = Math.PI / 3; // 60 degrees
+  const cos60 = Math.cos(angle);
+  const sin60 = Math.sin(angle);
+
+  state.prisms.forEach(m => {
+    const { originalPos } = m.userData;
+    // Float rotation: multiply by rotation matrix
+    const fx = originalPos.x * cos60 - originalPos.z * sin60;
+    const fz = originalPos.x * sin60 + originalPos.z * cos60;
+
+    // Add intentional drift to make it visible
+    const drift = (Math.random() - 0.5) * 0.12;
+    m.position.x = fx + drift;
+    m.position.z = fz + drift;
+
+    // Update material to show "error" - reddish tint
+    m.material = new THREE.MeshStandardMaterial({
+      color: 0xff4422, emissive: 0x882211, emissiveIntensity: 0.8,
+      metalness: 0.6, roughness: 0.3
+    });
+  });
+}
+
+// ─── Stats ───
+function updateStats() {
+  document.getElementById('stat-count').textContent = `Prisms: ${state.prisms.length}`;
+}
+
+let frameCount = 0, lastFpsTime = performance.now();
+function updateFPS() {
+  frameCount++;
+  const now = performance.now();
+  if (now - lastFpsTime > 500) {
+    const fps = Math.round(frameCount / ((now - lastFpsTime) / 1000));
+    document.getElementById('stat-fps').textContent = `FPS: ${fps}`;
+    frameCount = 0;
+    lastFpsTime = now;
+  }
+}
+
+// ─── Animation Loop ───
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  const dt = clock.getDelta();
+
+  controls.update();
+
+  // Animate particles
+  const pPos = particles.geometry.attributes.position.array;
+  for (let i = 0; i < particleCount; i++) {
+    pPos[i * 3 + 1] += Math.sin(t * 0.3 + i) * 0.001;
+  }
+  particles.geometry.attributes.position.needsUpdate = true;
+  particles.rotation.y = t * 0.02;
+
+  // Pulse active prisms
+  if (!state.floatMode) {
+    state.prisms.forEach((m, i) => {
+      if (m.userData.active && m !== state.selected) {
+        m.material.emissiveIntensity = 0.8 + Math.sin(t * 2 + i * 0.1) * 0.3;
+      }
+    });
+  }
+
+  // Explode animation
+  if (state.exploding) {
+    state.explodeFactor = Math.min(1, state.explodeFactor + 0.02);
+  } else {
+    state.explodeFactor = Math.max(0, state.explodeFactor - 0.02);
+  }
+  if (state.explodeFactor > 0.001) {
+    state.prisms.forEach(m => {
+      const { layer, originalPos } = m.userData;
+      const dir = originalPos.clone().normalize();
+      const yOff = layer * 2.5 * state.explodeFactor;
+      const radialOff = state.explodeFactor * 1.5 * (layer + 1) * 0.3;
+      m.position.x = originalPos.x + dir.x * radialOff;
+      m.position.z = originalPos.z + dir.z * radialOff;
+      m.position.y = originalPos.y + yOff;
+    });
+  } else if (!state.floatMode && !state.animating) {
+    // Reset positions
+    state.prisms.forEach(m => {
+      m.position.lerp(m.userData.originalPos, 0.1);
+    });
+  }
+
+  // Point light orbits gently
+  pointLight.position.x = Math.sin(t * 0.5) * 5;
+  pointLight.position.z = Math.cos(t * 0.5) * 5;
+  pointLight.position.y = 3 + Math.sin(t * 0.3);
+
+  updateFPS();
+  composer.render();
+}
+
+animate();
+
+// ─── Resize ───
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ─── Keyboard shortcuts ───
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'b') btnBuild.click();
+  if (e.key === 'r') btnRotate.click();
+  if (e.key === 'f') btnDrift.click();
+  if (e.key === 'e') btnExplode.click();
+  if (e.key === 'Escape') {
+    deselectAll();
+    hideInfo();
+    presetMenu.style.display = 'none';
+  }
+});
+
+// Initial stats
+updateStats();
+console.log('⚒️ Eisenstein 3D loaded —', state.prisms.length, 'prisms');
+</script>
+</body>
+</html>
