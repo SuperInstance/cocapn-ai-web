@@ -73,6 +73,7 @@ footer a{color:var(--dim)}footer a:hover{color:var(--ok)}
 <a href="#why-it-matters">Why It Matters</a>
 <a href="#how-it-works">How It Works</a>
 <a href="#the-numbers">Benchmarks</a>
+<a href="#fleet-on-arm">Fleet on Arm</a>
 <a href="#what-doesnt-work">Limitations</a>
 <a href="#get-started">Get Started</a>
 </nav>
@@ -448,6 +449,139 @@ At 1,000 fixes per second on a cellular modem:
 </ul>
 <p>
 On a satellite link at $1/MB, E12 saves $43K/year vs F64. But the real cost isn't money — it's that F64 still isn't exact.
+</p>
+
+
+<!-- ============================================ -->
+<!-- FLEET ON ARM                                 -->
+<!-- ============================================ -->
+<h2 id="fleet-on-arm" style="margin-top:2.5em">Fleet on Arm — Constraint Safety for Robotics</h2>
+
+<p style="font-size:1.1em;color:var(--ok);margin:1em 0">
+Every OpenArm, a fleet participant. Zero extra hardware.
+</p>
+
+<p>
+The same Eisenstein constraint math that eliminates drift in navigation and games now runs on robotic arms. <strong>OpenArm</strong> wraps every motor command in a constraint-check layer — joint limits, torque bounds, and Eisenstein workspace envelopes — all checked before the signal reaches the CAN bus. No extra hardware. No FPGA. Just math.
+</p>
+
+<div class="cols">
+<div class="col">
+<h4>Constraint Safety</h4>
+<p style="font-size:.85em">
+Joint limits, torque limits, Eisenstein workspace bounds. Every motor command checked before it reaches the CAN bus. Severity pipeline:
+</p>
+<p style="font-size:.8em;color:var(--dim)">
+<span style="color:#88ccff">advisory</span> →
+<span style="color:var(--ok)">soft</span> →
+<span style="color:var(--warn)">hard</span> →
+<span style="color:var(--bad)">critical</span> →
+<strong style="color:#ff2222">emergency stop</strong>
+</p>
+<p style="font-size:.85em">
+Commands that violate a hard constraint are silently clamped. Critical violations trigger an emergency brake. Advisory warnings log but don't interrupt motion.
+</p>
+</div>
+<div class="col">
+<h4>Fleet Connectivity</h4>
+<p style="font-size:.85em">
+PLATO knowledge system connects every arm. Multi-arm coordination through shared constraint state. Fleet agents monitor and control via HTTP API.
+</p>
+<p style="font-size:.85em">
+Embodiment protocol upgrades arm intelligence over the network — new constraint profiles, workspace envelopes, and safety parameters deploy without reflashing firmware.
+</p>
+</div>
+<div class="col">
+<h4>Eisenstein Workspace</h4>
+<p style="font-size:.85em">
+Hex lattice geometry for 6-7 DOF arms. Tighter than axis-aligned bounding boxes. 6-fold symmetry matches joint space geometry.
+</p>
+<p style="font-size:.85em">
+<span class="badge badge-ok">340B</span> constraint checks/sec on consumer GPU. Zero drift, exact integer arithmetic. Workspace membership is a single integer comparison — no trig, no float, no epsilon.
+</p>
+</div>
+</div>
+
+<h3>Python API</h3>
+<pre class="lang-python">from cocapn_openarm import ConstraintArm, JointLimit, EisensteinWorkspace
+
+arm = ConstraintArm(raw_arm, plato_server="192.168.1.100:8847")
+arm.add_constraint(JointLimit(0, -3.14, 3.14))
+arm.add_constraint(EisensteinWorkspace(radius=10))
+arm.set_position(0, 1.57)  # ← constraint-checked</pre>
+
+<h3>Architecture</h3>
+<div class="diagram">
+<svg width="560" height="220" viewBox="0 0 560 220" font-family="'SF Mono','Fira Code','Consolas','Menlo',monospace">
+  <!-- Physical Arm box -->
+  <rect x="10" y="30" width="100" height="50" rx="6" fill="var(--bg3)" stroke="#445" stroke-width="1.5"/>
+  <text x="60" y="52" fill="#aab" font-size="9" text-anchor="middle">Physical</text>
+  <text x="60" y="64" fill="var(--ok)" font-size="10" font-weight="bold" text-anchor="middle">OpenArm</text>
+
+  <!-- Arrow: Arm → ESP32 -->
+  <line x1="110" y1="55" x2="150" y2="55" stroke="var(--ok)" stroke-width="1.5" marker-end="url(#arrowG)"/>
+  <text x="130" y="48" fill="var(--dim)" font-size="7" text-anchor="middle">CAN</text>
+
+  <!-- ESP32 box -->
+  <rect x="155" y="25" width="120" height="60" rx="6" fill="var(--bg3)" stroke="var(--ok)" stroke-width="1.5"/>
+  <text x="215" y="45" fill="var(--ok)" font-size="10" font-weight="bold" text-anchor="middle">ESP32</text>
+  <text x="215" y="58" fill="#889" font-size="8" text-anchor="middle">constraint check</text>
+  <text x="215" y="70" fill="#889" font-size="8" text-anchor="middle">@ 100 Hz</text>
+
+  <!-- Arrow: ESP32 → CAN Bus -->
+  <line x1="275" y1="55" x2="315" y2="55" stroke="var(--ok)" stroke-width="1.5" marker-end="url(#arrowG)"/>
+  <text x="295" y="48" fill="var(--dim)" font-size="7" text-anchor="middle">cmd</text>
+
+  <!-- CAN Bus bar -->
+  <rect x="320" y="35" width="80" height="40" rx="4" fill="var(--bg3)" stroke="var(--warn)" stroke-width="1.5"/>
+  <text x="360" y="52" fill="var(--warn)" font-size="9" font-weight="bold" text-anchor="middle">CAN Bus</text>
+  <text x="360" y="64" fill="#889" font-size="7" text-anchor="middle">motors</text>
+
+  <!-- PLATO Server box -->
+  <rect x="155" y="120" width="120" height="60" rx="6" fill="var(--bg3)" stroke="#cc88ff" stroke-width="1.5"/>
+  <text x="215" y="142" fill="#cc88ff" font-size="10" font-weight="bold" text-anchor="middle">PLATO Server</text>
+  <text x="215" y="155" fill="#889" font-size="8" text-anchor="middle">knowledge system</text>
+  <text x="215" y="167" fill="#889" font-size="8" text-anchor="middle">:8847</text>
+
+  <!-- Arrow: ESP32 → PLATO -->
+  <line x1="215" y1="85" x2="215" y2="120" stroke="#cc88ff" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="230" y="105" fill="var(--dim)" font-size="7">HTTP</text>
+
+  <!-- Fleet Agents box -->
+  <rect x="340" y="120" width="120" height="60" rx="6" fill="var(--bg3)" stroke="#88aaff" stroke-width="1.5"/>
+  <text x="400" y="142" fill="#88aaff" font-size="10" font-weight="bold" text-anchor="middle">Fleet Agents</text>
+  <text x="400" y="155" fill="#889" font-size="8" text-anchor="middle">monitor + control</text>
+  <text x="400" y="167" fill="#889" font-size="8" text-anchor="middle">multi-arm coord</text>
+
+  <!-- Arrow: PLATO → Fleet -->
+  <line x1="275" y1="150" x2="340" y2="150" stroke="#88aaff" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- GPU box -->
+  <rect x="10" y="120" width="120" height="60" rx="6" fill="var(--bg3)" stroke="var(--bad)" stroke-width="1.5"/>
+  <text x="70" y="142" fill="var(--bad)" font-size="10" font-weight="bold" text-anchor="middle">GPU</text>
+  <text x="70" y="155" fill="#889" font-size="8" text-anchor="middle">340B checks/sec</text>
+  <text x="70" y="167" fill="#889" font-size="8" text-anchor="middle">Eisenstein kernel</text>
+
+  <!-- Arrow: GPU → PLATO -->
+  <line x1="130" y1="150" x2="155" y2="150" stroke="var(--bad)" stroke-width="1" marker-end="url(#arrowR)"/>
+
+  <!-- Arrowhead defs -->
+  <defs>
+    <marker id="arrowG" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="var(--ok)"/>
+    </marker>
+    <marker id="arrowR" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="var(--bad)"/>
+    </marker>
+  </defs>
+</svg>
+<div class="caption">Physical arm → ESP32 (constraint check at 100Hz) → CAN bus. PLATO server connects fleet agents for coordination and over-the-network upgrades.</div>
+</div>
+
+<p style="font-size:.85em;color:var(--dim)">
+Repos: <a href="https://github.com/SuperInstance/openarm">SuperInstance/openarm</a> ·
+<a href="https://github.com/SuperInstance/guard2mask-gpu">SuperInstance/guard2mask-gpu</a> ·
+<a href="https://github.com/SuperInstance/flux-vm-gpu">SuperInstance/flux-vm-gpu</a>
 </p>
 
 <!-- ============================================ -->
