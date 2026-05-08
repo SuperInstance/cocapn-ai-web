@@ -470,6 +470,59 @@ Negative results are data. We document them <a href="errata.html">publicly</a>. 
 </div>
 </div>
 
+<!-- ============================================ -->
+<!-- THE ECOSYSTEM                                -->
+<!-- ============================================ -->
+<h2>Further Reading</h2>
+
+<p>
+Eisenstein integers are one piece of a larger project: <a href="https://github.com/SuperInstance">SuperInstance</a> builds tools for exact computation in domains where floating-point drift causes real failures.
+</p>
+
+<h3>Constraint Theory</h3>
+<p>
+A framework for checking whether systems satisfy constraints — with zero false negatives. The core idea: represent constraints as Eisenstein integer operations, and the math guarantees soundness. Used for sensor fusion, autopilot validation, and real-time monitoring.
+</p>
+<ul style="margin:.4em 0 .4em 1.5em;font-size:.9em;line-height:1.8">
+<li><a href="https://github.com/SuperInstance/constraint-theory-core"><strong>constraint-theory-core</strong></a> — Rust library, <code>cargo add constraint-theory-core</code> (184 tests, published to crates.io)</li>
+<li><a href="https://github.com/SuperInstance/flux-lucid"><strong>flux-lucid</strong></a> — unified ecosystem crate with intent vectors, alignment checking, and tolerance navigation (93 tests)</li>
+<li><a href="https://github.com/SuperInstance/holonomy-consensus"><strong>holonomy-consensus</strong></a> — topological consensus for distributed systems using hex lattice holonomy (30 tests)</li>
+</ul>
+
+<h3>Embedded &amp; Edge</h3>
+<p>
+The <code>eisenstein</code> crate is <code>no_std</code> with zero dependencies. The core type is ~600 lines of Rust. We've compiled it for ARM Cortex-M targets. A C runtime fits in 4KB — small enough for microcontrollers that don't have an FPU.
+</p>
+<ul style="margin:.4em 0 .4em 1.5em;font-size:.9em;line-height:1.8">
+<li><a href="https://github.com/SuperInstance/fleet-coordinate"><strong>fleet-coordinate</strong></a> — coordination primitives for multi-agent fleets using Eisenstein spatial hashing</li>
+<li><a href="https://github.com/SuperInstance/pythagorean48-codes"><strong>pythagorean48-codes</strong></a> — Pythagorean snapping to Eisenstein lattice points (lockstep multiplayer desync prevention)</li>
+</ul>
+
+<h3>Developer Tools</h3>
+<p>
+Benchmarks, fuzz testing, and code generation — the infrastructure we built to verify the library works correctly.
+</p>
+<ul style="margin:.4em 0 .4em 1.5em;font-size:.9em;line-height:1.8">
+<li><a href="https://github.com/SuperInstance/eisenstein-bench"><strong>eisenstein-bench</strong></a> — CLI benchmark suite (drift, disk, snap, norm commands)</li>
+<li><a href="https://github.com/SuperInstance/eisenstein-fuzz"><strong>eisenstein-fuzz</strong></a> — property-based fuzzing (rotation identity, ring axioms, D6 closure, 13 property tests)</li>
+<li><a href="https://github.com/SuperInstance/hexgrid-gen"><strong>hexgrid-gen</strong></a> — code generator for hex grid lookup tables (Rust, C, Python, JS, JSON output)</li>
+</ul>
+
+<h3>CUDA Benchmarks</h3>
+<p>
+We ran 54 GPU experiments on an RTX 4050 (Ada) measuring constraint throughput with Eisenstein integer operations. The results are in <a href="https://github.com/SuperInstance/constraint-theory-ecosystem">constraint-theory-ecosystem</a>. Highlights: INT8×8 achieves 341B constraints/sec, differential testing across 61M inputs produced zero mismatches, and CUDA Graphs gave 18× kernel launch speedup. The negative results (FP16 unsafe past 2048, tensor cores marginal, bank padding counterproductive) are documented in our <a href="errata.html">errata</a>.
+</p>
+
+<h3>Cross-Language Ports</h3>
+<p>
+The same Eisenstein arithmetic available in three languages, tested for behavioral parity.
+</p>
+<ul style="margin:.4em 0 .4em 1.5em;font-size:.9em;line-height:1.8">
+<li><strong>Rust</strong> — <code>cargo add eisenstein</code> (37 tests)</li>
+<li><strong>Python</strong> — <code>pip install constraint-theory</code> (pure Python, zero deps)</li>
+<li><strong>JavaScript</strong> — <code>npm install @superinstance/polyformalism-a2a</code> (ESM, zero deps)</li>
+</ul>
+
 </div>
 
 <!-- ============================================ -->
