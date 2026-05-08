@@ -132,7 +132,7 @@ function init(){
   var st="";for(var i=0;i<5;i++)st+=i<t.diff?"\u2605":"\u2606";
   document.getElementById("df").textContent=st;
   // Auto-start on first track
-  if(ci===0&&tick===0){autoAdv=true;updateAA();cdElStart()}
+  if(ci===0&&tick===0){autoAdv=true;updateAA()}
 }
 var autoAdv=false,aaTimer=null;
 function restart(){if(aaTimer)clearTimeout(aaTimer);autoAdv=false;cumE=0;cumF32=0;cumF64=0;cumOkE=0;cumOkF32=0;cumOkF64=0;cumTracks=0;init();updateAA()}
