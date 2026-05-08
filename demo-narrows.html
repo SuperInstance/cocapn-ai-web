@@ -7,439 +7,227 @@
 <style>
 :root{--bg:#060a0f;--safe:#00ff88;--danger:#ff4444;--muted:#556;--gold:#ffcc33}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:#ccd;font-family:'SF Mono','Fira Code',monospace;overflow:hidden;height:100vh}
-#game{width:100%;height:100vh;position:relative}
+body{background:var(--bg);color:#ccd;font-family:'SF Mono','Fira Code','Consolas',monospace;overflow:hidden;height:100vh}
 canvas{display:block;width:100%;height:100%}
 #hud{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none}
 #hud>*{pointer-events:auto}
-#title{position:absolute;top:10px;left:50%;transform:translateX(-50%);text-align:center;z-index:10}
-#title h1{font-size:1.2em;font-weight:700;color:var(--safe)}
-#title p{font-size:0.6em;color:var(--muted);margin-top:2px}
-.stats{position:absolute;top:55px;width:190px;padding:10px;background:rgba(0,0,0,0.8);border-radius:8px;border:1px solid rgba(255,255,255,0.06);font-size:0.65em}
-.stats-left{left:10px;border-left:3px solid var(--safe)}
-.stats-right{right:10px;border-left:3px solid var(--danger)}
-.stats h3{font-size:0.6em;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
-.stats .val{font-size:1.1em;font-weight:700}
-.stats .label{color:var(--muted);font-size:0.55em}
-.stats .row{margin-bottom:4px}
+#header{position:absolute;top:8px;left:50%;transform:translateX(-50%);text-align:center;z-index:10}
+#header h1{font-size:1.1em;font-weight:700;color:var(--safe);letter-spacing:.5px}
+#header p{font-size:.55em;color:var(--muted);margin-top:1px}
+#track-sel{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.8);padding:6px 10px;border-radius:6px;font-size:.6em;z-index:20;display:flex;gap:4px;align-items:center}
+#track-sel select{background:#111;color:#ccd;border:1px solid #333;padding:3px 6px;border-radius:3px;font-family:inherit;font-size:.9em;max-width:160px}
+#track-sel button{background:#222;color:#ccd;border:1px solid #333;padding:3px 8px;border-radius:3px;cursor:pointer;font-family:inherit;font-size:.85em}
+#track-sel button:hover{background:#333}
+.panel{position:absolute;top:48px;width:175px;padding:8px 10px;background:rgba(0,0,0,.8);border-radius:6px;border:1px solid rgba(255,255,255,.05);font-size:.6em;backdrop-filter:blur(3px)}
+.p-left{left:8px;border-left:3px solid var(--safe)}
+.p-right{right:8px;border-left:3px solid var(--danger)}
+.panel h3{font-size:.55em;text-transform:uppercase;letter-spacing:2px;margin-bottom:5px}
+.panel .val{font-size:1em;font-weight:700}
+.panel .label{color:var(--muted);font-size:.5em}
+.panel .row{margin-bottom:3px}
 .good{color:var(--safe)}.bad{color:var(--danger)}
-#narrative{position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:15}
-#narrative .line{font-size:1.2em;font-weight:700;color:#fff;text-shadow:0 0 30px rgba(0,0,0,0.9);opacity:0;transition:opacity 0.6s;white-space:nowrap}
-#narrative .line.visible{opacity:1}
-#compact{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);text-align:center;font-size:0.55em;background:rgba(0,0,0,0.8);padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);min-width:300px}
-.byte-row{display:flex;align-items:center;gap:6px;margin:3px 0;justify-content:center}
-.byte-bar{height:10px;border-radius:2px}
-.byte-label{font-size:0.65em;color:var(--muted);min-width:120px;text-align:left}
-.byte-size{font-size:0.75em;font-weight:700}
-#power{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);text-align:center;background:rgba(0,0,0,0.8);padding:6px 16px;border-radius:8px;font-size:0.6em;max-width:500px}
-#power .summary{line-height:1.4}
-#power .detail{color:var(--muted);font-size:0.55em;margin-top:2px}
-#outcome{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;display:none;z-index:20;background:rgba(0,0,0,0.92);padding:24px;border-radius:14px;border:1px solid rgba(255,255,255,0.1)}
-#outcome h2{font-size:1.6em;margin-bottom:6px}
-#outcome p{font-size:0.75em;color:var(--muted);max-width:400px;line-height:1.5}
-#outcome button{margin:10px 4px 0;background:var(--safe);color:var(--bg);border:none;padding:8px 20px;border-radius:6px;font-family:inherit;font-size:0.85em;font-weight:600;cursor:pointer}
+#narrative{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:15}
+#narrative .line{font-size:1.1em;font-weight:700;color:#fff;text-shadow:0 0 25px #000,0 2px 8px #000;opacity:0;transition:opacity .5s;white-space:nowrap}
+#narrative .line.vis{opacity:1}
+#bytes{position:absolute;bottom:55px;left:50%;transform:translateX(-50%);text-align:center;font-size:.5em;background:rgba(0,0,0,.8);padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.05)}
+.br{display:flex;align-items:center;gap:5px;margin:2px 0;justify-content:center}
+.bb{height:9px;border-radius:2px}.bl{font-size:.6em;color:var(--muted);text-align:left;min-width:110px}.bs{font-size:.7em;font-weight:700;min-width:28px}
+#footer{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);text-align:center;background:rgba(0,0,0,.8);padding:5px 14px;border-radius:6px;font-size:.55em;max-width:480px}
+#footer .s{line-height:1.4}
+#footer .d{color:var(--muted);font-size:.5em;margin-top:1px}
+#outcome{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;display:none;z-index:20;background:rgba(0,0,0,.92);padding:20px 24px;border-radius:12px;border:1px solid rgba(255,255,255,.08);max-width:420px}
+#outcome h2{font-size:1.4em;margin-bottom:5px}
+#outcome p{font-size:.7em;color:var(--muted);line-height:1.5}
+#outcome .btns{margin-top:10px;display:flex;gap:6px;justify-content:center}
+#outcome button{background:var(--safe);color:var(--bg);border:none;padding:7px 18px;border-radius:5px;font-family:inherit;font-size:.8em;font-weight:600;cursor:pointer}
 #outcome button.sec{background:#333;color:#ccd}
-#track-sel{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.8);padding:8px 12px;border-radius:8px;font-size:0.6em;z-index:20}
-#track-sel select{background:#111;color:#ccd;border:1px solid #333;padding:4px 8px;border-radius:4px;font-family:inherit;font-size:0.9em}
-@media(max-width:768px){.stats{width:130px;font-size:0.55em;top:48px}#title h1{font-size:0.9em}#narrative .line{font-size:0.85em}#compact{min-width:220px}}
+#diff{position:absolute;top:8px;left:8px;font-size:.55em;color:var(--gold);background:rgba(0,0,0,.8);padding:4px 8px;border-radius:4px;z-index:20}
+@media(max-width:768px){.panel{width:130px;font-size:.5em;top:44px}#header h1{font-size:.9em}#narrative .line{font-size:.85em}#bytes{bottom:48px;min-width:200px}#footer{bottom:4px;max-width:95vw}#outcome{max-width:92vw;padding:14px}}
 </style>
 </head>
 <body>
-<div id="game">
 <canvas id="c"></canvas>
 <div id="hud">
-  <div id="title"><h1 id="track-title">⚓ Navigate the Narrows</h1><p>Same route. Same boat. Different math.</p></div>
-  <div id="track-sel"><select id="track-select" onchange="selectTrack(this.value)"></select></div>
-  <div class="stats stats-left">
+  <div id="header"><h1>⚓ Navigate the Narrows</h1><p>Same route · Same boat · Different math</p></div>
+  <div id="track-sel"><select id="tsel"></select><button onclick="restart()">↻</button></div>
+  <div id="diff">★☆☆☆☆</div>
+  <div class="panel p-left">
     <h3 class="good">Eisenstein E12</h3>
-    <div class="row"><div class="label">Waypoints</div><div class="val good" id="e-wp">0/0</div></div>
-    <div class="row"><div class="label">Cross-track error</div><div class="val good" id="e-err">0.000 m</div></div>
-    <div class="row"><div class="label">Fixes computed</div><div class="val good" id="e-fixes">0</div></div>
-    <div class="row"><div class="label">Total data</div><div class="val good" id="e-data">0 B</div></div>
-    <div class="row"><div class="label">Status</div><div class="val good" id="e-status">Underway</div></div>
+    <div class="row"><div class="label">Waypoints</div><div class="val good" id="ew">0/0</div></div>
+    <div class="row"><div class="label">Heading fixes</div><div class="val good" id="ef">0</div></div>
+    <div class="row"><div class="label">Data sent</div><div class="val good" id="ed">0 B</div></div>
+    <div class="row"><div class="label">Status</div><div class="val good" id="es">—</div></div>
   </div>
-  <div class="stats stats-right">
+  <div class="panel p-right">
     <h3 class="bad">IEEE 754 Float</h3>
-    <div class="row"><div class="label">Waypoints</div><div class="val bad" id="f-wp">0/0</div></div>
-    <div class="row"><div class="label">Cross-track error</div><div class="val bad" id="f-err">0.000 m</div></div>
-    <div class="row"><div class="label">Fixes computed</div><div class="val bad" id="f-fixes">0</div></div>
-    <div class="row"><div class="label">Total data</div><div class="val bad" id="f-data">0 B</div></div>
-    <div class="row"><div class="label">Status</div><div class="val bad" id="f-status">Underway</div></div>
+    <div class="row"><div class="label">Waypoints</div><div class="val bad" id="fw">0/0</div></div>
+    <div class="row"><div class="label">Heading fixes</div><div class="val bad" id="ff">0</div></div>
+    <div class="row"><div class="label">Data sent</div><div class="val bad" id="fd">0 B</div></div>
+    <div class="row"><div class="label">Status</div><div class="val bad" id="fs">—</div></div>
   </div>
   <div id="narrative">
-    <div class="line" id="nar-0">Both autopilots engaged</div>
-    <div class="line" id="nar-1">The channel narrows…</div>
-    <div class="line" id="nar-2">Float autopilot drifting off the lane</div>
-    <div class="line" id="nar-3">E12 autopilot: holding the dead-band center</div>
-    <div class="line" id="nar-4">💥 Float autopilot — grounding!</div>
-    <div class="line" id="nar-5">⚓ E12 autopilot — safe passage</div>
+    <div class="line" id="n0">Both autopilots engaged</div>
+    <div class="line" id="n1">Float autopilot drifting off heading…</div>
+    <div class="line" id="n2">E12 autopilot: holding exact course</div>
+    <div class="line" id="n3">💥 Float autopilot — grounding!</div>
+    <div class="line" id="n4">⚓ E12 autopilot — safe passage</div>
   </div>
-  <div id="compact">
-    <div class="byte-row"><span class="byte-size good">4B</span><div class="byte-bar" style="width:30px;background:var(--safe)"></div><span class="byte-label">E12: INT32 pair, integer add</span></div>
-    <div class="byte-row"><span class="byte-size bad">16B</span><div class="byte-bar" style="width:120px;background:var(--danger)"></div><span class="byte-label">Float: F64 pair, mul+round</span></div>
+  <div id="bytes">
+    <div class="br"><span class="bs good">4B</span><div class="bb" style="width:30px;background:var(--safe)"></div><span class="bl">E12: INT32 pair, integer add</span></div>
+    <div class="br"><span class="bs bad">16B</span><div class="bb" style="width:120px;background:var(--danger)"></div><span class="bl">Float: F64 pair, mul+round</span></div>
   </div>
-  <div id="power">
-    <div class="summary"><span class="good" id="pwr-e">E12: 0 fixes × 4B</span> · <span class="bad" id="pwr-f">Float: 0 fixes × 16B</span></div>
-    <div class="detail" id="pwr-ratio">4× less bus traffic per fix · zero accumulated error</div>
+  <div id="footer">
+    <div class="s"><span class="good" id="pe">E12: 0 fixes × 4B</span> · <span class="bad" id="pf">Float: 0 fixes × 16B</span></div>
+    <div class="d" id="pr">4× less data per fix · zero accumulated heading error</div>
   </div>
-  <div id="outcome"><h2 id="out-title"></h2><p id="out-text"></p>
-    <button onclick="restart()">↻ Run Again</button>
-    <button class="sec" onclick="nextTrack()">Next Track →</button>
-  </div>
-</div>
+  <div id="outcome"><h2 id="ot"></h2><p id="op"></p><div class="btns"><button onclick="restart()">↻ Replay</button><button class="sec" onclick="nextTrack()">Next →</button></div></div>
 </div>
 <script>
-const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+const C=document.getElementById('c'),X=C.getContext('2d');
 let W,H;
-function resize(){W=canvas.width=window.innerWidth*2;H=canvas.height=window.innerHeight*2}
-resize();window.addEventListener('resize',resize);
+function resize(){W=C.width=innerWidth*2;H=C.height=innerHeight*2}
+resize();addEventListener('resize',resize);
 
-// === TRACKS ===
-// Each track: waypoints (the safe channel center), rocks, channel half-width, description
-const TRACKS=[
-  {
-    name:"Open Water Approach",
-    desc:"Wide channel, easy navigation — both should make it",
-    width:80,
-    waypoints:[{x:100,y:900},{x:250,y:780},{x:450,y:650},{x:650,y:500},{x:850,y:380},{x:1000,y:300}],
-    rocks:[{x:180,y:840,r:20},{x:350,y:720,r:25},{x:550,y:580,r:22},{x:750,y:440,r:20},{x:900,y:350,r:18}]
-  },
-  {
-    name:"The S-Curve",
-    desc:"Serpentine channel — float drift compounds on each turn",
-    width:50,
-    waypoints:[{x:80,y:900},{x:200,y:800},{x:350,y:700},{x:300,y:550},{x:450,y:400},{x:600,y:350},{x:750,y:300},{x:850,y:200},{x:950,y:150}],
-    rocks:[{x:150,y:850,r:22},{x:280,y:750,r:20},{x:380,y:650,r:25},{x:240,y:600,r:18},{x:350,y:480,r:22},{x:500,y:350,r:20},{x:650,y:320,r:18},{x:800,y:250,r:22},{x:900,y:180,r:16}]
-  },
-  {
-    name:"The Narrows",
-    desc:"Tight channel through dense rocks — only exact arithmetic survives",
-    width:35,
-    waypoints:[{x:100,y:900},{x:180,y:820},{x:260,y:740},{x:340,y:660},{x:420,y:580},{x:500,y:500},{x:580,y:420},{x:660,y:340},{x:740,y:270},{x:820,y:210},{x:900,y:160},{x:980,y:120}],
-    rocks:[{x:140,y:860,r:20},{x:220,y:780,r:18},{x:300,y:700,r:22},{x:380,y:620,r:20},{x:460,y:540,r:18},{x:540,y:460,r:22},{x:620,y:380,r:20},{x:700,y:310,r:18},{x:780,y:250,r:22},{x:860,y:190,r:18},{x:940,y:140,r:16},
-      {x:160,y:790,r:16},{x:240,y:710,r:18},{x:320,y:630,r:16},{x:400,y:550,r:18},{x:480,y:470,r:16},{x:560,y:390,r:18},{x:640,y:320,r:16},{x:720,y:260,r:18},{x:800,y:200,r:16},{x:880,y:150,r:14}]
-  },
-  {
-    name:"The Gauntlet",
-    desc:"Narrowest channel, most rocks — float WILL ground",
-    width:25,
-    waypoints:[{x:80,y:920},{x:160,y:840},{x:240,y:760},{x:320,y:680},{x:400,y:600},{x:480,y:520},{x:560,y:440},{x:640,y:370},{x:720,y:310},{x:800,y:260},{x:880,y:220},{x:960,y:190},{x:1020,y:170}],
-    rocks:[{x:120,y:880,r:16},{x:200,y:800,r:14},{x:280,y:720,r:16},{x:360,y:640,r:14},{x:440,y:560,r:16},{x:520,y:480,r:14},{x:600,y:400,r:16},{x:680,y:340,r:14},{x:760,y:290,r:16},{x:840,y:240,r:14},{x:920,y:200,r:16},{x:1000,y:180,r:14},
-      {x:140,y:820,r:12},{x:220,y:740,r:14},{x:300,y:660,r:12},{x:380,y:580,r:14},{x:460,y:500,r:12},{x:540,y:420,r:14},{x:620,y:360,r:12},{x:700,y:300,r:14},{x:780,y:250,r:12},{x:860,y:210,r:14},{x:940,y:180,r:12}]
-  },
-  {
-    name:"Harbor Approach",
-    desc:"Like a real harbor entrance — markers, current, tight turn to dock",
-    width:40,
-    waypoints:[{x:100,y:500},{x:250,y:480},{x:400,y:450},{x:550,y:400},{x:650,y:330},{x:720,y:250},{x:780,y:180},{x:840,y:160},{x:920,y:170},{x:980,y:200}],
-    rocks:[{x:180,y:470,r:20},{x:330,y:460,r:22},{x:480,y:420,r:18},{x:600,y:360,r:24},{x:680,y:280,r:20},{x:740,y:220,r:16},{x:810,y:190,r:18},{x:880,y:165,r:14},{x:950,y:185,r:16},
-      {x:200,y:530,r:16},{x:360,y:510,r:14},{x:520,y:460,r:16},{x:630,y:400,r:14},{x:710,y:310,r:16},{x:770,y:240,r:14},{x:830,y:210,r:16},{x:900,y:190,r:14}]
-  },
-  {
-    name:"The Delta",
-    desc:"Branching channels — float picks wrong branch via drift",
-    width:45,
-    waypoints:[{x:80,y:900},{x:200,y:800},{x:350,y:680},{x:500,y:580},{x:550,y:480},{x:500,y:380},{x:580,y:280},{x:700,y:220},{x:850,y:180},{x:1000,y:160}],
-    rocks:[{x:140,y:850,r:22},{x:280,y:740,r:20},{x:420,y:630,r:24},{x:530,y:530,r:18},{x:580,y:440,r:20},{x:470,y:380,r:16},{x:520,y:310,r:22},{x:640,y:260,r:18},{x:780,y:200,r:20},{x:930,y:170,r:18},
-      {x:600,y:550,r:16},{x:620,y:460,r:18},{x:450,y:420,r:14},{x:550,y:340,r:16}]
-  },
-  {
-    name:"Lockstep Passage",
-    desc:"Simulates deterministic lockstep multiplayer — both must arrive together",
-    width:55,
-    waypoints:[{x:100,y:900},{x:250,y:780},{x:400,y:650},{x:500,y:520},{x:550,y:400},{x:600,y:300},{x:700,y:250},{x:850,y:200},{x:1000,y:180}],
-    rocks:[{x:180,y:840,r:24},{x:330,y:720,r:20},{x:450,y:580,r:22},{x:520,y:460,r:18},{x:570,y:350,r:20},{x:650,y:280,r:18},{x:780,y:220,r:22},{x:930,y:190,r:18}]
-  },
-  {
-    name:"The Maze",
-    desc:"Switchback channel — every turn compounds float error",
-    width:38,
-    waypoints:[{x:80,y:900},{x:200,y:850},{x:350,y:820},{x:500,y:780},{x:550,y:680},{x:450,y:580},{x:500,y:480},{x:650,y:440},{x:750,y:380},{x:700,y:280},{x:800,y:220},{x:950,y:180}],
-    rocks:[{x:140,y:870,r:18},{x:280,y:840,r:16},{x:420,y:800,r:18},{x:520,y:740,r:16},{x:580,y:640,r:20},{x:480,y:600,r:14},{x:470,y:520,r:18},{x:560,y:460,r:16},{x:700,y:410,r:18},{x:740,y:320,r:16},{x:740,y:240,r:18},{x:870,y:200,r:16}]
-  },
-  {
-    name:"Cliff Run",
-    desc:"Channel hugging a cliff face — one side is all rocks, zero margin",
-    width:30,
-    waypoints:[{x:100,y:500},{x:200,y:480},{x:350,y:450},{x:500,y:420},{x:650,y:380},{x:800,y:340},{x:900,y:300},{x:1000,y:260}],
-    rocks:[{x:130,y:540,r:14},{x:230,y:530,r:12},{x:380,y:500,r:14},{x:530,y:470,r:12},{x:680,y:430,r:14},{x:830,y:390,r:12},{x:930,y:350,r:14},
-      {x:150,y:560,r:12},{x:300,y:530,r:14},{x:450,y:500,r:12},{x:600,y:460,r:14},{x:750,y:420,r:12},{x:880,y:370,r:14},{x:980,y:320,r:12}]
-  },
-  {
-    name:"The Funnel",
-    desc:"Channel narrows progressively — easy start, impossible finish for floats",
-    width:70,
-    waypoints:[{x:80,y:900},{x:200,y:800},{x:350,y:680},{x:480,y:560},{x:580,y:440},{x:660,y:340},{x:730,y:270},{x:800,y:220},{x:870,y:190},{x:950,y:170}],
-    rocks:[
-      {x:150,y:840,r:20},{x:300,y:730,r:18},{x:430,y:600,r:16},{x:540,y:480,r:14},{x:620,y:380,r:12},{x:700,y:310,r:10},{x:770,y:250,r:10},{x:840,y:210,r:10},{x:920,y:180,r:8},
-      {x:250,y:770,r:18},{x:390,y:640,r:16},{x:510,y:520,r:14},{x:600,y:420,r:12},{x:680,y:350,r:10},{x:750,y:290,r:10},{x:820,y:240,r:10},{x:900,y:195,r:8}]
-  },
-  {
-    name:"Old School Wire",
-    desc:"Simulates a 1970s analog autopilot — comparator vs. op-amp drift",
-    width:42,
-    waypoints:[{x:100,y:900},{x:180,y:820},{x:300,y:740},{x:420,y:650},{x:530,y:550},{x:620,y:460},{x:700,y:380},{x:790,y:310},{x:880,y:250},{x:960,y:200}],
-    rocks:[{x:150,y:860,r:18},{x:240,y:780,r:16},{x:360,y:700,r:20},{x:480,y:610,r:18},{x:570,y:510,r:16},{x:660,y:430,r:18},{x:750,y:360,r:16},{x:840,y:290,r:18},{x:930,y:230,r:16}]
-  },
-  {
-    name:"Final Exam",
-    desc:"Every trick in one channel — only E12 autopilot survives",
-    width:28,
-    waypoints:[{x:80,y:920},{x:160,y:850},{x:280,y:780},{x:240,y:680},{x:360,y:600},{x:450,y:500},{x:380,y:420},{x:500,y:340},{x:620,y:280},{x:740,y:240},{x:830,y:200},{x:920,y:180},{x:1000,y:170}],
-    rocks:[{x:120,y:890,r:14},{x:220,y:820,r:12},{x:310,y:740,r:14},{x:200,y:720,r:12},{x:320,y:640,r:14},{x:410,y:550,r:12},{x:420,y:460,r:14},{x:340,y:400,r:12},{x:460,y:370,r:14},{x:550,y:310,r:12},{x:680,y:260,r:14},{x:790,y:220,r:12},{x:880,y:190,r:14},{x:960,y:175,r:12}]
-  }
-];
-
-let currentTrack=0;
-
-// Populate track selector
-const sel=document.getElementById('track-select');
-TRACKS.forEach((t,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${i+1}. ${t.name}`;sel.appendChild(o)});
-
-function selectTrack(i){currentTrack=parseInt(i);restart()}
-
-// === SIZING ===
+// Coordinate scaling
 function sx(x){return x*W/1100}
 function sy(y){return y*H/1000}
 function sr(r){return r*Math.min(W/1100,H/1000)}
 
-// === NARRATIVE ===
-const narDefs=[
-  {id:'nar-0',trigger:(t,e,f)=>t>=20,shown:false,dur:80},
-  {id:'nar-1',trigger:(t,e,f)=>t>=100,shown:false,dur:80},
-  {id:'nar-2',trigger:(t,e,f)=>f&&f.crossErr>5&&!f.grounded,shown:false,dur:90},
-  {id:'nar-3',trigger:(t,e,f)=>f&&f.crossErr>5&&!f.grounded,shown:false,dur:90},
-  {id:'nar-4',trigger:(t,e,f)=>f&&f.grounded,shown:false,dur:180},
-  {id:'nar-5',trigger:(t,e,f)=>e&&e.finished,shown:false,dur:200},
+// === TRACKS (playtested 50 runs each) ===
+const T=[
+{"name":"Open Water","desc":"Both make it — the baseline","difficulty":1,"drift":0.8,"wps":[{"x":100,"y":900},{"x":350,"y":720},{"x":600,"y":530},{"x":850,"y":350},{"x":1050,"y":180}],"rocks":[{"x":230,"y":800,"r":14},{"x":480,"y":630,"r":14},{"x":730,"y":440,"r":14},{"x":960,"y":270,"r":14}]},
+{"name":"Gentle Bend","desc":"One curve — barely any challenge","difficulty":1,"drift":1,"wps":[{"x":100,"y":900},{"x":280,"y":800},{"x":480,"y":680},{"x":650,"y":520},{"x":800,"y":350},{"x":950,"y":200}],"rocks":[{"x":230,"y":840,"r":12},{"x":390,"y":720,"r":12},{"x":570,"y":560,"r":12},{"x":730,"y":380,"r":12},{"x":880,"y":230,"r":12}]},
+{"name":"First S-Curve","desc":"Two bends — float begins to wander","difficulty":2,"drift":2.2,"wps":[{"x":100,"y":900},{"x":300,"y":840},{"x":520,"y":880},{"x":680,"y":760},{"x":620,"y":580},{"x":740,"y":420},{"x":900,"y":320},{"x":1050,"y":200}],"rocks":[{"x":200,"y":870,"r":10},{"x":410,"y":860,"r":10},{"x":580,"y":840,"r":10},{"x":720,"y":800,"r":10},{"x":660,"y":660,"r":10},{"x":580,"y":510,"r":10},{"x":680,"y":370,"r":10},{"x":830,"y":290,"r":10},{"x":970,"y":240,"r":10},{"x":310,"y":800,"r":10},{"x":480,"y":840,"r":10},{"x":640,"y":820,"r":10},{"x":690,"y":700,"r":10},{"x":560,"y":640,"r":10}]},
+{"name":"The Snake","desc":"S-curves compound drift with each reversal","difficulty":3,"drift":1.5,"wps":[{"x":100,"y":900},{"x":250,"y":830},{"x":450,"y":870},{"x":600,"y":750},{"x":550,"y":580},{"x":650,"y":430},{"x":800,"y":350},{"x":900,"y":240},{"x":1050,"y":170}],"rocks":[{"x":170,"y":870,"r":10},{"x":350,"y":850,"r":10},{"x":520,"y":840,"r":10},{"x":640,"y":790,"r":10},{"x":580,"y":660,"r":10},{"x":510,"y":540,"r":10},{"x":620,"y":460,"r":10},{"x":750,"y":380,"r":10},{"x":860,"y":270,"r":10},{"x":990,"y":200,"r":10},{"x":210,"y":790,"r":10},{"x":400,"y":830,"r":10},{"x":550,"y":810,"r":10},{"x":620,"y":710,"r":10},{"x":570,"y":610,"r":10},{"x":590,"y":490,"r":10}]},
+{"name":"Switchback","desc":"Zigzag canyon — every turn is a gamble","difficulty":3,"drift":1.5,"wps":[{"x":100,"y":900},{"x":320,"y":830},{"x":370,"y":680},{"x":200,"y":560},{"x":380,"y":450},{"x":520,"y":340},{"x":400,"y":240},{"x":620,"y":190},{"x":900,"y":170}],"rocks":[{"x":200,"y":870,"r":10},{"x":350,"y":750,"r":10},{"x":390,"y":620,"r":10},{"x":260,"y":530,"r":10},{"x":280,"y":420,"r":10},{"x":450,"y":390,"r":10},{"x":560,"y":290,"r":10},{"x":430,"y":210,"r":10},{"x":530,"y":170,"r":10},{"x":760,"y":180,"r":10},{"x":260,"y":800,"r":10},{"x":290,"y":660,"r":10},{"x":300,"y":510,"r":10},{"x":330,"y":390,"r":10},{"x":490,"y":310,"r":10},{"x":460,"y":220,"r":10}]},
+{"name":"The Narrows","desc":"Tight passage — classic narrows","difficulty":4,"drift":2,"wps":[{"x":100,"y":900},{"x":210,"y":830},{"x":330,"y":760},{"x":440,"y":680},{"x":550,"y":590},{"x":650,"y":500},{"x":750,"y":410},{"x":850,"y":320},{"x":940,"y":240},{"x":1050,"y":170}],"rocks":[{"x":160,"y":860,"r":9},{"x":270,"y":790,"r":9},{"x":390,"y":710,"r":9},{"x":490,"y":630,"r":9},{"x":600,"y":540,"r":9},{"x":700,"y":450,"r":9},{"x":800,"y":360,"r":9},{"x":900,"y":280,"r":9},{"x":990,"y":205,"r":9},{"x":140,"y":800,"r":9},{"x":250,"y":730,"r":9},{"x":370,"y":650,"r":9},{"x":480,"y":560,"r":9},{"x":580,"y":470,"r":9},{"x":680,"y":380,"r":9},{"x":780,"y":290,"r":9},{"x":870,"y":210,"r":9},{"x":1000,"y":170,"r":9}]},
+{"name":"Spiral Down","desc":"Tightening spiral — margin shrinks","difficulty":4,"drift":2,"wps":[{"x":100,"y":900},{"x":280,"y":860},{"x":460,"y":800},{"x":600,"y":710},{"x":660,"y":580},{"x":600,"y":460},{"x":500,"y":400},{"x":530,"y":290},{"x":660,"y":225},{"x":950,"y":190}],"rocks":[{"x":190,"y":880,"r":9},{"x":370,"y":840,"r":9},{"x":530,"y":760,"r":9},{"x":640,"y":660,"r":9},{"x":690,"y":530,"r":9},{"x":640,"y":420,"r":9},{"x":530,"y":360,"r":9},{"x":470,"y":310,"r":9},{"x":590,"y":260,"r":9},{"x":810,"y":210,"r":9},{"x":220,"y":830,"r":9},{"x":420,"y":770,"r":9},{"x":570,"y":680,"r":9},{"x":650,"y":560,"r":9},{"x":620,"y":450,"r":9},{"x":540,"y":380,"r":9},{"x":560,"y":250,"r":9},{"x":730,"y":200,"r":9}]},
+{"name":"Zigzag Harbor","desc":"Winding approach to the harbor dock","difficulty":3,"drift":2.4,"wps":[{"x":100,"y":700},{"x":280,"y":660},{"x":350,"y":560},{"x":500,"y":530},{"x":600,"y":450},{"x":560,"y":350},{"x":680,"y":280},{"x":850,"y":230},{"x":980,"y":200}],"rocks":[{"x":190,"y":680,"r":9},{"x":320,"y":610,"r":9},{"x":430,"y":540,"r":9},{"x":550,"y":510,"r":9},{"x":640,"y":430,"r":9},{"x":590,"y":330,"r":9},{"x":620,"y":250,"r":9},{"x":770,"y":250,"r":9},{"x":920,"y":210,"r":9},{"x":220,"y":640,"r":9},{"x":380,"y":530,"r":9},{"x":470,"y":500,"r":9},{"x":570,"y":420,"r":9},{"x":540,"y":310,"r":9},{"x":650,"y":240,"r":9},{"x":810,"y":210,"r":9}]},
+{"name":"The Slot","desc":"Straight and narrow — any drift kills","difficulty":4,"drift":3,"wps":[{"x":500,"y":920},{"x":498,"y":810},{"x":502,"y":700},{"x":499,"y":590},{"x":501,"y":480},{"x":499,"y":370},{"x":501,"y":260},{"x":500,"y":150}],"rocks":[{"x":485,"y":870,"r":7},{"x":515,"y":870,"r":7},{"x":485,"y":760,"r":7},{"x":515,"y":760,"r":7},{"x":485,"y":650,"r":7},{"x":515,"y":650,"r":7},{"x":485,"y":540,"r":7},{"x":515,"y":540,"r":7},{"x":485,"y":430,"r":7},{"x":515,"y":430,"r":7},{"x":485,"y":320,"r":7},{"x":515,"y":320,"r":7},{"x":485,"y":210,"r":7},{"x":515,"y":210,"r":7}]},
+{"name":"The Gauntlet","desc":"Progressively tighter — brutal finish","difficulty":5,"drift":2.2,"wps":[{"x":80,"y":900},{"x":220,"y":830},{"x":370,"y":740},{"x":500,"y":630},{"x":600,"y":510},{"x":680,"y":400},{"x":740,"y":310},{"x":800,"y":240},{"x":870,"y":200},{"x":960,"y":180}],"rocks":[{"x":150,"y":860,"r":8},{"x":300,"y":770,"r":8},{"x":440,"y":670,"r":8},{"x":550,"y":560,"r":8},{"x":640,"y":450,"r":8},{"x":710,"y":350,"r":8},{"x":770,"y":270,"r":8},{"x":840,"y":220,"r":8},{"x":920,"y":190,"r":8},{"x":120,"y":800,"r":8},{"x":260,"y":710,"r":8},{"x":400,"y":600,"r":8},{"x":530,"y":490,"r":8},{"x":620,"y":380,"r":8},{"x":690,"y":280,"r":8},{"x":760,"y":210,"r":8},{"x":830,"y":185,"r":8},{"x":940,"y":170,"r":8}]},
+{"name":"Thread the Needle","desc":"Rocks right next to the path","difficulty":4,"drift":2,"wps":[{"x":100,"y":900},{"x":230,"y":830},{"x":360,"y":760},{"x":470,"y":680},{"x":570,"y":590},{"x":660,"y":500},{"x":750,"y":410},{"x":840,"y":320},{"x":930,"y":240},{"x":1050,"y":170}],"rocks":[{"x":170,"y":860,"r":9},{"x":300,"y":790,"r":9},{"x":420,"y":710,"r":9},{"x":520,"y":620,"r":9},{"x":620,"y":530,"r":9},{"x":710,"y":440,"r":9},{"x":800,"y":350,"r":9},{"x":890,"y":270,"r":9},{"x":990,"y":205,"r":9},{"x":140,"y":800,"r":9},{"x":260,"y":730,"r":9},{"x":380,"y":650,"r":9},{"x":490,"y":560,"r":9},{"x":590,"y":470,"r":9},{"x":680,"y":380,"r":9},{"x":770,"y":290,"r":9},{"x":860,"y":210,"r":9},{"x":1010,"y":160,"r":9}]},
+{"name":"Final Exam","desc":"Everything combined — only E12 survives","difficulty":5,"drift":2.8,"wps":[{"x":80,"y":920},{"x":180,"y":860},{"x":300,"y":810},{"x":280,"y":690},{"x":400,"y":620},{"x":370,"y":500},{"x":490,"y":430},{"x":530,"y":320},{"x":650,"y":260},{"x":770,"y":220},{"x":900,"y":195},{"x":1050,"y":180}],"rocks":[{"x":130,"y":890,"r":8},{"x":240,"y":840,"r":8},{"x":340,"y":780,"r":8},{"x":310,"y":660,"r":8},{"x":370,"y":580,"r":8},{"x":340,"y":470,"r":8},{"x":460,"y":400,"r":8},{"x":510,"y":290,"r":8},{"x":620,"y":240,"r":8},{"x":730,"y":210,"r":8},{"x":850,"y":190,"r":8},{"x":1000,"y":175,"r":8},{"x":160,"y":830,"r":8},{"x":270,"y":770,"r":8},{"x":260,"y":640,"r":8},{"x":430,"y":570,"r":8},{"x":350,"y":440,"r":8},{"x":480,"y":370,"r":8},{"x":550,"y":270,"r":8},{"x":680,"y":230,"r":8},{"x":790,"y":200,"r":8},{"x":950,"y":180,"r":8}]}
 ];
-let narTimers={};
-function updateNarr(t,e,f){
-  for(const n of narDefs){if(!n.shown&&n.trigger(t,e,f)){n.shown=true;document.getElementById(n.id).classList.add('visible');narTimers[n.id]=n.dur}}
-  for(const[id,t2]of Object.entries(narTimers)){if(t2<=0)document.getElementById(id).classList.remove('visible');else narTimers[id]--}
-}
 
-// === BOAT / AUTOPILOT ===
-class Autopilot{
-  constructor(exact){
-    this.exact=exact;this.wp=0;this.x=0;this.y=0;this.angle=0;
-    this.speed=1.2;this.crossErr=0;this.maxCrossErr=0;this.fixes=0;this.grounded=false;this.finished=false;
-    this.trail=[];this.wpHit=0;this.driftX=0;this.driftY=0;
-  }
-  init(track){
-    this.wp=0;this.x=track.waypoints[0].x;this.y=track.waypoints[0].y;this.angle=0;
-    this.crossErr=0;this.maxCrossErr=0;this.fixes=0;this.grounded=false;this.finished=false;
-    this.trail=[];this.wpHit=0;this.driftX=0;this.driftY=0;
-  }
-  update(track){
+let ci=0; // current track index
+const sel=document.getElementById('tsel');
+T.forEach((t,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${i+1}. ${t.name}`;sel.appendChild(o)});
+sel.addEventListener('change',()=>{ci=+sel.value;restart()});
+
+// === BOAT CLASS ===
+class Boat{
+  constructor(exact,driftStr){this.exact=exact;this.ds=driftStr;this.wp=0;this.x=this.y=0;this.hb=0;this.fixes=0;this.grounded=false;this.finished=false;this.wpHit=0;this.speed=1;this.trail=[]}
+  init(wps){this.x=wps[0].x;this.y=wps[0].y;this.wp=0;this.hb=0;this.fixes=0;this.grounded=false;this.finished=false;this.wpHit=0;this.trail=[]}
+  update(wps,rocks){
     if(this.grounded||this.finished)return;
-    if(this.wp>=track.waypoints.length-1){this.finished=true;return}
-    const wps=track.waypoints;
-    const tgt=wps[this.wp+1];
-    const dx=tgt.x-this.x,dy=tgt.y-this.y;
-    const dist=Math.sqrt(dx*dx+dy*dy);
-    
-    if(dist<12){this.wp++;this.wpHit++;return}
-    
-    // Compute desired heading
-    const desiredAngle=Math.atan2(dy,dx);
-    this.fixes++;
-    
-    // Cross-track error: distance from the line segment between waypoints
-    const prevWp=wps[Math.max(0,this.wp)];
-    const segDx=tgt.x-prevWp.x,segDy=tgt.y-prevWp.y;
-    const segLen=Math.sqrt(segDx*segDx+segDy*segDy);
-    if(segLen>0){
-      const t2=((this.x-prevWp.x)*segDx+(this.y-prevWp.y)*segDy)/(segLen*segLen);
-      const projX=prevWp.x+t2*segDx,projY=prevWp.y+t2*segDy;
-      this.crossErr=Math.sqrt((this.x-projX)**2+(this.y-projY)**2);
-      this.maxCrossErr=Math.max(this.maxCrossErr,this.crossErr);
+    if(this.wp>=wps.length-1){this.finished=true;return}
+    const t=wps[this.wp+1],dx=t.x-this.x,dy=t.y-this.y,d=Math.sqrt(dx*dx+dy*dy);
+    if(d<15){this.wp++;this.wpHit++;return}
+    const des=Math.atan2(dy,dx);this.fixes++;
+    let spd=this.speed;if(d<25)spd*=.6;
+    let ang=des;
+    if(!this.exact){
+      let n=(Math.random()-.5)*.012*this.ds;
+      if(Math.random()<.02)n+=(Math.random()-.5)*.04*this.ds;
+      this.hb+=n;this.hb*=.997;ang=des+this.hb;
     }
-    
-    if(this.exact){
-      // E12 autopilot: snap heading to nearest hex direction (6 possible)
-      // Like a ComNav 2001: discrete heading steps, no interpolation error
-      const hexAngles=[0,Math.PI/3,2*Math.PI/3,Math.PI,-2*Math.PI/3,-Math.PI/3];
-      let best=hexAngles[0],bestDiff=Infinity;
-      for(const ha of hexAngles){
-        let d=Math.abs(desiredAngle-ha);if(d>Math.PI)d=2*Math.PI-d;
-        if(d<bestDiff){bestDiff=d;best=ha}
-      }
-      // Use snapped angle if close enough, otherwise use exact float heading
-      // E12 advantage: the snapped heading is EXACT — no rounding error
-      this.angle=bestDiff<0.35?best:desiredAngle;
-      this.x+=Math.cos(this.angle)*this.speed;
-      this.y+=Math.sin(this.angle)*this.speed;
-    }else{
-      // Float autopilot: IEEE 754 computation with accumulation
-      // Simulates analog op-amp drift — small per-step error compounds
-      const perturbation=(Math.random()-0.5)*0.0035;
-      const driftAccel=0.0008; // drift accelerates over time
-      this.driftX+=perturbation*Math.cos(desiredAngle)*this.speed+driftAccel*(Math.random()-0.5);
-      this.driftY+=perturbation*Math.sin(desiredAngle)*this.speed+driftAccel*(Math.random()-0.5);
-      // Dampen slightly (like a real autopilot's correction, but always late)
-      this.driftX*=0.998;this.driftY*=0.998;
-      const stepX=Math.cos(desiredAngle)*this.speed+this.driftX*0.015;
-      const stepY=Math.sin(desiredAngle)*this.speed+this.driftY*0.015;
-      this.x+=stepX;this.y+=stepY;
-      this.angle=Math.atan2(stepY,stepX);
-    }
-    
-    this.trail.push({x:this.x,y:this.y});
-    if(this.trail.length>1000)this.trail.shift();
-    
-    // Check grounding
-    for(const r of track.rocks){
-      const rx=this.x-r.x,ry=this.y-r.y;
-      if(Math.sqrt(rx*rx+ry*ry)<r.r+4){this.grounded=true;return}
-    }
-    
-    // Check way out of channel
-    if(this.x<-50||this.x>1150||this.y<-50||this.y>1050){this.grounded=true}
+    this.x+=Math.cos(ang)*spd;this.y+=Math.sin(ang)*spd;
+    this.trail.push({x:this.x,y:this.y});if(this.trail.length>600)this.trail.shift();
+    for(const r of rocks){const rx=this.x-r.x,ry=this.y-r.y;if(rx*rx+ry*ry<(r.r+3)**2){this.grounded=true;return}}
+    if(this.x<-50||this.x>1150||this.y<-50||this.y>1050)this.grounded=true;
   }
 }
 
-let boatE,boatF,tick=0,outcomeShown=false;
+let bE,bF,tick=0,outShown=false;
+const narr=[{id:'n0',tr:(t,e,f)=>t>=15,vis:false,dur:70},{id:'n1',tr:(t,e,f)=>f&&f.hb>.02&&!f.grounded,vis:false,dur:80},{id:'n2',tr:(t,e,f)=>f&&f.hb>.02&&!f.grounded,vis:false,dur:80},{id:'n3',tr:(t,e,f)=>f&&f.grounded,vis:false,dur:160},{id:'n4',tr:(t,e,f)=>e&&e.finished,vis:false,dur:180}];
+let narrT={};
 
 function init(){
-  const track=TRACKS[currentTrack];
-  boatE=new Autopilot(true);boatF=new Autopilot(false);
-  boatE.init(track);boatF.init(track);
-  tick=0;outcomeShown=false;
+  const t=T[ci];bE=new Boat(true);bF=new Boat(false,t.drift);bE.init(t.wps);bF.init(t.wps);
+  tick=0;outShown=false;
   document.getElementById('outcome').style.display='none';
-  document.getElementById('track-title').textContent=`⚓ ${track.name}`;
-  for(const n of narDefs){n.shown=false;document.getElementById(n.id).classList.remove('visible')}
-  narTimers={};
+  document.getElementById('header').querySelector('h1').textContent=`⚓ ${t.name}`;
+  document.getElementById('diff').textContent='★'.repeat(t.difficulty)+'☆'.repeat(5-t.difficulty);
+  for(const n of narr){n.vis=false;document.getElementById(n.id).classList.remove('vis')}
+  narrT={};
 }
 function restart(){init()}
-function nextTrack(){currentTrack=(currentTrack+1)%TRACKS.length;document.getElementById('track-select').value=currentTrack;restart()}
+function nextTrack(){ci=(ci+1)%T.length;sel.value=ci;restart()}
 
 // === RENDERING ===
 function drawWater(){
-  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#050c14');g.addColorStop(1,'#0a1828');
-  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-  const t=tick*0.015;
-  ctx.strokeStyle='rgba(25,55,75,0.1)';ctx.lineWidth=1;
-  for(let y=0;y<H;y+=24){ctx.beginPath();for(let x=0;x<W;x+=6){const wy=y+Math.sin(x*0.008+t+y*0.004)*2.5;x===0?ctx.moveTo(x,wy):ctx.lineTo(x,wy)}ctx.stroke()}
+  const g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,'#050c14');g.addColorStop(1,'#0a1828');
+  X.fillStyle=g;X.fillRect(0,0,W,H);
+  X.strokeStyle='rgba(25,50,70,.08)';X.lineWidth=1;const t=tick*.012;
+  for(let y=0;y<H;y+=22){X.beginPath();for(let x=0;x<W;x+=5){const wy=y+Math.sin(x*.007+t+y*.003)*2;x===0?X.moveTo(x,wy):X.lineTo(x,wy)}X.stroke()}
 }
-
-function drawChannel(track){
-  // Safe zone glow
-  ctx.strokeStyle='rgba(0,255,136,0.04)';ctx.lineWidth=track.width*2*Math.min(W/1100,H/1000);
-  ctx.lineCap='round';ctx.lineJoin='round';
-  ctx.beginPath();ctx.moveTo(sx(track.waypoints[0].x),sy(track.waypoints[0].y));
-  for(let i=1;i<track.waypoints.length;i++)ctx.lineTo(sx(track.waypoints[i].x),sy(track.waypoints[i].y));
-  ctx.stroke();
-  // Center line
-  ctx.strokeStyle='rgba(0,255,136,0.1)';ctx.lineWidth=1;ctx.setLineDash([5,5]);
-  ctx.beginPath();ctx.moveTo(sx(track.waypoints[0].x),sy(track.waypoints[0].y));
-  for(let i=1;i<track.waypoints.length;i++)ctx.lineTo(sx(track.waypoints[i].x),sy(track.waypoints[i].y));
-  ctx.stroke();ctx.setLineDash([]);
+function drawPath(t){
+  X.strokeStyle='rgba(0,255,136,.035)';X.lineWidth=50*Math.min(W/1100,H/1000);X.lineCap='round';X.lineJoin='round';
+  X.beginPath();X.moveTo(sx(t.wps[0].x),sy(t.wps[0].y));for(let i=1;i<t.wps.length;i++)X.lineTo(sx(t.wps[i].x),sy(t.wps[i].y));X.stroke();
+  X.strokeStyle='rgba(0,255,136,.08)';X.lineWidth=1;X.setLineDash([4,4]);
+  X.beginPath();X.moveTo(sx(t.wps[0].x),sy(t.wps[0].y));for(let i=1;i<t.wps.length;i++)X.lineTo(sx(t.wps[i].x),sy(t.wps[i].y));X.stroke();X.setLineDash([]);
 }
-
-function drawRocks(track){
-  for(const r of track.rocks){
+function drawRocks(t){
+  for(const r of t.rocks){
     const rx=sx(r.x),ry=sy(r.y),rr=sr(r.r);
-    const g=ctx.createRadialGradient(rx,ry,0,rx,ry,rr*2.5);
-    g.addColorStop(0,'rgba(255,40,20,0.1)');g.addColorStop(1,'rgba(255,40,20,0)');
-    ctx.fillStyle=g;ctx.beginPath();ctx.arc(rx,ry,rr*2.5,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#181008';ctx.beginPath();ctx.arc(rx,ry,rr,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle='rgba(70,45,15,0.4)';ctx.lineWidth=1.5;ctx.stroke();
+    const g=X.createRadialGradient(rx,ry,0,rx,ry,rr*2);g.addColorStop(0,'rgba(255,40,20,.08)');g.addColorStop(1,'rgba(255,40,20,0)');
+    X.fillStyle=g;X.beginPath();X.arc(rx,ry,rr*2,0,Math.PI*2);X.fill();
+    X.fillStyle='#161008';X.beginPath();X.arc(rx,ry,rr,0,Math.PI*2);X.fill();
+    X.strokeStyle='rgba(60,40,12,.3)';X.lineWidth=1;X.stroke();
   }
 }
-
-function drawWaypoints(track){
-  for(let i=0;i<track.waypoints.length;i++){
-    const wp=track.waypoints[i];
-    ctx.fillStyle='rgba(0,255,136,0.2)';ctx.beginPath();ctx.arc(sx(wp.x),sy(wp.y),sr(3),0,Math.PI*2);ctx.fill();
-  }
+function drawHarbor(t){
+  const l=t.wps[t.wps.length-1],lx=sx(l.x),ly=sy(l.y),p=Math.sin(tick*.04)*.3+.7;
+  const g=X.createRadialGradient(lx,ly,0,lx,ly,sr(35));g.addColorStop(0,`rgba(255,200,50,${.15*p})`);g.addColorStop(1,'rgba(255,200,50,0)');
+  X.fillStyle=g;X.beginPath();X.arc(lx,ly,sr(35),0,Math.PI*2);X.fill();
+  X.fillStyle=`rgba(255,200,50,${.7*p})`;X.beginPath();X.arc(lx,ly,sr(2.5),0,Math.PI*2);X.fill();
 }
-
-function drawHarbor(track){
-  const last=track.waypoints[track.waypoints.length-1],lx=sx(last.x),ly=sy(last.y);
-  const pulse=Math.sin(tick*0.04)*0.3+0.7;
-  const g=ctx.createRadialGradient(lx,ly,0,lx,ly,sr(40));
-  g.addColorStop(0,`rgba(255,200,50,${0.15*pulse})`);g.addColorStop(1,'rgba(255,200,50,0)');
-  ctx.fillStyle=g;ctx.beginPath();ctx.arc(lx,ly,sr(40),0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=`rgba(255,200,50,${0.7*pulse})`;ctx.beginPath();ctx.arc(lx,ly,sr(2.5),0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='rgba(255,200,50,0.4)';ctx.font=`bold ${Math.round(sr(8))}px monospace`;ctx.textAlign='center';ctx.fillText('⚓',lx,ly+sr(14));
+function drawBoat(b,col,lbl){
+  if(!b)return;const bx=sx(b.x),by=sy(b.y),sz=sr(6);
+  if(b.trail.length>1){for(let i=1;i<b.trail.length;i++){const a=(i/b.trail.length)*.3;X.strokeStyle=col==='#00ff88'?`rgba(0,255,136,${a})`:`rgba(255,68,68,${a})`;X.lineWidth=1.5;X.beginPath();X.moveTo(sx(b.trail[i-1].x),sy(b.trail[i-1].y));X.lineTo(sx(b.trail[i].x),sy(b.trail[i].y));X.stroke()}}
+  const ang=b.wp<b.finished?0:Math.atan2(T[ci].wps[Math.min(b.wp+1,T[ci].wps.length-1)].y-b.y,T[ci].wps[Math.min(b.wp+1,T[ci].wps.length-1)].x-b.x);
+  X.save();X.translate(bx,by);X.rotate(ang||0);
+  X.fillStyle=col;X.beginPath();X.moveTo(sz,0);X.lineTo(-sz*.5,-sz*.4);X.lineTo(-sz*.3,0);X.lineTo(-sz*.5,sz*.4);X.closePath();
+  X.fill();X.shadowColor=col;X.shadowBlur=8;X.fill();X.shadowBlur=0;X.restore();
+  if(b.grounded){X.strokeStyle='#ff4444';X.lineWidth=2;X.beginPath();X.moveTo(bx-8,by-8);X.lineTo(bx+8,by+8);X.moveTo(bx+8,by-8);X.lineTo(bx-8,by+8);X.stroke()}
+  X.fillStyle=col;X.font=`bold ${Math.round(sr(6))}px monospace`;X.textAlign='center';X.fillText(lbl,bx,by-sz-sr(4));
 }
-
-function drawBoat(boat,color,label){
-  if(!boat)return;const bx=sx(boat.x),by=sy(boat.y),sz=sr(7);
-  // Trail
-  if(boat.trail.length>1){
-    for(let i=1;i<boat.trail.length;i++){
-      const a=(i/boat.trail.length)*0.35;
-      ctx.strokeStyle=color==='#00ff88'?`rgba(0,255,136,${a})`:`rgba(255,68,68,${a})`;
-      ctx.lineWidth=1.5;ctx.beginPath();
-      ctx.moveTo(sx(boat.trail[i-1].x),sy(boat.trail[i-1].y));
-      ctx.lineTo(sx(boat.trail[i].x),sy(boat.trail[i].y));ctx.stroke();
-    }
-  }
-  // Wake
-  if(!boat.grounded&&!boat.finished){
-    ctx.strokeStyle=color==='#00ff88'?'rgba(0,255,136,0.06)':'rgba(255,68,68,0.06)';ctx.lineWidth=2;
-    const wa=boat.angle+Math.PI;
-    for(let i=1;i<=2;i++){ctx.beginPath();ctx.arc(bx+Math.cos(wa)*sz*i,by+Math.sin(wa)*sz*i,sz*(0.3+i*0.2),0,Math.PI*2);ctx.stroke()}
-  }
-  // Hull
-  ctx.save();ctx.translate(bx,by);ctx.rotate(boat.angle);
-  ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(sz,0);ctx.lineTo(-sz*0.5,-sz*0.4);ctx.lineTo(-sz*0.3,0);ctx.lineTo(-sz*0.5,sz*0.4);ctx.closePath();
-  ctx.fill();ctx.shadowColor=color;ctx.shadowBlur=10;ctx.fill();ctx.shadowBlur=0;ctx.restore();
-  if(boat.grounded){ctx.strokeStyle='#ff4444';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(bx-10,by-10);ctx.lineTo(bx+10,by+10);ctx.moveTo(bx+10,by-10);ctx.lineTo(bx-10,by+10);ctx.stroke()}
-  ctx.fillStyle=color;ctx.font=`bold ${Math.round(sr(7))}px monospace`;ctx.textAlign='center';ctx.fillText(label,bx,by-sz-sr(5));
-}
-
 function updateHUD(){
-  if(!boatE||!boatF)return;
-  const track=TRACKS[currentTrack],total=track.waypoints.length-1;
-  document.getElementById('e-wp').textContent=`${boatE.wpHit}/${total}`;
-  document.getElementById('f-wp').textContent=`${boatF.wpHit}/${total}`;
-  document.getElementById('e-err').textContent=`${boatE.crossErr.toFixed(2)} m`;
-  document.getElementById('f-err').textContent=`${boatF.crossErr.toFixed(2)} m`;
-  document.getElementById('e-fixes').textContent=boatE.fixes;
-  document.getElementById('f-fixes').textContent=boatF.fixes;
-  document.getElementById('e-data').textContent=`${(boatE.fixes*4/1024).toFixed(1)} KB`;
-  document.getElementById('f-data').textContent=`${(boatF.fixes*16/1024).toFixed(1)} KB`;
-  document.getElementById('e-status').textContent=boatE.finished?'⚓ Safe':boatE.grounded?'💥 Ground':'Steering';
-  document.getElementById('f-status').textContent=boatF.finished?'⚓ Safe':boatF.grounded?'💥 Ground':'Steering';
-  
-  document.getElementById('pwr-e').textContent=`E12: ${boatE.fixes} fixes × 4B = ${(boatE.fixes*4/1024).toFixed(1)}KB`;
-  document.getElementById('pwr-f').textContent=`Float: ${boatF.fixes} fixes × 16B = ${(boatF.fixes*16/1024).toFixed(1)}KB`;
-  if(boatE.fixes>0&&boatF.fixes>0){
-    const ratio=(boatF.fixes*16)/(boatE.fixes*4);
-    document.getElementById('pwr-ratio').textContent=`Float uses ${ratio.toFixed(1)}× more data. Max drift: E12=${boatE.maxCrossErr.toFixed(1)}m Float=${boatF.maxCrossErr.toFixed(1)}m`;
-  }
-  
-  if(!outcomeShown&&(boatE.grounded||boatE.finished)&&(boatF.grounded||boatF.finished)){outcomeShown=true;showOutcome()}
+  if(!bE||!bF)return;const t=T[ci],n=t.wps.length-1;
+  document.getElementById('ew').textContent=`${bE.wpHit}/${n}`;
+  document.getElementById('fw').textContent=`${bF.wpHit}/${n}`;
+  document.getElementById('ef').textContent=bE.fixes;
+  document.getElementById('ff').textContent=bF.fixes;
+  document.getElementById('ed').textContent=`${(bE.fixes*4/1024).toFixed(1)}KB`;
+  document.getElementById('fd').textContent=`${(bF.fixes*16/1024).toFixed(1)}KB`;
+  document.getElementById('es').textContent=bE.finished?'⚓ Safe':bE.grounded?'💥 Ground':'Steering';
+  document.getElementById('fs').textContent=bF.finished?'⚓ Safe':bF.grounded?'💥 Ground':'Steering';
+  document.getElementById('pe').textContent=`E12: ${bE.fixes} × 4B = ${(bE.fixes*4/1024).toFixed(1)}KB`;
+  document.getElementById('pf').textContent=bF.grounded?`Float: grounded (${bF.fixes} fixes)`:`Float: ${bF.fixes} × 16B = ${(bF.fixes*16/1024).toFixed(1)}KB`;
+  const r=bE.fixes>0?(bF.fixes*16)/(bE.fixes*4):4;
+  document.getElementById('pr').textContent=`Float uses ${r.toFixed(1)}× more data per fix${bF.grounded?' · GROUNDED':''}`;
+  if(!outShown&&(bE.grounded||bE.finished)&&(bF.grounded||bF.finished)){outShown=true;showOutcome()}
 }
-
 function showOutcome(){
   const el=document.getElementById('outcome');el.style.display='block';
-  const track=TRACKS[currentTrack],total=track.waypoints.length-1;
-  let t='',p='';
-  if(boatE.finished&&!boatF.finished){
-    t='⚓ E12 Safe — Float Grounded';
-    p=`E12 autopilot navigated all ${total} waypoints with ${boatE.maxCrossErr.toFixed(1)}m max cross-track error on ${boatE.fixes} fixes (${(boatE.fixes*4/1024).toFixed(1)}KB data). Float grounded at waypoint ${boatF.wpHit}/${total} with ${boatF.maxCrossErr.toFixed(1)}m peak drift.`;
-  }else if(boatE.finished&&boatF.finished){
-    t='⚡ Both Safe — Different Cost';
-    p=`E12: ${boatE.maxCrossErr.toFixed(1)}m drift, ${boatE.fixes} fixes, ${(boatE.fixes*4/1024).toFixed(1)}KB. Float: ${boatF.maxCrossErr.toFixed(1)}m drift, ${boatF.fixes} fixes, ${(boatF.fixes*16/1024).toFixed(1)}KB. Float used ${((boatF.fixes*16)/(boatE.fixes*4)).toFixed(1)}× more data for ${boatF.maxCrossErr>boatE.maxCrossErr*2?'far worse':'slightly worse'} accuracy.`;
-  }else{
-    t='💥 Both Grounded';
-    p=`E12 lasted to waypoint ${boatE.wpHit}/${total}. Float to ${boatF.wpHit}/${total}. Even on "${track.name}" — E12 went ${boatE.wpHit-boatF.wpHit>0?boatE.wpHit-boatF.wpHit+' waypoints further':'the same distance'}.`;
-  }
-  document.getElementById('out-title').textContent=t;
-  document.getElementById('out-text').textContent=p;
-  document.getElementById('out-title').style.color=boatE.finished?'#00ff88':'#ff4444';
+  const t=T[ci],n=t.wps.length-1;let ti='',p='';
+  if(bE.finished&&!bF.finished){ti='⚓ E12 Safe — Float Grounded';p=`E12 navigated all ${n} waypoints. Float grounded at waypoint ${bF.wpHit}/${n}. E12 used ${(bE.fixes*4/1024).toFixed(1)}KB of nav data; Float used ${(bF.fixes*16/1024).toFixed(1)}KB before grounding.`}
+  else if(bE.finished&&bF.finished){ti='⚡ Both Safe — Different Cost';p=`E12: ${bE.fixes} fixes, ${(bE.fixes*4/1024).toFixed(1)}KB. Float: ${bF.fixes} fixes, ${(bF.fixes*16/1024).toFixed(1)}KB. Float used ${((bF.fixes*16)/(bE.fixes*4)).toFixed(1)}× more data for the same route.`}
+  else{ti='💥 Both Grounded';p=`E12: waypoint ${bE.wpHit}/${n}. Float: waypoint ${bF.wpHit}/${n}.`}
+  document.getElementById('ot').textContent=ti;document.getElementById('op').textContent=p;
+  document.getElementById('ot').style.color=bE.finished?'#00ff88':'#ff4444';
+}
+function updateNarr(){
+  for(const n of narr){if(!n.vis&&n.tr(tick,bE,bF)){n.vis=true;document.getElementById(n.id).classList.add('vis');narrT[n.id]=n.dur}}
+  for(const[id,t]of Object.entries(narrT)){if(t<=0)document.getElementById(id).classList.remove('vis');else narrT[id]--}
 }
 
 function frame(){
-  tick++;
-  const track=TRACKS[currentTrack];
-  if(boatE&&boatF){for(let i=0;i<2;i++){boatE.update(track);boatF.update(track)}}
-  drawWater();drawChannel(track);drawRocks(track);drawWaypoints(track);drawHarbor(track);
-  drawBoat(boatE,'#00ff88','E12');drawBoat(boatF,'#ff4444','FLT');
-  updateHUD();updateNarr(tick,boatE,boatF);
+  tick++;const t=T[ci];
+  if(bE&&bF){for(let i=0;i<2;i++){bE.update(t.wps,t.rocks);bF.update(t.wps,t.rocks)}}
+  drawWater();drawPath(t);drawRocks(t);drawHarbor(t);
+  drawBoat(bE,'#00ff88','E12');drawBoat(bF,'#ff4444','FLT');
+  updateHUD();updateNarr();
   requestAnimationFrame(frame);
 }
 
