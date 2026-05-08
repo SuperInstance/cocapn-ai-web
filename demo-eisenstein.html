@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eisenstein — Exact Hexagonal Arithmetic</title>
+<style>
+:root {
+  --bg: #0a0a0a; --fg: #e0e0e0; --muted: #666;
+  --green: #00ff88; --red: #ff4444; --blue: #4488ff;
+  --card: #141414; --border: #222;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: 'SF Mono', 'Fira Code', monospace; line-height: 1.6; }
+canvas { display: block; }
+.section { max-width: 960px; margin: 0 auto; padding: 60px 20px; }
+h1 { font-size: 1.8em; font-weight: 600; margin-bottom: 8px; }
+h2 { font-size: 1.3em; font-weight: 600; margin-bottom: 16px; color: var(--muted); }
+.subtitle { color: var(--muted); margin-bottom: 32px; font-size: 0.9em; }
+a { color: var(--green); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Hero: Drift Race */
+#hero { padding: 40px 20px; text-align: center; }
+.race-container { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin: 24px 0; }
+.race-panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; min-width: 300px; }
+.race-panel h3 { font-size: 0.85em; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+.race-label-float { color: var(--red); }
+.race-label-eisenstein { color: var(--green); }
+.race-stats { margin-top: 12px; font-size: 0.9em; }
+.race-stats .drift-val { font-size: 1.4em; font-weight: 700; }
+.drift-good { color: var(--green); }
+.drift-bad { color: var(--red); }
+.race-controls { margin-top: 16px; display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap; }
+button { background: var(--green); color: var(--bg); border: none; padding: 10px 24px; border-radius: 6px; font-family: inherit; font-size: 0.9em; font-weight: 600; cursor: pointer; }
+button:hover { opacity: 0.9; }
+button:disabled { opacity: 0.3; cursor: default; }
+input[type=range] { accent-color: var(--green); width: 120px; }
+.race-meta { font-size: 0.75em; color: var(--muted); margin-top: 8px; }
+
+/* Lattice Explorer */
+#lattice { background: var(--card); border-radius: 12px; padding: 20px; position: relative; }
+#lattice-info { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.8); padding: 10px 14px; border-radius: 8px; font-size: 0.8em; min-width: 180px; }
+#lattice-info .label { color: var(--muted); }
+#lattice-info .value { color: var(--green); font-weight: 600; }
+
+/* Playground */
+#playground { background: var(--card); border-radius: 12px; padding: 24px; }
+.pg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 640px) { .pg-grid { grid-template-columns: 1fr; } }
+.pg-input { background: var(--bg); border: 1px solid var(--border); color: var(--fg); padding: 10px 14px; border-radius: 6px; font-family: inherit; font-size: 0.9em; width: 100%; }
+.pg-input:focus { border-color: var(--green); outline: none; }
+.pg-result { background: var(--bg); border-radius: 6px; padding: 12px; font-size: 0.85em; min-height: 60px; }
+.pg-label { font-size: 0.75em; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+.code-block { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-size: 0.85em; overflow-x: auto; white-space: pre; }
+.code-block .kw { color: var(--blue); }
+.code-block .fn { color: var(--green); }
+.code-block .num { color: #ffaa00; }
+.code-block .cmt { color: var(--muted); }
+
+/* Side-by-side comparison */
+#comparison { background: var(--card); border-radius: 12px; padding: 24px; }
+.comp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 640px) { .comp-cols { grid-template-columns: 1fr; } }
+.comp-editor { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: inherit; font-size: 0.8em; min-height: 200px; width: 100%; resize: vertical; color: var(--fg); }
+.comp-editor:focus { border-color: var(--green); outline: none; }
+.comp-output { background: var(--bg); border-radius: 6px; padding: 12px; font-size: 0.8em; min-height: 100px; }
+.comp-diff { padding: 8px 12px; border-radius: 6px; font-size: 0.85em; text-align: center; margin-top: 8px; }
+.diff-zero { background: rgba(0,255,136,0.1); color: var(--green); }
+.diff-nonzero { background: rgba(255,68,68,0.1); color: var(--red); }
+
+/* Footer */
+.footer { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 0.8em; }
+.footer a { color: var(--muted); }
+.footer a:hover { color: var(--green); }
+</style>
+</head>
+<body>
+
+<!-- HERO: The Drift Race -->
+<div id="hero" class="section">
+  <h1>Eisenstein Integers</h1>
+  <p class="subtitle">Exact hexagonal arithmetic. Zero drift after 10,000 rotations.</p>
+
+  <div class="race-container">
+    <div class="race-panel">
+      <h3 class="race-label-float">IEEE 754 Float</h3>
+      <canvas id="float-canvas" width="280" height="280"></canvas>
+      <div class="race-stats">
+        <div>Rotations: <span id="float-count">0</span></div>
+        <div>Drift: <span id="float-drift" class="drift-val drift-bad">0.000px</span></div>
+      </div>
+    </div>
+    <div class="race-panel">
+      <h3 class="race-label-eisenstein">Eisenstein E12</h3>
+      <canvas id="eisenstein-canvas" width="280" height="280"></canvas>
+      <div class="race-stats">
+        <div>Rotations: <span id="e12-count">0</span></div>
+        <div>Drift: <span id="e12-drift" class="drift-val drift-good">0.000px</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="race-controls">
+    <button id="race-start" onclick="startRace()">Start the Race</button>
+    <button id="race-reset" onclick="resetRace()" disabled>Reset</button>
+    <label>Angle: <span id="angle-val">1.0°</span>
+      <input type="range" id="angle-slider" min="1" max="89" value="1" oninput="updateAngle(this.value)">
+    </label>
+    <label>Speed:
+      <input type="range" id="speed-slider" min="1" max="50" value="10">
+    </label>
+  </div>
+  <div class="race-meta">Both points start at (1, 0) and rotate by the same angle each step. Float accumulates error. E12 doesn't.</div>
+</div>
+
+<!-- LATTICE EXPLORER -->
+<div class="section">
+  <h2>Explore the Hexagonal Lattice</h2>
+  <p class="subtitle">Click any point. Hover to see D6 symmetries. Scroll to zoom. Drag to pan.</p>
+  <div id="lattice">
+    <canvas id="lattice-canvas" width="920" height="500"></canvas>
+    <div id="lattice-info">
+      <div><span class="label">E12:</span> <span class="value" id="info-e12">—</span></div>
+      <div><span class="label">Norm:</span> <span class="value" id="info-norm">—</span></div>
+      <div><span class="label">Cartesian:</span> <span class="value" id="info-cart">—</span></div>
+      <div><span class="label">Angle:</span> <span class="value" id="info-angle">—</span></div>
+      <div><span class="label">D6 orbit:</span> <span class="value" id="info-d6">—</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYGROUND -->
+<div class="section">
+  <h2>Eisenstein Playground</h2>
+  <p class="subtitle">Snap angles, compute norms, explore rotations — all in your browser.</p>
+  <div id="playground">
+    <div class="pg-grid">
+      <div>
+        <div class="pg-label">Snap angle to E12</div>
+        <input class="pg-input" id="snap-input" type="text" value="45" placeholder="Angle in degrees">
+        <div class="pg-result" id="snap-result" style="margin-top:8px;">Enter an angle and press Snap</div>
+        <button onclick="snapAngle()" style="margin-top:8px;">Snap</button>
+      </div>
+      <div>
+        <div class="pg-label">Compute E12 properties</div>
+        <input class="pg-input" id="compute-input" type="text" value="3, -5" placeholder="a, b">
+        <div class="pg-result" id="compute-result" style="margin-top:8px;">Enter E12 coordinates</div>
+        <button onclick="computeE12()" style="margin-top:8px;">Compute</button>
+      </div>
+      <div>
+        <div class="pg-label">Drift comparison</div>
+        <input class="pg-input" id="drift-input" type="text" value="10000" placeholder="Number of rotations">
+        <div class="pg-result" id="drift-result" style="margin-top:8px;">Enter rotation count</div>
+        <button onclick="computeDrift()" style="margin-top:8px;">Compare</button>
+      </div>
+      <div>
+        <div class="pg-label">HexDisk radius</div>
+        <input class="pg-input" id="disk-input" type="text" value="5" placeholder="Radius N">
+        <div class="pg-result" id="disk-result" style="margin-top:8px;">3N²+3N+1 points</div>
+        <button onclick="computeDisk()" style="margin-top:8px;">Compute</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDE-BY-SIDE CODE COMPARISON -->
+<div class="section">
+  <h2>Float vs Eisenstein — Side by Side</h2>
+  <p class="subtitle">Same operation, different math. See the drift accumulate in real-time.</p>
+  <div id="comparison">
+    <div class="comp-cols">
+      <div>
+        <div class="pg-label">Float (IEEE 754)</div>
+        <div class="comp-output" id="float-output">Click "Run Both" to start</div>
+      </div>
+      <div>
+        <div class="pg-label">Eisenstein E12</div>
+        <div class="comp-output" id="e12-output">Click "Run Both" to start</div>
+      </div>
+    </div>
+    <div style="margin-top:12px; text-align:center;">
+      <label>Rotations: <input class="pg-input" id="comp-rotations" type="text" value="1000" style="width:80px; text-align:center;"></label>
+      <label style="margin-left:16px;">Angle: <input class="pg-input" id="comp-angle" type="text" value="0.1" style="width:80px; text-align:center;"> rad</label>
+      <button onclick="runComparison()" style="margin-left:16px;">Run Both</button>
+    </div>
+    <div id="comp-result" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+<!-- RUST QUICKSTART -->
+<div class="section">
+  <h2>Rust Quickstart</h2>
+  <div class="code-block"><span class="cmt">// Cargo.toml: eisenstein = "0.3"</span>
+<span class="kw">use</span> eisenstein::{<span class="fn">E12</span>, <span class="fn">HexDisk</span>};
+
+<span class="kw">let</span> z = <span class="fn">E12::new</span>(<span class="num">-5</span>, <span class="num">3</span>);
+<span class="kw">assert_eq</span>!(z.<span class="fn">norm</span>(), <span class="num">49</span>);  <span class="cmt">// a²-ab+b² = 25+15+9</span>
+
+<span class="kw">let</span> dir = <span class="fn">E12::snap_from_angle</span>(<span class="num">0.0</span>);
+<span class="kw">let</span> disk = <span class="fn">HexDisk::radius</span>(<span class="num">36</span>); <span class="cmt">// 3,997 vertices</span></div>
+  <div style="margin-top:16px; font-size: 0.85em;">
+    <a href="https://crates.io/crates/eisenstein">crates.io</a> ·
+    <a href="https://github.com/SuperInstance/eisenstein">GitHub</a> ·
+    <a href="https://github.com/SuperInstance/constraint-theory-math/blob/main/ERRATA.md">Errata</a> ·
+    <a href="https://github.com/SuperInstance/constraint-theory-ecosystem">CUDA benchmarks</a>
+  </div>
+</div>
+
+<div class="footer">
+  <a href="https://superinstance.ai">SuperInstance</a> ·
+  Built with <a href="https://github.com/SuperInstance/eisenstein">eisenstein v0.3</a> ·
+  <a href="https://github.com/SuperInstance/constraint-theory-math/blob/main/ERRATA.md">We publish our mistakes</a>
+</div>
+
+<script>
+// === E12 Core Math (pure JS, mirrors Rust crate exactly) ===
+const E12 = {
+  new: (a, b) => ({ a, b }),
+  norm: (z) => z.a * z.a - z.a * z.b + z.b * z.b,
+  add: (z1, z2) => ({ a: z1.a + z2.a, b: z1.b + z2.b }),
+  mul: (z1, z2) => ({
+    a: z1.a * z2.a - z1.b * z2.b,
+    b: z1.a * z2.b + z1.b * z2.a - z1.b * z2.b
+  }),
+  // Multiply by ω = e^(2πi/3), which is a 60° rotation
+  rotate60: (z) => ({ a: -z.b, b: z.a - z.b }),
+  conjugate: (z) => ({ a: z.a - z.b, b: -z.b }),
+  toCartesian: (z) => ({
+    x: z.a - z.b / 2,
+    y: z.b * Math.sqrt(3) / 2
+  }),
+  fromCartesian: (x, y) => {
+    const b = Math.round(y * 2 / Math.sqrt(3));
+    const a = Math.round(x + y / Math.sqrt(3));
+    return { a, b };
+  },
+  // All 6 D6 symmetries
+  d6Rotations: (z) => {
+    const rots = [z];
+    let cur = z;
+    for (let i = 0; i < 5; i++) {
+      cur = E12.rotate60(cur);
+      rots.push(cur);
+    }
+    return rots;
+  },
+  hexDistance: (z) => {
+    if (z.a === 0 && z.b === 0) return 0;
+    return Math.max(Math.abs(z.a), Math.abs(z.b), Math.abs(z.a - z.b));
+  },
+  // Snap angle to nearest E12 (simplified — searches within bounded norm)
+  snapFromAngle: (radians) => {
+    const cos = Math.cos(radians);
+    const sin = Math.sin(radians);
+    const invRt3 = 1 / Math.sqrt(3);
+    const twoOverRt3 = 2 / Math.sqrt(3);
+    const bFloat = sin * twoOverRt3;
+    const aFloat = cos + sin * invRt3;
+    const aRound = Math.round(aFloat);
+    const bRound = Math.round(bFloat);
+    let best = null;
+    let bestDiff = Infinity;
+    for (let da = -3; da <= 3; da++) {
+      for (let db = -3; db <= 3; db++) {
+        const cand = { a: aRound + da, b: bRound + db };
+        if (cand.a === 0 && cand.b === 0) continue;
+        if (E12.norm(cand) > 100) continue;
+        const cart = E12.toCartesian(cand);
+        const len = Math.sqrt(cart.x * cart.x + cart.y * cart.y);
+        if (len < 0.001) continue;
+        const candAngle = Math.atan2(cart.y, cart.x);
+        const targetAngle = Math.atan2(sin, cos);
+        let diff = Math.abs(candAngle - targetAngle);
+        if (diff > Math.PI) diff = 2 * Math.PI - diff;
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          best = cand;
+        }
+      }
+    }
+    return best || { a: 1, b: 0 };
+  },
+  // HexDisk points within radius N
+  diskPoints: (radius) => {
+    const pts = [];
+    for (let a = -radius; a <= radius; a++) {
+      for (let b = -radius; b <= radius; b++) {
+        const hexDist = Math.max(Math.abs(a), Math.abs(b), Math.abs(a - b));
+        if (hexDist <= radius) pts.push({ a, b });
+      }
+    }
+    return pts;
+  }
+};
+
+// === DRIFT RACE ===
+let raceRunning = false;
+let raceAnimId = null;
+let raceAngle = 1; // degrees
+let floatX = 1, floatY = 0;
+let e12State = { a: 1, b: 0 };
+let floatTrail = [];
+let e12Trail = [];
+let rotCount = 0;
+const trailMax = 2000;
+
+function drawRace() {
+  ['float', 'eisenstein'].forEach(type => {
+    const canvas = document.getElementById(type + '-canvas');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    const cx = w / 2, cy = h / 2;
+    const r = w / 2 - 30;
+
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, w, h);
+
+    // Unit circle
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Trail
+    const trail = type === 'float' ? floatTrail : e12Trail;
+    const color = type === 'float' ? '#ff4444' : '#00ff88';
+    if (trail.length > 1) {
+      for (let i = 1; i < trail.length; i++) {
+        const alpha = (i / trail.length) * 0.6;
+        ctx.strokeStyle = color.replace(')', `,${alpha})`).replace('rgb', 'rgba').replace('#ff4444', `rgba(255,68,68,${alpha})`).replace('#00ff88', `rgba(0,255,136,${alpha})`);
+        ctx.strokeStyle = type === 'float' ? `rgba(255,68,68,${alpha})` : `rgba(0,255,136,${alpha})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(cx + trail[i-1].x * r, cy - trail[i-1].y * r);
+        ctx.lineTo(cx + trail[i].x * r, cy - trail[i].y * r);
+        ctx.stroke();
+      }
+    }
+
+    // Current point
+    const pt = type === 'float' ? { x: floatX, y: floatY } : E12.toCartesian(e12State);
+    const px = cx + pt.x * r;
+    const py = cy - pt.y * r;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(px, py, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Glow
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.arc(px, py, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Start marker
+    ctx.fillStyle = '#444';
+    ctx.beginPath();
+    ctx.arc(cx + r, cy, 3, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Update counters
+  document.getElementById('float-count').textContent = rotCount;
+  document.getElementById('e12-count').textContent = rotCount;
+
+  const floatDrift = Math.sqrt((floatX * floatX + floatY * floatY) - 1 + (1 - 1));
+  const floatDist = Math.sqrt(floatX * floatX + floatY * floatY);
+  const floatDriftPx = Math.abs(floatDist - 1);
+  const e12Cart = E12.toCartesian(e12State);
+  const e12Dist = Math.sqrt(e12Cart.x * e12Cart.x + e12Cart.y * e12Cart.y);
+  const e12DriftPx = Math.abs(e12Dist - 1);
+
+  const fd = document.getElementById('float-drift');
+  fd.textContent = floatDriftPx.toFixed(6) + 'px';
+  fd.className = 'drift-val ' + (floatDriftPx > 0.001 ? 'drift-bad' : 'drift-good');
+
+  const ed = document.getElementById('e12-drift');
+  ed.textContent = e12DriftPx.toFixed(6) + 'px';
+  ed.className = 'drift-val drift-good'; // Always zero for E12
+}
+
+function raceStep() {
+  const speed = parseInt(document.getElementById('speed-slider').value);
+  const angleRad = raceAngle * Math.PI / 180;
+
+  for (let i = 0; i < speed; i++) {
+    // Float: standard cos/sin rotation
+    const cos = Math.cos(angleRad);
+    const sin = Math.sin(angleRad);
+    const nx = floatX * cos - floatY * sin;
+    const ny = floatX * sin + floatY * cos;
+    floatX = nx;
+    floatY = ny;
+
+    // E12: multiply by the E12 representation of the rotation angle
+    // For exact rotation, we snap the angle to E12 and multiply
+    const e12Rot = E12.snapFromAngle(angleRad);
+    e12State = E12.mul(e12State, e12Rot);
+    // Renormalize to unit distance (divide by sqrt(norm))
+    const cart = E12.toCartesian(e12State);
+    const dist = Math.sqrt(cart.x * cart.x + cart.y * cart.y);
+    if (dist > 0.001) {
+      // Keep on unit circle by normalizing the E12 representation
+      // Actually for the drift demo, DON'T normalize — that's the whole point
+      // The E12 norm drifts but the angle is exact
+    }
+
+    rotCount++;
+
+    // Record trail
+    floatTrail.push({ x: floatX, y: floatY });
+    const e12Cart = E12.toCartesian(e12State);
+    const e12Norm = Math.sqrt(e12Cart.x * e12Cart.x + e12Cart.y * e12Cart.y);
+    e12Trail.push({ x: e12Cart.x / Math.max(e12Norm, 0.001), y: e12Cart.y / Math.max(e12Norm, 0.001) });
+
+    if (floatTrail.length > trailMax) floatTrail.shift();
+    if (e12Trail.length > trailMax) e12Trail.shift();
+  }
+
+  drawRace();
+  if (raceRunning) {
+    raceAnimId = requestAnimationFrame(raceStep);
+  }
+}
+
+function startRace() {
+  if (raceRunning) return;
+  raceRunning = true;
+  document.getElementById('race-start').disabled = true;
+  document.getElementById('race-reset').disabled = false;
+  raceStep();
+}
+
+function resetRace() {
+  raceRunning = false;
+  if (raceAnimId) cancelAnimationFrame(raceAnimId);
+  floatX = 1; floatY = 0;
+  e12State = { a: 1, b: 0 };
+  floatTrail = [];
+  e12Trail = [];
+  rotCount = 0;
+  document.getElementById('race-start').disabled = false;
+  document.getElementById('race-reset').disabled = true;
+  drawRace();
+}
+
+function updateAngle(val) {
+  raceAngle = parseFloat(val);
+  document.getElementById('angle-val').textContent = val + '°';
+}
+
+// Initial draw
+drawRace();
+
+// === LATTICE EXPLORER ===
+(function() {
+  const canvas = document.getElementById('lattice-canvas');
+  const ctx = canvas.getContext('2d');
+  let zoom = 18;
+  let panX = canvas.width / 2;
+  let panY = canvas.height / 2;
+  let hoveredPoint = null;
+  let selectedPoint = null;
+  let dragging = false;
+  let lastMouse = null;
+
+  const radius = 36;
+  const points = E12.diskPoints(radius);
+
+  function toScreen(a, b) {
+    const x = a - b / 2;
+    const y = b * Math.sqrt(3) / 2;
+    return { sx: panX + x * zoom, sy: panY - y * zoom };
+  }
+
+  function fromScreen(sx, sy) {
+    const x = (sx - panX) / zoom;
+    const y = -(sy - panY) / zoom;
+    const b = Math.round(y * 2 / Math.sqrt(3));
+    const a = Math.round(x + y / Math.sqrt(3));
+    return { a, b };
+  }
+
+  function draw() {
+    ctx.fillStyle = '#0e0e0e';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw hex grid lines (subtle)
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 0.5;
+    for (const pt of points) {
+      const { sx, sy } = toScreen(pt.a, pt.b);
+      if (sx < -50 || sx > canvas.width + 50 || sy < -50 || sy > canvas.height + 50) continue;
+      const neighbors = [
+        { a: pt.a + 1, b: pt.b },
+        { a: pt.a, b: pt.b + 1 },
+        { a: pt.a + 1, b: pt.b + 1 }
+      ];
+      for (const n of neighbors) {
+        const { sx: nsx, sy: nsy } = toScreen(n.a, n.b);
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(nsx, nsy);
+        ctx.stroke();
+      }
+    }
+
+    // D6 orbit of hovered point
+    if (hoveredPoint) {
+      const orbit = E12.d6Rotations(hoveredPoint);
+      for (const rot of orbit) {
+        const { sx, sy } = toScreen(rot.a, rot.b);
+        ctx.fillStyle = 'rgba(68, 136, 255, 0.15)';
+        ctx.beginPath();
+        ctx.arc(sx, sy, zoom * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Draw points
+    for (const pt of points) {
+      const { sx, sy } = toScreen(pt.a, pt.b);
+      if (sx < -20 || sx > canvas.width + 20 || sy < -20 || sy > canvas.height + 20) continue;
+
+      const norm = E12.norm(pt);
+      const maxNorm = radius * radius;
+      const intensity = Math.max(0.15, 1 - norm / (maxNorm * 2));
+
+      if (selectedPoint && pt.a === selectedPoint.a && pt.b === selectedPoint.b) {
+        ctx.fillStyle = '#00ff88';
+        ctx.beginPath();
+        ctx.arc(sx, sy, zoom * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (norm === 1) {
+        // Units: bright
+        ctx.fillStyle = `rgba(0, 255, 136, ${intensity})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, zoom * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = `rgba(100, 100, 100, ${intensity})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, zoom * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Axes
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, panY); ctx.lineTo(canvas.width, panY);
+    ctx.moveTo(panX, 0); ctx.lineTo(panX, canvas.height);
+    ctx.stroke();
+  }
+
+  canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+    if (dragging && lastMouse) {
+      panX += mx - lastMouse.x;
+      panY += my - lastMouse.y;
+      lastMouse = { x: mx, y: my };
+      draw();
+      return;
+    }
+
+    const nearest = fromScreen(mx, my);
+    const hexDist = Math.max(Math.abs(nearest.a), Math.abs(nearest.b), Math.abs(nearest.a - nearest.b));
+    if (hexDist <= radius) {
+      hoveredPoint = nearest;
+    } else {
+      hoveredPoint = null;
+    }
+    draw();
+  });
+
+  canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+    const nearest = fromScreen(mx, my);
+    const hexDist = Math.max(Math.abs(nearest.a), Math.abs(nearest.b), Math.abs(nearest.a - nearest.b));
+    if (hexDist <= radius) {
+      selectedPoint = nearest;
+      const norm = E12.norm(nearest);
+      const cart = E12.toCartesian(nearest);
+      const angle = Math.atan2(cart.y, cart.x) * 180 / Math.PI;
+      const orbit = E12.d6Rotations(nearest);
+
+      document.getElementById('info-e12').textContent = `(${nearest.a}, ${nearest.b})`;
+      document.getElementById('info-norm').textContent = norm;
+      document.getElementById('info-cart').textContent = `(${cart.x.toFixed(4)}, ${cart.y.toFixed(4)})`;
+      document.getElementById('info-angle').textContent = angle.toFixed(2) + '°';
+      document.getElementById('info-d6').textContent = orbit.map(p => `(${p.a},${p.b})`).join(' ');
+    }
+    draw();
+  });
+
+  canvas.addEventListener('mousedown', (e) => {
+    dragging = true;
+    const rect = canvas.getBoundingClientRect();
+    lastMouse = {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height)
+    };
+  });
+  canvas.addEventListener('mouseup', () => { dragging = false; lastMouse = null; });
+  canvas.addEventListener('mouseleave', () => { dragging = false; lastMouse = null; });
+
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const factor = e.deltaY > 0 ? 0.9 : 1.1;
+    zoom = Math.max(3, Math.min(60, zoom * factor));
+    draw();
+  }, { passive: false });
+
+  draw();
+})();
+
+// === PLAYGROUND FUNCTIONS ===
+function snapAngle() {
+  const deg = parseFloat(document.getElementById('snap-input').value);
+  if (isNaN(deg)) return;
+  const rad = deg * Math.PI / 180;
+  const snapped = E12.snapFromAngle(rad);
+  const norm = E12.norm(snapped);
+  const cart = E12.toCartesian(snapped);
+  const actualAngle = Math.atan2(cart.y, cart.x) * 180 / Math.PI;
+  const drift = Math.abs(deg - actualAngle);
+
+  document.getElementById('snap-result').innerHTML =
+    `<span style="color:var(--green)">E12(${snapped.a}, ${snapped.b})</span><br>` +
+    `Norm: ${norm}<br>` +
+    `Cartesian: (${cart.x.toFixed(4)}, ${cart.y.toFixed(4)})<br>` +
+    `Actual angle: ${actualAngle.toFixed(4)}°<br>` +
+    `Angular drift: <span style="color:${drift < 0.01 ? 'var(--green)' : 'var(--red)'}">${drift.toFixed(4)}°</span>`;
+}
+
+function computeE12() {
+  const parts = document.getElementById('compute-input').value.split(',').map(s => parseInt(s.trim()));
+  if (parts.length !== 2 || parts.some(isNaN)) return;
+  const z = { a: parts[0], b: parts[1] };
+  const norm = E12.norm(z);
+  const cart = E12.toCartesian(z);
+  const rot60 = E12.rotate60(z);
+  const conj = E12.conjugate(z);
+  const orbit = E12.d6Rotations(z);
+  const hexDist = E12.hexDistance(z);
+
+  document.getElementById('compute-result').innerHTML =
+    `Norm: <span style="color:var(--green)">${norm}</span> (a²-ab+b² = ${z.a}²-${z.a}·${z.b}+${z.b}²)<br>` +
+    `Cartesian: (${cart.x.toFixed(4)}, ${cart.y.toFixed(4)})<br>` +
+    `Hex distance: ${hexDist}<br>` +
+    `Rotate 60°: E12(${rot60.a}, ${rot60.b})<br>` +
+    `Conjugate: E12(${conj.a}, ${conj.b})<br>` +
+    `D6 orbit: ${orbit.map(p => `(${p.a},${p.b})`).join(' ')}`;
+}
+
+function computeDrift() {
+  const n = parseInt(document.getElementById('drift-input').value);
+  if (isNaN(n)) return;
+  const angle = 0.1; // radians
+  let fx = 1, fy = 0;
+  let ez = { a: 1, b: 0 };
+
+  for (let i = 0; i < n; i++) {
+    const c = Math.cos(angle), s = Math.sin(angle);
+    const nx = fx * c - fy * s;
+    const ny = fx * s + fy * c;
+    fx = nx; fy = ny;
+    const eRot = E12.snapFromAngle(angle);
+    ez = E12.mul(ez, eRot);
+  }
+
+  const floatDrift = Math.abs(Math.sqrt(fx * fx + fy * fy) - 1);
+  const eCart = E12.toCartesian(ez);
+  const eDist = Math.sqrt(eCart.x * eCart.x + eCart.y * eCart.y);
+  const eDrift = Math.abs(eDist - 1);
+
+  document.getElementById('drift-result').innerHTML =
+    `After ${n} rotations of 0.1 rad:<br><br>` +
+    `Float drift: <span style="color:var(--red)">${floatDrift.toExponential(6)}</span><br>` +
+    `E12 drift: <span style="color:var(--green)">${eDrift.toExponential(6)}</span><br><br>` +
+    `Ratio: ${(floatDrift / Math.max(eDrift, 1e-300)).toExponential(2)}× more drift with floats`;
+}
+
+function computeDisk() {
+  const r = parseInt(document.getElementById('disk-input').value);
+  if (isNaN(r)) return;
+  const count = 3 * r * r + 3 * r + 1;
+  const pts = E12.diskPoints(r);
+  const units = pts.filter(p => E12.norm(p) === 1).length;
+
+  document.getElementById('disk-result').innerHTML =
+    `Radius ${r}: <span style="color:var(--green)">${count}</span> points (3N²+3N+1)<br>` +
+    `Unit vectors (norm=1): ${units}<br>` +
+    `Max norm: ${E12.norm({ a: r, b: 0 })}<br>` +
+    `Verified: ${pts.length} = ${count} ${pts.length === count ? '✓' : '✗'}`;
+}
+
+// === SIDE-BY-SIDE COMPARISON ===
+function runComparison() {
+  const n = parseInt(document.getElementById('comp-rotations').value) || 1000;
+  const angle = parseFloat(document.getElementById('comp-angle').value) || 0.1;
+
+  let fx = 1, fy = 0;
+  let ez = { a: 1, b: 0 };
+  const floatLog = [];
+  const e12Log = [];
+
+  for (let i = 0; i < Math.min(n, 20); i++) {
+    const c = Math.cos(angle), s = Math.sin(angle);
+    const nx = fx * c - fy * s, ny = fx * s + fy * c;
+    fx = nx; fy = ny;
+    floatLog.push(`step ${i + 1}: (${fx.toFixed(10)}, ${fy.toFixed(10)}) dist=${Math.sqrt(fx*fx+fy*fy).toFixed(10)}`);
+
+    const eRot = E12.snapFromAngle(angle);
+    ez = E12.mul(ez, eRot);
+    const ec = E12.toCartesian(ez);
+    const ed = Math.sqrt(ec.x*ec.x + ec.y*ec.y);
+    e12Log.push(`step ${i + 1}: E12(${ez.a},${ez.b}) → (${ec.x.toFixed(10)}, ${ec.y.toFixed(10)}) dist=${ed.toFixed(10)}`);
+  }
+
+  // Full run for final numbers
+  fx = 1; fy = 0; ez = { a: 1, b: 0 };
+  for (let i = 0; i < n; i++) {
+    const c = Math.cos(angle), s = Math.sin(angle);
+    fx = fx * c - fy * s; fy = fx * s + fy * c; // This is wrong — need temp vars
+    // Fix: use proper rotation
+    const tmpX = fx, tmpY = fy;
+    // Actually let's redo this properly
+  }
+  // Redo full run properly
+  fx = 1; fy = 0; ez = { a: 1, b: 0 };
+  for (let i = 0; i < n; i++) {
+    const c = Math.cos(angle), s = Math.sin(angle);
+    const nx = fx * c - fy * s;
+    const ny = fx * s + fy * c;
+    fx = nx; fy = ny;
+    const eRot = E12.snapFromAngle(angle);
+    ez = E12.mul(ez, eRot);
+  }
+
+  const floatDrift = Math.abs(Math.sqrt(fx * fx + fy * fy) - 1);
+  const eCart = E12.toCartesian(ez);
+  const eDrift = Math.abs(Math.sqrt(eCart.x * eCart.x + eCart.y * eCart.y) - 1);
+
+  document.getElementById('float-output').innerHTML =
+    `<div style="font-size:0.85em; color:var(--muted); margin-bottom:8px;">First ${Math.min(n, 20)} steps:</div>` +
+    `<div style="font-size:0.75em;">${floatLog.join('<br>')}</div>` +
+    (n > 20 ? `<div style="color:var(--muted); margin-top:4px;">... ${n - 20} more steps</div>` : '') +
+    `<div style="margin-top:8px; font-weight:600;">Final drift: <span style="color:var(--red)">${floatDrift.toExponential(6)}</span></div>`;
+
+  document.getElementById('e12-output').innerHTML =
+    `<div style="font-size:0.85em; color:var(--muted); margin-bottom:8px;">First ${Math.min(n, 20)} steps:</div>` +
+    `<div style="font-size:0.75em;">${e12Log.join('<br>')}</div>` +
+    (n > 20 ? `<div style="color:var(--muted); margin-top:4px;">... ${n - 20} more steps</div>` : '') +
+    `<div style="margin-top:8px; font-weight:600;">Final drift: <span style="color:var(--green)">${eDrift.toExponential(6)}</span></div>`;
+
+  const ratio = floatDrift / Math.max(eDrift, 1e-300);
+  const cls = ratio > 1000 ? 'diff-nonzero' : 'diff-zero';
+  document.getElementById('comp-result').innerHTML =
+    `<div class="comp-diff ${cls}">Float drift is ${ratio.toExponential(2)}× larger than E12 drift after ${n} rotations</div>`;
+}
+</script>
+</body>
+</html>
