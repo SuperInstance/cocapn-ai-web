@@ -5,92 +5,83 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Eisenstein — Navigate the Narrows</title>
 <style>
-:root{--bg:#060a0f;--ok:#00ff88;--bad:#ff4444;--dim:#556;--gold:#ffcc33}
+:root{--bg:#060a0f;--ok:#00ff88;--warn:#ffaa22;--bad:#ff4444;--dim:#556}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:#ccd;font-family:'SF Mono','Fira Code','Consolas',monospace;overflow:hidden;height:100vh}
 canvas{display:block;width:100%;height:100%}
 #hud{position:absolute;inset:0;pointer-events:none}
 #hud>*{pointer-events:auto}
-#hdr{position:absolute;top:8px;left:50%;transform:translateX(-50%);text-align:center;z-index:10}
-#hdr h1{font-size:1.05em;color:var(--ok)}
-#hdr p{font-size:.52em;color:var(--dim);margin-top:1px}
-#ts{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.8);padding:5px 8px;border-radius:6px;font-size:.58em;z-index:20;display:flex;gap:4px;align-items:center}
-#ts select{background:#111;color:#ccd;border:1px solid #333;padding:2px 5px;border-radius:3px;font-family:inherit;font-size:.9em;max-width:140px}
-#ts button{background:#222;color:#ccd;border:1px solid #333;padding:2px 7px;border-radius:3px;cursor:pointer;font-family:inherit}
-.p{position:absolute;top:44px;width:168px;padding:7px 9px;background:rgba(0,0,0,.82);border-radius:6px;border:1px solid rgba(255,255,255,.04);font-size:.58em}
-.pl{left:8px;border-left:3px solid var(--ok)}
-.pr{right:8px;border-left:3px solid var(--bad)}
-.p h3{font-size:.52em;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
-.p .v{font-size:1em;font-weight:700}
-.p .l{color:var(--dim);font-size:.48em}
+#hdr{position:absolute;top:6px;left:50%;transform:translateX(-50%);text-align:center;z-index:10}
+#hdr h1{font-size:1em;color:var(--ok)}
+#hdr p{font-size:.5em;color:var(--dim);margin-top:1px}
+#ts{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.8);padding:4px 8px;border-radius:5px;font-size:.55em;z-index:20;display:flex;gap:3px;align-items:center}
+#ts select{background:#111;color:#ccd;border:1px solid #333;padding:2px 4px;border-radius:3px;font-family:inherit;font-size:.85em;max-width:130px}
+#ts button{background:#222;color:#ccd;border:1px solid #333;padding:2px 6px;border-radius:3px;cursor:pointer;font-family:inherit}
+.p{position:absolute;top:40px;width:145px;padding:6px 7px;background:rgba(0,0,0,.82);border-radius:5px;border:1px solid rgba(255,255,255,.04);font-size:.5em}
+.p1{left:4px;border-left:3px solid var(--ok)}
+.p2{left:155px;border-left:3px solid var(--warn)}
+.p3{right:4px;border-left:3px solid var(--bad)}
+.p h3{font-size:.48em;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px}
+.p .v{font-size:.9em;font-weight:700}
+.p .l{color:var(--dim);font-size:.45em}
 .p .r{margin-bottom:2px}
-.ok{color:var(--ok)}.bad{color:var(--bad)}
-#nar{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:15}
-#nar .ln{font-size:1.05em;font-weight:700;color:#fff;text-shadow:0 0 20px #000,0 2px 6px #000;opacity:0;transition:opacity .4s;white-space:nowrap}
-#nar .ln.v{opacity:1}
-#cmp{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);text-align:center;font-size:.5em;background:rgba(0,0,0,.82);padding:6px 14px;border-radius:6px;white-space:nowrap}
-.cr{display:flex;align-items:center;gap:5px;margin:2px 0;justify-content:center}
-.cb{height:9px;border-radius:2px}.cl{font-size:.58em;color:var(--dim);text-align:left;min-width:100px}.cs{font-size:.68em;font-weight:700;min-width:26px}
-#ftr{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);text-align:center;background:rgba(0,0,0,.82);padding:4px 14px;border-radius:6px;font-size:.52em;max-width:480px}
-#ftr .d{color:var(--dim);font-size:.48em;margin-top:1px}
-#out{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;display:none;z-index:20;background:rgba(0,0,0,.93);padding:18px 22px;border-radius:12px;border:1px solid rgba(255,255,255,.06);max-width:400px}
-#out h2{font-size:1.3em;margin-bottom:4px}
-#out p{font-size:.68em;color:var(--dim);line-height:1.5}
-#out .btns{margin-top:8px;display:flex;gap:5px;justify-content:center}
-#out button{background:var(--ok);color:var(--bg);border:none;padding:6px 16px;border-radius:4px;font-family:inherit;font-size:.78em;font-weight:600;cursor:pointer}
-#out button.s{background:#333;color:#ccd}
-#df{position:absolute;top:8px;left:8px;font-size:.52em;color:var(--gold);background:rgba(0,0,0,.8);padding:3px 7px;border-radius:4px;z-index:20}
-#rabtn{background:var(--gold);color:var(--bg);border:none;padding:2px 8px;border-radius:3px;cursor:pointer;font-family:inherit;font-size:.9em;font-weight:600}
-#ticker{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.88);padding:5px 12px;border-radius:6px;font-size:.5em;display:none;white-space:nowrap;text-align:center;z-index:25}
-#ticker .tk{margin:1px 0}
-@media(max-width:768px){.p{width:120px;font-size:.48em;top:40px}#hdr h1{font-size:.85em}#cmp{bottom:42px}#ftr{bottom:3px;max-width:95vw}#out{max-width:92vw;padding:12px}#ticker{font-size:.42em;max-width:95vw}}
+.ok{color:var(--ok)}.wrn{color:var(--warn)}.bad{color:var(--bad)}
+#cmp{position:absolute;bottom:44px;left:50%;transform:translateX(-50%);text-align:center;font-size:.42em;background:rgba(0,0,0,.82);padding:5px 10px;border-radius:5px;white-space:nowrap}
+.cr{display:flex;align-items:center;gap:4px;margin:2px 0;justify-content:center}
+.cb{height:8px;border-radius:2px}.cl{font-size:.5em;color:var(--dim);text-align:left;min-width:90px}.cs{font-size:.6em;font-weight:700;min-width:22px}
+#ftr{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);text-align:center;background:rgba(0,0,0,.82);padding:3px 10px;border-radius:5px;font-size:.45em;max-width:95vw;white-space:nowrap}
+#ftr .d{color:var(--dim);font-size:.42em;margin-top:1px}
+#out{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;display:none;z-index:20;background:rgba(0,0,0,.93);padding:14px 18px;border-radius:10px;border:1px solid rgba(255,255,255,.06);max-width:420px;font-size:.7em}
+#out h2{font-size:1.2em;margin-bottom:3px}
+#out p{color:var(--dim);line-height:1.5;margin-bottom:6px}
+#out .btns{display:flex;gap:4px;justify-content:center}
+#out button{color:var(--bg);border:none;padding:5px 14px;border-radius:4px;font-family:inherit;font-size:.75em;font-weight:600;cursor:pointer}
+.b1{background:var(--ok)}.b2{background:var(--warn)}.b3{background:var(--bad)}.bs{background:#333;color:#ccd}
+#df{position:absolute;top:6px;left:6px;font-size:.48em;color:var(--gold);background:rgba(0,0,0,.8);padding:2px 6px;border-radius:3px;z-index:20}
+@media(max-width:900px){.p{width:110px;font-size:.42em;top:36px}.p2{left:118px}#hdr h1{font-size:.8em}#cmp{bottom:38px}#ftr{bottom:3px}}
+@media(max-width:600px){.p{width:90px;font-size:.38em;top:32px}.p2{left:98px}#hdr h1{font-size:.7em}#cmp{bottom:34px;font-size:.36em}#ftr{font-size:.38em}}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="hud">
-<div id="hdr"><h1>&#9875; Navigate the Narrows</h1><p>Same route &middot; Same boat &middot; Different math</p></div>
-<div id="ts"><select id="sel"></select><button onclick="restart()">&#8635;</button><button id="rabtn" onclick="runAll()">&#9654; Run All 12</button></div>
+<div id="hdr"><h1>&#9875; Navigate the Narrows</h1><p>Same boat. Three autopilots. Different math.</p></div>
+<div id="ts"><select id="sel"></select><button onclick="restart()">&#8635;</button></div>
 <div id="df"></div>
-<div class="p pl">
-<h3 class="ok">Eisenstein E12</h3>
-<div class="r"><div class="l">Waypoints</div><div class="v ok" id="ew">0/0</div></div>
+<div class="p p1">
+<h3 class="ok">E12 Exact</h3>
 <div class="r"><div class="l">Per fix</div><div class="v ok">4 bytes</div></div>
-<div class="r"><div class="l">Total data</div><div class="v ok" id="ed">0B</div></div>
-<div class="r"><div class="l">Heading error</div><div class="v ok" id="eh">0.000 rad</div></div>
-<div class="r"><div class="l">Status</div><div class="v ok" id="es">&mdash;</div></div>
-<canvas id="cE" width="80" height="80" style="display:block;margin:4px auto 0"></canvas>
+<div class="r"><div class="l">Total</div><div class="v ok" id="e1d">0B</div></div>
+<div class="r"><div class="l">Drift</div><div class="v ok" id="e1h">0.000</div></div>
+<div class="r"><div class="l">Status</div><div class="v ok" id="e1s">&mdash;</div></div>
 </div>
-<div class="p pr">
-<h3 class="bad">IEEE 754 Float</h3>
-<div class="r"><div class="l">Waypoints</div><div class="v bad" id="fw">0/0</div></div>
+<div class="p p2">
+<h3 class="wrn">Float32</h3>
+<div class="r"><div class="l">Per fix</div><div class="v wrn">8 bytes</div></div>
+<div class="r"><div class="l">Total</div><div class="v wrn" id="e2d">0B</div></div>
+<div class="r"><div class="l">Drift</div><div class="v wrn" id="e2h">0.000</div></div>
+<div class="r"><div class="l">Status</div><div class="v wrn" id="e2s">&mdash;</div></div>
+</div>
+<div class="p p3">
+<h3 class="bad">Float64</h3>
 <div class="r"><div class="l">Per fix</div><div class="v bad">16 bytes</div></div>
-<div class="r"><div class="l">Total data</div><div class="v bad" id="fd">0B</div></div>
-<div class="r"><div class="l">Heading error</div><div class="v bad" id="fh">0.000 rad</div></div>
-<div class="r"><div class="l">Status</div><div class="v bad" id="fs">&mdash;</div></div>
-<canvas id="cF" width="80" height="80" style="display:block;margin:4px auto 0"></canvas>
-</div>
-<div id="nar">
-<div class="ln" id="n0">Both autopilots engaged</div>
-<div class="ln" id="n1">Float autopilot drifting off heading&hellip;</div>
-<div class="ln" id="n2">E12: holding exact course</div>
-<div class="ln" id="n3">Float: heading error compounding</div>
-<div class="ln" id="n4">&#128165; Float autopilot &mdash; grounding!</div>
-<div class="ln" id="n5">&#9875; E12 &mdash; safe passage</div>
+<div class="r"><div class="l">Total</div><div class="v bad" id="e3d">0B</div></div>
+<div class="r"><div class="l">Drift</div><div class="v bad" id="e3h">0.000</div></div>
+<div class="r"><div class="l">Status</div><div class="v bad" id="e3s">&mdash;</div></div>
 </div>
 <div id="cmp">
-<div class="cr"><span class="cs ok">4B</span><div class="cb" style="width:28px;background:var(--ok)"></div><span class="cl">E12: 2&times; INT32, integer add</span></div>
-<div class="cr"><span class="cs bad">16B</span><div class="cb" style="width:112px;background:var(--bad)"></div><span class="cl">Float: 2&times; F64, mul+round</span></div>
+<div class="cr"><span class="cs ok">4B</span><div class="cb" style="width:24px;background:var(--ok)"></div><span class="cl">E12: INT32 pair</span></div>
+<div class="cr"><span class="cs wrn">8B</span><div class="cb" style="width:48px;background:var(--warn)"></div><span class="cl">F32: "turn up precision"</span></div>
+<div class="cr"><span class="cs bad">16B</span><div class="cb" style="width:96px;background:var(--bad)"></div><span class="cl">F64: standard float</span></div>
 </div>
-<div id="ticker"></div>
 <div id="ftr">
-<div><span class="ok" id="pe">E12: 0 fixes &times; 4B</span> &middot; <span class="bad" id="pf">Float: 0 fixes &times; 16B</span></div>
-<div class="d" id="pd">Every fix: 4x less data. Zero heading drift. Every time.</div>
+<span class="ok" id="s1">E12: 0</span> &middot; <span class="wrn" id="s2">F32: 0</span> &middot; <span class="bad" id="s3">F64: 0</span>
+<div class="d" id="sd">More precision = more data. E12 needs neither.</div>
 </div>
-<div id="out"><h2 id="ot"></h2><p id="op"></p><div class="btns"><button onclick="restart()">&#8635; Replay</button><button class="s" onclick="nextTrack()">Next &rarr;</button></div></div>
+<div id="out"><h2 id="ot"></h2><p id="op"></p><div class="btns"><button class="b1" onclick="restart()">&#8635;</button><button class="bs" onclick="nextTrack()">Next &#8594;</button></div></div>
 </div>
 <script>
-const T=[{name:"Open Water",desc:"Baseline — count the bytes",diff:1,ds:3.0,wps:[{x:100,y:900},{x:350,y:720},{x:600,y:530},{x:850,y:350},{x:1050,y:180}],rocks:[{x:260,y:859,r:14},{x:439,y:577,r:14},{x:760,y:489,r:14},{x:911,y:219,r:14}]},{name:"Gentle Bend",desc:"Slight curve — trails diverge",diff:1,ds:3.0,wps:[{x:100,y:900},{x:280,y:800},{x:480,y:680},{x:650,y:520},{x:800,y:350},{x:950,y:200}],rocks:[{x:214,y:894,r:12},{x:354,y:697,r:12},{x:599,y:636,r:12},{x:688,y:402,r:12},{x:910,y:310,r:12}]},{name:"The Slalom",desc:"S-curves — watch float wander",diff:2,ds:3.0,wps:[{x:100,y:900},{x:250,y:830},{x:450,y:870},{x:600,y:750},{x:550,y:580},{x:650,y:430},{x:800,y:350},{x:900,y:240},{x:1050,y:170}],rocks:[{x:152,y:914,r:10},{x:227,y:879,r:10},{x:307,y:806,r:10},{x:407,y:826,r:10},{x:509,y:867,r:10},{x:584,y:807,r:10},{x:554,y:717,r:10},{x:529,y:632,r:10},{x:604,y:562,r:10},{x:654,y:487,r:10},{x:671,y:379,r:10},{x:746,y:339,r:10},{x:851,y:346,r:10},{x:901,y:291,r:10},{x:923,y:191,r:10},{x:998,y:156,r:10}]},{name:"Harbor Approach",desc:"Long straight then gentle turn",diff:2,ds:3.0,wps:[{x:100,y:600},{x:300,y:590},{x:500,y:570},{x:680,y:520},{x:800,y:430},{x:870,y:320},{x:920,y:230},{x:1000,y:200}],rocks:[{x:152,y:632,r:10},{x:252,y:627,r:10},{x:347,y:550,r:10},{x:447,y:540,r:10},{x:554,y:591,r:10},{x:644,y:566,r:10},{x:689,y:470,r:10},{x:749,y:424,r:10},{x:847,y:421,r:10},{x:882,y:366,r:10},{x:852,y:281,r:10},{x:877,y:236,r:10},{x:952,y:255,r:10},{x:992,y:240,r:10}]},{name:"Switchback",desc:"Sharp zigzag — float can't hold",diff:3,ds:3.0,wps:[{x:100,y:900},{x:320,y:830},{x:370,y:680},{x:200,y:560},{x:380,y:450},{x:520,y:340},{x:400,y:240},{x:620,y:190},{x:900,y:170}],rocks:[{x:163,y:906,r:10},{x:273,y:871,r:10},{x:309,y:785,r:10},{x:334,y:710,r:10},{x:342,y:630,r:10},{x:257,y:570,r:10},{x:232,y:511,r:10},{x:322,y:456,r:10},{x:430,y:442,r:10},{x:500,y:387,r:10},{x:474,y:334,r:10},{x:414,y:284,r:10},{x:461,y:252,r:10},{x:571,y:227,r:10},{x:688,y:160,r:10},{x:828,y:150,r:10}]},{name:"The Narrows",desc:"Classic tight channel",diff:3,ds:3.0,wps:[{x:100,y:900},{x:210,y:830},{x:330,y:760},{x:440,y:680},{x:550,y:590},{x:650,y:500},{x:750,y:410},{x:850,y:320},{x:940,y:240},{x:1050,y:170}],rocks:[{x:137,y:898,r:9},{x:192,y:863,r:9},{x:231,y:797,r:9},{x:291,y:762,r:9},{x:368,y:755,r:9},{x:423,y:715,r:9},{x:456,y:644,r:9},{x:511,y:599,r:9},{x:587,y:581,r:9},{x:637,y:536,r:9},{x:663,y:464,r:9},{x:713,y:419,r:9},{x:787,y:401,r:9},{x:837,y:356,r:9},{x:861,y:287,r:9},{x:906,y:247,r:9},{x:977,y:238,r:9},{x:1032,y:203,r:9}]},{name:"Spiral Down",desc:"Tightening spiral",diff:3,ds:3.0,wps:[{x:100,y:900},{x:280,y:860},{x:460,y:800},{x:600,y:710},{x:660,y:580},{x:600,y:460},{x:500,y:400},{x:530,y:290},{x:660,y:225},{x:950,y:190}],rocks:[{x:150,y:911,r:9},{x:240,y:891,r:9},{x:318,y:824,r:9},{x:408,y:794,r:9},{x:507,y:796,r:9},{x:577,y:751,r:9},{x:595,y:668,r:9},{x:625,y:603,r:9},{x:665,y:540,r:9},{x:635,y:480,r:9},{x:564,y:464,r:9},{x:514,y:434,r:9},{x:529,y:378,r:9},{x:544,y:323,r:9},{x:553,y:254,r:9},{x:618,y:222,r:9},{x:735,y:238,r:9},{x:880,y:221,r:9}]},{name:"Zigzag Harbor",desc:"Winding approach to dock",diff:3,ds:3.0,wps:[{x:100,y:700},{x:280,y:660},{x:350,y:560},{x:500,y:530},{x:600,y:450},{x:560,y:350},{x:680,y:280},{x:850,y:230},{x:980,y:200}],rocks:[{x:149,y:710,r:9},{x:239,y:690,r:9},{x:281,y:624,r:9},{x:316,y:574,r:9},{x:391,y:572,r:9},{x:466,y:557,r:9},{x:513,y:494,r:9},{x:563,y:454,r:9},{x:609,y:418,r:9},{x:589,y:368,r:9},{x:580,y:315,r:9},{x:640,y:280,r:9},{x:728,y:287,r:9},{x:813,y:262,r:9},{x:878,y:203,r:9},{x:943,y:188,r:9}]},{name:"The Slot",desc:"Straight and narrow — any drift kills",diff:4,ds:3.0,wps:[{x:500,y:920},{x:498,y:810},{x:502,y:700},{x:499,y:590},{x:501,y:480},{x:499,y:370},{x:501,y:260},{x:500,y:150}],rocks:[{x:485,y:870,r:7},{x:515,y:870,r:7},{x:485,y:760,r:7},{x:515,y:760,r:7},{x:485,y:650,r:7},{x:515,y:650,r:7},{x:485,y:540,r:7},{x:515,y:540,r:7},{x:485,y:430,r:7},{x:515,y:430,r:7},{x:485,y:320,r:7},{x:515,y:320,r:7},{x:485,y:210,r:7},{x:515,y:210,r:7}]},{name:"Thread the Needle",desc:"Rocks right next to the path",diff:4,ds:3.0,wps:[{x:100,y:900},{x:230,y:830},{x:360,y:760},{x:470,y:680},{x:570,y:590},{x:660,y:500},{x:750,y:410},{x:840,y:320},{x:930,y:240},{x:1050,y:170}],rocks:[{x:141,y:898,r:9},{x:206,y:863,r:9},{x:254,y:797,r:9},{x:319,y:762,r:9},{x:398,y:755,r:9},{x:453,y:715,r:9},{x:483,y:644,r:9},{x:533,y:599,r:9},{x:605,y:580,r:9},{x:650,y:535,r:9},{x:670,y:465,r:9},{x:715,y:420,r:9},{x:785,y:400,r:9},{x:830,y:355,r:9},{x:851,y:287,r:9},{x:896,y:247,r:9},{x:969,y:238,r:9},{x:1029,y:203,r:9}]},{name:"The Gauntlet",desc:"Progressively tighter — brutal finish",diff:5,ds:3.0,wps:[{x:80,y:900},{x:220,y:830},{x:370,y:740},{x:500,y:630},{x:600,y:510},{x:680,y:400},{x:740,y:310},{x:800,y:240},{x:870,y:200},{x:960,y:180}],rocks:[{x:123,y:899,r:8},{x:193,y:864,r:8},{x:248,y:792,r:8},{x:323,y:747,r:8},{x:414,y:726,r:8},{x:479,y:671,r:8},{x:511,y:588,r:8},{x:561,y:528,r:8},{x:635,y:493,r:8},{x:675,y:438,r:8},{x:680,y:368,r:8},{x:710,y:323,r:8},{x:769,y:304,r:8},{x:799,y:269,r:8},{x:809,y:214,r:8},{x:844,y:194,r:8},{x:896,y:213,r:8},{x:941,y:203,r:8}]},{name:"Final Exam",desc:"Everything combined",diff:5,ds:3.0,wps:[{x:80,y:920},{x:180,y:860},{x:300,y:810},{x:280,y:690},{x:400,y:620},{x:370,y:500},{x:490,y:430},{x:530,y:320},{x:650,y:260},{x:770,y:220},{x:900,y:195},{x:1050,y:180}],rocks:[{x:113,y:918,r:8},{x:163,y:888,r:8},{x:204,y:834,r:8},{x:264,y:809,r:8},{x:310,y:778,r:8},{x:300,y:718,r:8},{x:302,y:660,r:8},{x:362,y:625,r:8},{x:407,y:586,r:8},{x:392,y:526,r:8},{x:392,y:470,r:8},{x:452,y:435,r:8},{x:514,y:408,r:8},{x:534,y:353,r:8},{x:553,y:292,r:8},{x:613,y:262,r:8},{x:685,y:264,r:8},{x:745,y:244,r:8},{x:800,y:199,r:8},{x:865,y:187,r:8},{x:939,y:206,r:8},{x:1014,y:199,r:8}]}];
+var T=[{name:"Open Water",desc:"Baseline — count the bytes",diff:1,wps:[{x:100,y:900},{x:350,y:720},{x:600,y:530},{x:850,y:350},{x:1050,y:180}],rocks:[{x:260,y:859,r:14},{x:439,y:577,r:14},{x:760,y:489,r:14},{x:911,y:219,r:14}]},{name:"Gentle Bend",desc:"Slight curve — trails diverge",diff:1,wps:[{x:100,y:900},{x:280,y:800},{x:480,y:680},{x:650,y:520},{x:800,y:350},{x:950,y:200}],rocks:[{x:214,y:894,r:12},{x:354,y:697,r:12},{x:599,y:636,r:12},{x:688,y:402,r:12},{x:910,y:310,r:12}]},{name:"The Slalom",desc:"S-curves — watch float wander",diff:2,wps:[{x:100,y:900},{x:250,y:830},{x:450,y:870},{x:600,y:750},{x:550,y:580},{x:650,y:430},{x:800,y:350},{x:900,y:240},{x:1050,y:170}],rocks:[{x:152,y:914,r:10},{x:227,y:879,r:10},{x:307,y:806,r:10},{x:407,y:826,r:10},{x:509,y:867,r:10},{x:584,y:807,r:10},{x:554,y:717,r:10},{x:529,y:632,r:10},{x:604,y:562,r:10},{x:654,y:487,r:10},{x:671,y:379,r:10},{x:746,y:339,r:10},{x:851,y:346,r:10},{x:901,y:291,r:10},{x:923,y:191,r:10},{x:998,y:156,r:10}]},{name:"Harbor Approach",desc:"Long straight then gentle turn",diff:2,wps:[{x:100,y:600},{x:300,y:590},{x:500,y:570},{x:680,y:520},{x:800,y:430},{x:870,y:320},{x:920,y:230},{x:1000,y:200}],rocks:[{x:152,y:632,r:10},{x:252,y:627,r:10},{x:347,y:550,r:10},{x:447,y:540,r:10},{x:554,y:591,r:10},{x:644,y:566,r:10},{x:689,y:470,r:10},{x:749,y:424,r:10},{x:847,y:421,r:10},{x:882,y:366,r:10},{x:852,y:281,r:10},{x:877,y:236,r:10},{x:952,y:255,r:10},{x:992,y:240,r:10}]},{name:"Switchback",desc:"Sharp zigzag — float can't hold",diff:3,wps:[{x:100,y:900},{x:320,y:830},{x:370,y:680},{x:200,y:560},{x:380,y:450},{x:520,y:340},{x:400,y:240},{x:620,y:190},{x:900,y:170}],rocks:[{x:163,y:906,r:10},{x:273,y:871,r:10},{x:309,y:785,r:10},{x:334,y:710,r:10},{x:342,y:630,r:10},{x:257,y:570,r:10},{x:232,y:511,r:10},{x:322,y:456,r:10},{x:430,y:442,r:10},{x:500,y:387,r:10},{x:474,y:334,r:10},{x:414,y:284,r:10},{x:461,y:252,r:10},{x:571,y:227,r:10},{x:688,y:160,r:10},{x:828,y:150,r:10}]},{name:"The Narrows",desc:"Classic tight channel",diff:3,wps:[{x:100,y:900},{x:210,y:830},{x:330,y:760},{x:440,y:680},{x:550,y:590},{x:650,y:500},{x:750,y:410},{x:850,y:320},{x:940,y:240},{x:1050,y:170}],rocks:[{x:137,y:898,r:9},{x:192,y:863,r:9},{x:231,y:797,r:9},{x:291,y:762,r:9},{x:368,y:755,r:9},{x:423,y:715,r:9},{x:456,y:644,r:9},{x:511,y:599,r:9},{x:587,y:581,r:9},{x:637,y:536,r:9},{x:663,y:464,r:9},{x:713,y:419,r:9},{x:787,y:401,r:9},{x:837,y:356,r:9},{x:861,y:287,r:9},{x:906,y:247,r:9},{x:977,y:238,r:9},{x:1032,y:203,r:9}]},{name:"Spiral Down",desc:"Tightening spiral",diff:3,wps:[{x:100,y:900},{x:280,y:860},{x:460,y:800},{x:600,y:710},{x:660,y:580},{x:600,y:460},{x:500,y:400},{x:530,y:290},{x:660,y:225},{x:950,y:190}],rocks:[{x:150,y:911,r:9},{x:240,y:891,r:9},{x:318,y:824,r:9},{x:408,y:794,r:9},{x:507,y:796,r:9},{x:577,y:751,r:9},{x:595,y:668,r:9},{x:625,y:603,r:9},{x:665,y:540,r:9},{x:635,y:480,r:9},{x:564,y:464,r:9},{x:514,y:434,r:9},{x:529,y:378,r:9},{x:544,y:323,r:9},{x:553,y:254,r:9},{x:618,y:222,r:9},{x:735,y:238,r:9},{x:880,y:221,r:9}]},{name:"Zigzag Harbor",desc:"Winding approach to dock",diff:3,wps:[{x:100,y:700},{x:280,y:660},{x:350,y:560},{x:500,y:530},{x:600,y:450},{x:560,y:350},{x:680,y:280},{x:850,y:230},{x:980,y:200}],rocks:[{x:149,y:710,r:9},{x:239,y:690,r:9},{x:281,y:624,r:9},{x:316,y:574,r:9},{x:391,y:572,r:9},{x:466,y:557,r:9},{x:513,y:494,r:9},{x:563,y:454,r:9},{x:609,y:418,r:9},{x:589,y:368,r:9},{x:580,y:315,r:9},{x:640,y:280,r:9},{x:728,y:287,r:9},{x:813,y:262,r:9},{x:878,y:203,r:9},{x:943,y:188,r:9}]},{name:"The Slot",desc:"Straight and narrow — any drift kills",diff:4,wps:[{x:500,y:920},{x:498,y:810},{x:502,y:700},{x:499,y:590},{x:501,y:480},{x:499,y:370},{x:501,y:260},{x:500,y:150}],rocks:[{x:485,y:870,r:7},{x:515,y:870,r:7},{x:485,y:760,r:7},{x:515,y:760,r:7},{x:485,y:650,r:7},{x:515,y:650,r:7},{x:485,y:540,r:7},{x:515,y:540,r:7},{x:485,y:430,r:7},{x:515,y:430,r:7},{x:485,y:320,r:7},{x:515,y:320,r:7},{x:485,y:210,r:7},{x:515,y:210,r:7}]},{name:"Thread the Needle",desc:"Rocks right next to the path",diff:4,wps:[{x:100,y:900},{x:230,y:830},{x:360,y:760},{x:470,y:680},{x:570,y:590},{x:660,y:500},{x:750,y:410},{x:840,y:320},{x:930,y:240},{x:1050,y:170}],rocks:[{x:141,y:898,r:9},{x:206,y:863,r:9},{x:254,y:797,r:9},{x:319,y:762,r:9},{x:398,y:755,r:9},{x:453,y:715,r:9},{x:483,y:644,r:9},{x:533,y:599,r:9},{x:605,y:580,r:9},{x:650,y:535,r:9},{x:670,y:465,r:9},{x:715,y:420,r:9},{x:785,y:400,r:9},{x:830,y:355,r:9},{x:851,y:287,r:9},{x:896,y:247,r:9},{x:969,y:238,r:9},{x:1029,y:203,r:9}]},{name:"The Gauntlet",desc:"Progressively tighter — brutal finish",diff:5,wps:[{x:80,y:900},{x:220,y:830},{x:370,y:740},{x:500,y:630},{x:600,y:510},{x:680,y:400},{x:740,y:310},{x:800,y:240},{x:870,y:200},{x:960,y:180}],rocks:[{x:123,y:899,r:8},{x:193,y:864,r:8},{x:248,y:792,r:8},{x:323,y:747,r:8},{x:414,y:726,r:8},{x:479,y:671,r:8},{x:511,y:588,r:8},{x:561,y:528,r:8},{x:635,y:493,r:8},{x:675,y:438,r:8},{x:680,y:368,r:8},{x:710,y:323,r:8},{x:769,y:304,r:8},{x:799,y:269,r:8},{x:809,y:214,r:8},{x:844,y:194,r:8},{x:896,y:213,r:8},{x:941,y:203,r:8}]},{name:"Final Exam",desc:"Everything combined",diff:5,wps:[{x:80,y:920},{x:180,y:860},{x:300,y:810},{x:280,y:690},{x:400,y:620},{x:370,y:500},{x:490,y:430},{x:530,y:320},{x:650,y:260},{x:770,y:220},{x:900,y:195},{x:1050,y:180}],rocks:[{x:113,y:918,r:8},{x:163,y:888,r:8},{x:204,y:834,r:8},{x:264,y:809,r:8},{x:310,y:778,r:8},{x:300,y:718,r:8},{x:302,y:660,r:8},{x:362,y:625,r:8},{x:407,y:586,r:8},{x:392,y:526,r:8},{x:392,y:470,r:8},{x:452,y:435,r:8},{x:514,y:408,r:8},{x:534,y:353,r:8},{x:553,y:292,r:8},{x:613,y:262,r:8},{x:685,y:264,r:8},{x:745,y:244,r:8},{x:800,y:199,r:8},{x:865,y:187,r:8},{x:939,y:206,r:8},{x:1014,y:199,r:8}]}];
 
 var ci=0,sel=document.getElementById("sel");
 T.forEach(function(t,i){var o=document.createElement("option");o.value=i;o.textContent=(i+1)+". "+t.name;sel.appendChild(o)});
@@ -100,25 +91,19 @@ function resize(){W=C.width=innerWidth*2;H=C.height=innerHeight*2}
 resize();addEventListener("resize",resize);
 function sx(x){return x*W/1100}function sy(y){return y*H/1000}function sr(r){return r*Math.min(W/1100,H/1000)}
 
-// Explosion/ripple effects
-var fx=[];
-function addFx(x,y){for(var i=0;i<3;i++)fx.push({x:x,y:y,r:0,mr:15+i*10,a:1,d:0})}
-
-function B(exact,ds){
-  this.exact=exact;this.ds=ds;this.wp=0;this.x=0;this.y=0;this.hb=0;this.fixes=0;
-  this.dead=false;this.done=false;this.hit=0;this.spd=1;this.trail=[];
-  this.lastDes=0; // desired heading for compass
+function B(exact,ds,bpf,col){
+  this.exact=exact;this.ds=ds;this.bpf=bpf;this.col=col;
+  this.wp=0;this.x=0;this.y=0;this.hb=0;this.fixes=0;this.dead=false;this.done=false;this.hit=0;this.spd=1;this.trail=[];
 }
 B.prototype.init=function(wps){
-  this.x=wps[0].x;this.y=wps[0].y;this.wp=0;this.hb=0;this.fixes=0;
-  this.dead=false;this.done=false;this.hit=0;this.trail=[];this.lastDes=0;
+  this.x=wps[0].x;this.y=wps[0].y;this.wp=0;this.hb=0;this.fixes=0;this.dead=false;this.done=false;this.hit=0;this.trail=[];
 };
 B.prototype.step=function(wps,rocks){
   if(this.dead||this.done)return;
   if(this.wp>=wps.length-1){this.done=true;return}
   var t=wps[this.wp+1],dx=t.x-this.x,dy=t.y-this.y,d=Math.sqrt(dx*dx+dy*dy);
   if(d<15){this.wp++;this.hit++;return}
-  var des=Math.atan2(dy,dx);this.lastDes=des;this.fixes++;
+  var des=Math.atan2(dy,dx);this.fixes++;
   var s=this.spd;if(d<25)s*=.6;
   var ang=des;
   if(!this.exact){
@@ -127,266 +112,114 @@ B.prototype.step=function(wps,rocks){
     this.hb+=n;this.hb*=.996;ang=des+this.hb;
   }
   this.x+=Math.cos(ang)*s;this.y+=Math.sin(ang)*s;
-  this.trail.push({x:this.x,y:this.y});if(this.trail.length>700)this.trail.shift();
-  for(var i=0;i<rocks.length;i++){var r=rocks[i],rx=this.x-r.x,ry=this.y-r.y;if(rx*rx+ry*ry<(r.r+3)*(r.r+3)){this.dead=true;addFx(this.x,this.y);return}}
-  if(this.x<-50||this.x>1150||this.y<-50||this.y>1050){this.dead=true;addFx(this.x,this.y)}
+  this.trail.push({x:this.x,y:this.y});if(this.trail.length>500)this.trail.shift();
+  for(var i=0;i<rocks.length;i++){var r=rocks[i],rx=this.x-r.x,ry=this.y-r.y;if(rx*rx+ry*ry<(r.r+3)*(r.r+3)){this.dead=true;return}}
+  if(this.x<-50||this.x>1150||this.y<-50||this.y>1050)this.dead=true;
 };
 
-var bE,bF,tick=0,outS=false;
-// Run-all state
-var raMode=false,raIdx=0,raWait=0;
-var raTot={eD:0,fD:0,eS:0,fS:0};
-var narr=[
-  {id:"n0",ok:function(t,e,f){return t>=12},v:false,d:60},
-  {id:"n1",ok:function(t,e,f){return f&&Math.abs(f.hb)>.02&&!f.dead},v:false,d:70},
-  {id:"n2",ok:function(t,e,f){return f&&Math.abs(f.hb)>.02&&!f.dead},v:false,d:70},
-  {id:"n3",ok:function(t,e,f){return f&&Math.abs(f.hb)>.06&&!f.dead},v:false,d:80},
-  {id:"n4",ok:function(t,e,f){return f&&f.dead},v:false,d:150},
-  {id:"n5",ok:function(t,e,f){return e&&e.done},v:false,d:170}
-];
-var nT={};
+var bE,bF32,bF64,tick=0,outS=false;
 
 function init(){
-  var t=T[ci];bE=new B(true);bF=new B(false,t.ds);bE.init(t.wps);bF.init(t.wps);
-  tick=0;outS=false;fx=[];document.getElementById("out").style.display="none";
+  var t=T[ci];
+  bE=new B(true,0,4,"#00ff88");
+  bF32=new B(false,1.5,8,"#ffaa22");
+  bF64=new B(false,3.0,16,"#ff4444");
+  bE.init(t.wps);bF32.init(t.wps);bF64.init(t.wps);
+  tick=0;outS=false;document.getElementById("out").style.display="none";
   document.getElementById("hdr").querySelector("h1").textContent="\u2693 "+t.name;
   var st="";for(var i=0;i<5;i++)st+=i<t.diff?"\u2605":"\u2606";
   document.getElementById("df").textContent=st;
-  for(var i=0;i<narr.length;i++){narr[i].v=false;document.getElementById(narr[i].id).classList.remove("v")}
-  nT={};
 }
-function restart(){if(!raMode)init();else{raMode=false;init()}}
-function nextTrack(){if(raMode)return;ci=(ci+1)%T.length;sel.value=ci;init()}
-
-// Run All 12
-function runAll(){
-  raMode=true;raIdx=0;raTot={eD:0,fD:0,eS:0,fS:0};
-  ci=0;sel.value=0;init();
-  document.getElementById("ticker").style.display="block";
-  document.getElementById("rabtn").textContent="\u25A0 Stop";
-  updateTicker();
-}
-function stopRunAll(){
-  raMode=false;
-  document.getElementById("ticker").style.display="none";
-  document.getElementById("rabtn").textContent="\u25B6 Run All 12";
-}
-function updateTicker(){
-  var tk=document.getElementById("ticker");
-  tk.innerHTML='<div class="tk"><span class="ok">E12:</span> '+raTot.eS+'/12 survived, '+fmtB(raTot.eD)+'</div>'+
-    '<div class="tk"><span class="bad">FLT:</span> '+raTot.fS+'/12 survived, '+fmtB(raTot.fD)+'</div>'+
-    '<div class="tk" style="color:var(--gold)">Track '+(raIdx+1)+' of 12</div>';
-}
-function advanceRunAll(){
-  // Accumulate stats
-  raTot.eD+=bE.fixes*4;raTot.fD+=bF.fixes*16;
-  if(bE.done&&!bE.dead)raTot.eS++;
-  if(bF.done&&!bF.dead)raTot.fS++;
-  raIdx++;
-  if(raIdx>=12){
-    raMode=false;
-    document.getElementById("ticker").style.display="none";
-    document.getElementById("rabtn").textContent="\u25B6 Run All 12";
-    showFinalSummary();
-    return;
-  }
-  ci=raIdx;sel.value=ci;init();
-  updateTicker();
-}
-function showFinalSummary(){
-  var o=document.getElementById("out");o.style.display="block";
-  var ratio=raTot.eD>0?(raTot.fD/raTot.eD).toFixed(1):"4.0";
-  var saved=((raTot.fD-raTot.eD)/1024).toFixed(1);
-  document.getElementById("ot").textContent="\u2693 Run All 12 — Complete";
-  document.getElementById("ot").style.color="var(--gold)";
-  document.getElementById("op").innerHTML=
-    '<span class="ok">E12:</span> '+fmtB(raTot.eD)+', '+raTot.eS+'/12 tracks survived<br>'+
-    '<span class="bad">Float:</span> '+fmtB(raTot.fD)+', '+raTot.fS+'/12 tracks survived<br>'+
-    '<br>Data ratio: '+ratio+'\u00D7 (Float used '+ratio+'x more data)<br>'+
-    '<span class="ok">E12 saved '+saved+' KB of navigation data across 12 tracks</span><br>'+
-    '<span class="ok">E12 never accumulated heading drift. Float drifted every time.</span>';
-  document.getElementById("out").querySelector(".btns").innerHTML=
-    '<button onclick="ci=0;sel.value=0;init()">\u2693 Replay Track 1</button>'+
-    '<button class="s" onclick="document.getElementById(\'out\').style.display=\'none\';runAll()">\u25B6 Run All Again</button>';
-}
-
-// Compass drawing
-function drawCompass(cid,hb,col){
-  var cv=document.getElementById(cid),c=cv.getContext("2d");
-  var w=80,cx=40,cy=40,r=32;
-  c.clearRect(0,0,w,w);
-  // Background
-  c.fillStyle="rgba(6,10,15,.9)";c.beginPath();c.arc(cx,cy,r+4,0,Math.PI*2);c.fill();
-  c.strokeStyle="rgba(255,255,255,.08)";c.lineWidth=1;c.beginPath();c.arc(cx,cy,r+4,0,Math.PI*2);c.stroke();
-  // Tick marks at 60° intervals
-  c.strokeStyle="rgba(255,255,255,.2)";c.lineWidth=1;
-  for(var i=0;i<6;i++){
-    var a=i*Math.PI/3;
-    c.beginPath();c.moveTo(cx+Math.cos(a)*(r-2),cy+Math.sin(a)*(r-2));
-    c.lineTo(cx+Math.cos(a)*(r+2),cy+Math.sin(a)*(r+2));c.stroke();
-  }
-  // Labels N/E/S/W at 0,90,180,270 (relative)
-  c.fillStyle="rgba(255,255,255,.25)";c.font="7px monospace";c.textAlign="center";c.textBaseline="middle";
-  c.fillText("0",cx+r-9,cy);c.fillText("π",cx-r+9,cy);
-  // Needle — shows heading error
-  var err=hb; // radians of error
-  // Needle points in the direction of error (relative to north/up)
-  // Up = 0 error, so needle angle = err - PI/2 to rotate from "up" convention
-  c.save();c.translate(cx,cy);c.rotate(err);
-  c.fillStyle=col;c.beginPath();c.moveTo(0,-(r-6));c.lineTo(-3,4);c.lineTo(3,4);c.closePath();c.fill();
-  c.fillStyle="rgba(255,255,255,.3)";c.beginPath();c.moveTo(0,r-6);c.lineTo(-3,-4);c.lineTo(3,-4);c.closePath();c.fill();
-  c.restore();
-  // Center dot
-  c.fillStyle="rgba(255,255,255,.4)";c.beginPath();c.arc(cx,cy,2,0,Math.PI*2);c.fill();
-}
+function restart(){init()}
+function nextTrack(){ci=(ci+1)%T.length;sel.value=ci;restart()}
 
 function drawWater(){
   var g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,"#050c14");g.addColorStop(1,"#0a1828");
   X.fillStyle=g;X.fillRect(0,0,W,H);
-  // Subtle wave lines
-  X.strokeStyle="rgba(25,50,70,.07)";X.lineWidth=1;var t=tick*.01;
-  for(var y=0;y<H;y+=24){X.beginPath();for(var x=0;x<W;x+=5){var wy=y+Math.sin(x*.006+t+y*.003)*2;x===0?X.moveTo(x,wy):X.lineTo(x,wy)}X.stroke()}
-  // Animated wave highlights
-  X.strokeStyle="rgba(40,90,120,.05)";X.lineWidth=2;
-  var wt=tick*.02;
-  for(var i=0;i<5;i++){
-    var base=(wt*30+i*H/5)%H;
-    X.beginPath();
-    for(var x=0;x<W;x+=8){var wy=base+Math.sin(x*.004+wt+i)*6;x===0?X.moveTo(x,wy):X.lineTo(x,wy)}
-    X.stroke();
-  }
+  X.strokeStyle="rgba(25,50,70,.06)";X.lineWidth=1;var t=tick*.01;
+  for(var y=0;y<H;y+=22){X.beginPath();for(var x=0;x<W;x+=5){var wy=y+Math.sin(x*.006+t+y*.003)*2;x===0?X.moveTo(x,wy):X.lineTo(x,wy)}X.stroke()}
 }
 function drawPath(t){
-  X.strokeStyle="rgba(0,255,136,.03)";X.lineWidth=50*Math.min(W/1100,H/1000);X.lineCap="round";X.lineJoin="round";
+  X.strokeStyle="rgba(0,255,136,.025)";X.lineWidth=40*Math.min(W/1100,H/1000);X.lineCap="round";X.lineJoin="round";
   X.beginPath();X.moveTo(sx(t.wps[0].x),sy(t.wps[0].y));for(var i=1;i<t.wps.length;i++)X.lineTo(sx(t.wps[i].x),sy(t.wps[i].y));X.stroke();
-  X.strokeStyle="rgba(0,255,136,.07)";X.lineWidth=1;X.setLineDash([4,4]);
+  X.strokeStyle="rgba(0,255,136,.06)";X.lineWidth=1;X.setLineDash([4,4]);
   X.beginPath();X.moveTo(sx(t.wps[0].x),sy(t.wps[0].y));for(var i=1;i<t.wps.length;i++)X.lineTo(sx(t.wps[i].x),sy(t.wps[i].y));X.stroke();X.setLineDash([]);
 }
 function drawRocks(t){
   for(var j=0;j<t.rocks.length;j++){
     var r=t.rocks[j],rx=sx(r.x),ry=sy(r.y),rr=sr(r.r);
-    // Depth shadow below rock
-    X.fillStyle="rgba(0,0,0,.15)";X.beginPath();X.ellipse(rx+sr(2),ry+sr(3),rr*1.1,rr*.5,0,0,Math.PI*2);X.fill();
-    // Danger glow
-    var g=X.createRadialGradient(rx,ry,0,rx,ry,rr*2);g.addColorStop(0,"rgba(255,40,20,.07)");g.addColorStop(1,"rgba(255,40,20,0)");
-    X.fillStyle=g;X.beginPath();X.arc(rx,ry,rr*2,0,Math.PI*2);X.fill();
-    // Rock body
+    var g=X.createRadialGradient(rx,ry,0,rx,ry,rr*1.8);g.addColorStop(0,"rgba(255,40,20,.06)");g.addColorStop(1,"rgba(255,40,20,0)");
+    X.fillStyle=g;X.beginPath();X.arc(rx,ry,rr*1.8,0,Math.PI*2);X.fill();
     X.fillStyle="#161008";X.beginPath();X.arc(rx,ry,rr,0,Math.PI*2);X.fill();
-    X.strokeStyle="rgba(60,40,12,.25)";X.lineWidth=1;X.stroke();
+    X.strokeStyle="rgba(60,40,12,.2)";X.lineWidth=1;X.stroke();
   }
 }
 function drawHarbor(t){
   var l=t.wps[t.wps.length-1],lx=sx(l.x),ly=sy(l.y),p=Math.sin(tick*.04)*.3+.7;
-  var g=X.createRadialGradient(lx,ly,0,lx,ly,sr(35));g.addColorStop(0,"rgba(255,200,50,"+(.14*p)+")");g.addColorStop(1,"rgba(255,200,50,0)");
-  X.fillStyle=g;X.beginPath();X.arc(lx,ly,sr(35),0,Math.PI*2);X.fill();
-  X.fillStyle="rgba(255,200,50,"+(.7*p)+")";X.beginPath();X.arc(lx,ly,sr(2.5),0,Math.PI*2);X.fill();
+  X.fillStyle="rgba(255,200,50,"+(.12*p)+")";X.beginPath();X.arc(lx,ly,sr(30),0,Math.PI*2);X.fill();
+  X.fillStyle="rgba(255,200,50,"+(.6*p)+")";X.beginPath();X.arc(lx,ly,sr(2),0,Math.PI*2);X.fill();
 }
-function drawWake(b,col){
-  if(!b||b.trail.length<4)return;
-  var len=b.trail.length,wakeStart=Math.max(0,len-30);
-  var isE=b.exact;
-  for(var i=wakeStart+1;i<len;i++){
-    var a=(i-wakeStart)/(len-wakeStart)*.4;
-    var p0=b.trail[i-1],p1=b.trail[i];
-    // Perpendicular offset for wake spread
-    var dx=p1.x-p0.x,dy=p1.y-p0.y,d=Math.sqrt(dx*dx+dy*dy)||1;
-    var nx=-dy/d,ny=dx/d;
-    var spread=a*(isE?3:6+Math.sin(i*.7)*3);
-    X.strokeStyle=col==="#00ff88"?"rgba(0,255,136,"+a*.5+")":"rgba(255,68,68,"+a*.5+")";
-    X.lineWidth=isE?1:1.5;
-    // Left wake line
-    X.beginPath();X.moveTo(sx(p0.x+nx*spread),sy(p0.y+ny*spread));X.lineTo(sx(p1.x+nx*spread),sy(p1.y+ny*spread));X.stroke();
-    // Right wake line
-    X.beginPath();X.moveTo(sx(p0.x-nx*spread),sy(p0.y-ny*spread));X.lineTo(sx(p1.x-nx*spread),sy(p1.y-ny*spread));X.stroke();
-  }
-}
-function drawBoat(b,col,lbl){
-  if(!b)return;var bx=sx(b.x),by=sy(b.y),sz=sr(6);
-  if(b.trail.length>1){for(var i=1;i<b.trail.length;i++){var a=(i/b.trail.length)*.3;X.strokeStyle=col==="#00ff88"?"rgba(0,255,136,"+a+")":"rgba(255,68,68,"+a+")";X.lineWidth=1.5;X.beginPath();X.moveTo(sx(b.trail[i-1].x),sy(b.trail[i-1].y));X.lineTo(sx(b.trail[i].x),sy(b.trail[i].y));X.stroke()}}
+function drawBoat(b,lbl){
+  if(!b)return;var bx=sx(b.x),by=sy(b.y),sz=sr(5);
+  if(b.trail.length>1){for(var i=1;i<b.trail.length;i++){var a=(i/b.trail.length)*.25;X.strokeStyle=b.col.replace(")",","+a+")").replace("rgb","rgba");X.lineWidth=1.2;X.beginPath();X.moveTo(sx(b.trail[i-1].x),sy(b.trail[i-1].y));X.lineTo(sx(b.trail[i].x),sy(b.trail[i].y));X.stroke()}}
   var t=T[ci],nxt=t.wps[Math.min(b.wp+1,t.wps.length-1)],ang=Math.atan2(nxt.y-b.y,nxt.x-b.x);
-  // Wake
-  if(!b.dead&&!b.done)drawWake(b,col);
   X.save();X.translate(bx,by);X.rotate(ang);
-  X.fillStyle=col;X.beginPath();X.moveTo(sz,0);X.lineTo(-sz*.5,-sz*.4);X.lineTo(-sz*.3,0);X.lineTo(-sz*.5,sz*.4);X.closePath();
-  X.fill();X.shadowColor=col;X.shadowBlur=8;X.fill();X.shadowBlur=0;X.restore();
-  // Anchor icon when done
-  if(b.done&&!b.dead){
-    X.fillStyle=col;X.font="bold "+Math.round(sr(10))+"px serif";X.textAlign="center";X.textBaseline="middle";
-    X.fillText("\u2693",bx,by-sz-sr(8));
-  }
-  if(b.dead){X.strokeStyle="#ff4444";X.lineWidth=2;X.beginPath();X.moveTo(bx-8,by-8);X.lineTo(bx+8,by+8);X.moveTo(bx+8,by-8);X.lineTo(bx-8,by+8);X.stroke()}
-  X.fillStyle=col;X.font="bold "+Math.round(sr(6))+"px monospace";X.textAlign="center";X.fillText(lbl,bx,by-sz-sr(4));
+  X.fillStyle=b.col;X.beginPath();X.moveTo(sz,0);X.lineTo(-sz*.5,-sz*.4);X.lineTo(-sz*.3,0);X.lineTo(-sz*.5,sz*.4);X.closePath();
+  X.fill();X.shadowColor=b.col;X.shadowBlur=6;X.fill();X.shadowBlur=0;X.restore();
+  if(b.dead){X.strokeStyle="#ff4444";X.lineWidth=1.5;X.beginPath();X.moveTo(bx-6,by-6);X.lineTo(bx+6,by+6);X.moveTo(bx+6,by-6);X.lineTo(bx-6,by+6);X.stroke()}
+  X.fillStyle=b.col;X.font="bold "+Math.round(sr(5))+"px monospace";X.textAlign="center";X.fillText(lbl,bx,by-sz-sr(3));
 }
-function drawFx(){
-  for(var i=fx.length-1;i>=0;i--){
-    var e=fx[i];e.r+=.8;e.a=1-e.r/e.mr;
-    if(e.a<=0){fx.splice(i,1);continue}
-    var ex=sx(e.x),ey=sy(e.y);
-    X.strokeStyle="rgba(255,100,30,"+e.a*.6+")";X.lineWidth=2;
-    X.beginPath();X.arc(ex,ey,sr(e.r),0,Math.PI*2);X.stroke();
-    X.strokeStyle="rgba(255,200,50,"+e.a*.3+")";X.lineWidth=1;
-    X.beginPath();X.arc(ex,ey,sr(e.r*.6),0,Math.PI*2);X.stroke();
-  }
-}
-function fmtB(b){if(b<1024)return b+"B";return(b/1024).toFixed(1)+"KB"}
+function fmtB(b){return b<1024?b+"B":(b/1024).toFixed(1)+"KB"}
 function updateHUD(){
-  if(!bE||!bF)return;var t=T[ci],n=t.wps.length-1;
-  document.getElementById("ew").textContent=bE.hit+"/"+n;
-  document.getElementById("fw").textContent=bF.hit+"/"+n;
-  document.getElementById("ed").textContent=fmtB(bE.fixes*4);
-  document.getElementById("fd").textContent=fmtB(bF.fixes*16);
-  document.getElementById("eh").textContent=Math.abs(bE.hb).toFixed(4)+" rad";
-  document.getElementById("fh").textContent=Math.abs(bF.hb).toFixed(4)+" rad";
-  document.getElementById("es").textContent=bE.done?"\u2693 Safe":bE.dead?"\uD83D\uDCA5 Ground":"Steering";
-  document.getElementById("fs").textContent=bF.done?"\u2693 Safe":bF.dead?"\uD83D\uDCA5 Ground":"Steering";
-  document.getElementById("pe").textContent="E12: "+bE.fixes+" fixes \u00D7 4B = "+fmtB(bE.fixes*4);
-  var ft=bF.dead?"Float: grounded after "+bF.fixes+" fixes ("+fmtB(bF.fixes*16)+")":"Float: "+bF.fixes+" fixes \u00D7 16B = "+fmtB(bF.fixes*16);
-  document.getElementById("pf").textContent=ft;
-  var ratio=bE.fixes>0?(bF.fixes*16)/(bE.fixes*4):4;
-  document.getElementById("pd").textContent="Per fix: "+ratio.toFixed(1)+"\u00D7 more data"+" | Heading error: "+Math.abs(bF.hb).toFixed(4)+" vs "+Math.abs(bE.hb).toFixed(4)+" rad";
-  // Compasses
-  drawCompass("cE",bE.hb,"#00ff88");
-  drawCompass("cF",bF.hb,"#ff4444");
-  if(!outS&&(bE.dead||bE.done)&&(bF.dead||bF.done)){
-    outS=true;
-    if(raMode){raWait=240;} // ~4 seconds at 60fps
-    else showOut();
-  }
+  if(!bE||!bF32||!bF64)return;var t=T[ci],n=t.wps.length-1;
+  document.getElementById("e1d").textContent=fmtB(bE.fixes*bE.bpf);
+  document.getElementById("e2d").textContent=fmtB(bF32.fixes*bF32.bpf);
+  document.getElementById("e3d").textContent=fmtB(bF64.fixes*bF64.bpf);
+  document.getElementById("e1h").textContent=Math.abs(bE.hb).toFixed(4);
+  document.getElementById("e2h").textContent=Math.abs(bF32.hb).toFixed(4);
+  document.getElementById("e3h").textContent=Math.abs(bF64.hb).toFixed(4);
+  var st=function(b){return b.done?"\u2693":b.dead?"\uD83D\uDCA5":"Steering"};
+  document.getElementById("e1s").textContent=st(bE);
+  document.getElementById("e2s").textContent=st(bF32);
+  document.getElementById("e3s").textContent=st(bF64);
+  var eD=bE.fixes*bE.bpf,f32D=bF32.fixes*bF32.bpf,f64D=bF64.fixes*bF64.bpf;
+  document.getElementById("s1").textContent="E12: "+bE.hit+"/"+n+" "+fmtB(eD);
+  document.getElementById("s2").textContent="F32: "+bF32.hit+"/"+n+" "+fmtB(f32D)+(f32D>eD?" ("+Math.round(f32D/eD)+"\u00D7)":"");
+  document.getElementById("s3").textContent="F64: "+bF64.hit+"/"+n+" "+fmtB(f64D)+(f64D>eD?" ("+Math.round(f64D/eD)+"\u00D7)":"");
+  var parts=[];
+  if(f32D>eD)parts.push("F32 used "+Math.round(f32D/eD)+"\u00D7 more data");
+  if(f64D>eD)parts.push("F64 used "+Math.round(f64D/eD)+"\u00D7 more data");
+  if(bF32.dead)parts.push("F32 grounded despite 2\u00D7 precision");
+  if(bF64.dead)parts.push("F64 grounded at 4\u00D7 data cost");
+  document.getElementById("sd").textContent=parts.length?parts.join(". ")+".":"More precision = more data. E12 needs neither.";
+  if(!outS&&(bE.dead||bE.done)&&(bF32.dead||bF32.done)&&(bF64.dead||bF64.done)){outS=true;showOut()}
 }
 function showOut(){
   document.getElementById("out").style.display="block";
-  // Restore default buttons
-  document.getElementById("out").querySelector(".btns").innerHTML=
-    '<button onclick="restart()">\u2693 Replay</button><button class="s" onclick="nextTrack()">Next \u2192</button>';
   var t=T[ci],n=t.wps.length-1,ti="",p="";
-  if(bE.done&&!bF.done){
-    ti="\u2693 E12 Safe \u2014 Float Grounded";
-    p="E12: all "+n+" waypoints, "+bE.fixes+" fixes, "+fmtB(bE.fixes*4)+". Float: grounded at wp "+bF.hit+"/"+n+", "+bF.fixes+" fixes wasted "+fmtB(bF.fixes*16)+". Heading drift: "+Math.abs(bF.hb).toFixed(3)+" rad.";
-  }else if(bE.done&&bF.done){
-    ti="\u26A1 Both Safe \u2014 Compare the Numbers";
-    p="E12: "+bE.fixes+" fixes \u00D7 4B = "+fmtB(bE.fixes*4)+", drift: "+Math.abs(bE.hb).toFixed(4)+" rad. Float: "+bF.fixes+" fixes \u00D7 16B = "+fmtB(bF.fixes*16)+", drift: "+Math.abs(bF.hb).toFixed(4)+" rad. "+((bF.fixes*16)/(bE.fixes*4)).toFixed(1)+"\u00D7 more data for "+(Math.abs(bF.hb)>Math.abs(bE.hb)*10?"far worse":"worse")+" accuracy.";
+  var eD=bE.fixes*4,f32D=bF32.fixes*8,f64D=bF64.fixes*16;
+  var eOk=bE.done,f32Ok=bF32.done,f64Ok=bF64.done;
+  if(eOk&&!f32Ok&&!f64Ok){
+    ti="\u2693 Only E12 Made It";
+    p="E12: all "+n+" waypoints, "+fmtB(eD)+". F32 grounded ("+fmtB(f32D)+" wasted). F64 grounded ("+fmtB(f64D)+" wasted). Turning up precision didn't help.";
+  }else if(eOk&&f32Ok&&!f64Ok){
+    ti="\u26A1 F32 Survived \u2014 At 2\u00D7 The Cost";
+    p="E12: "+fmtB(eD)+". F32: "+fmtB(f32D)+" ("+Math.round(f32D/eD)+"\u00D7). F64 grounded. F32 survived by spending 2\u00D7 more data. E12 needs neither extra precision nor extra bytes.";
+  }else if(eOk&&f32Ok&&f64Ok){
+    ti="\u26A1 All Three Made It \u2014 Compare The Cost";
+    p="E12: "+fmtB(eD)+". F32: "+fmtB(f32D)+" ("+Math.round(f32D/eD)+"\u00D7). F64: "+fmtB(f64D)+" ("+Math.round(f64D/eD)+"\u00D7). Same route, 4\u00D7 data difference between E12 and F64.";
   }else{
-    ti="\uD83D\uDCA5 Both Grounded";p="E12: wp "+bE.hit+"/"+n+". Float: wp "+bF.hit+"/"+n+".";
+    ti="\uD83D\uDCA5 Only E12 Survives";p="E12: wp "+bE.hit+"/"+n+". F32: "+bF32.hit+"/"+n+". F64: "+bF64.hit+"/"+n+".";
   }
   document.getElementById("ot").textContent=ti;document.getElementById("op").textContent=p;
   document.getElementById("ot").style.color=bE.done?"#00ff88":"#ff4444";
 }
-function updateNarr(){
-  for(var i=0;i<narr.length;i++){var n=narr[i];if(!n.v&&n.ok(tick,bE,bF)){n.v=true;document.getElementById(n.id).classList.add("v");nT[n.id]=n.d}}
-  for(var id in nT){if(nT[id]<=0)document.getElementById(id).classList.remove("v");else nT[id]--}
-}
 function frame(){
   tick++;var t=T[ci];
-  if(bE&&bF){for(var i=0;i<2;i++){bE.step(t.wps,t.rocks);bF.step(t.wps,t.rocks)}}
-  // Auto-advance in run-all mode
-  if(raMode&&outS){
-    raWait--;
-    if(raWait<=0)advanceRunAll();
-  }
+  if(bE&&bF32&&bF64){for(var i=0;i<2;i++){bE.step(t.wps,t.rocks);bF32.step(t.wps,t.rocks);bF64.step(t.wps,t.rocks)}}
   drawWater();drawPath(t);drawRocks(t);drawHarbor(t);
-  drawBoat(bE,"#00ff88","E12");drawBoat(bF,"#ff4444","FLT");
-  drawFx();
-  updateHUD();updateNarr();requestAnimationFrame(frame);
+  drawBoat(bE,"E12");drawBoat(bF32,"F32");drawBoat(bF64,"F64");
+  updateHUD();requestAnimationFrame(frame);
 }
 init();frame();
 </script>
