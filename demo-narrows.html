@@ -5,50 +5,79 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Eisenstein — Navigate the Narrows</title>
 <style>
-:root { --bg:#060a0f; --water:#0a1a2a; --safe:#00ff88; --danger:#ff4444; --land:#2a1a0a; --boat:#ffffff; --muted:#445; --wake:rgba(255,255,255,0.15); }
+:root { --bg:#060a0f; --water:#0a1a2a; --safe:#00ff88; --danger:#ff4444; --land:#2a1a0a; --boat:#ffffff; --muted:#556; --wake:rgba(255,255,255,0.15); }
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:#ccd;font-family:'SF Mono','Fira Code',monospace;overflow:hidden;height:100vh}
 #game{width:100%;height:100vh;position:relative}
 canvas{display:block;width:100%;height:100%}
 
-/* HUD overlay */
 #hud{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none}
 #hud>*{pointer-events:auto}
 
-#title{position:absolute;top:20px;left:50%;transform:translateX(-50%);text-align:center;z-index:10}
-#title h1{font-size:1.4em;font-weight:700;color:var(--safe);letter-spacing:1px}
-#title p{font-size:0.7em;color:var(--muted);margin-top:4px}
+#title{position:absolute;top:12px;left:50%;transform:translateX(-50%);text-align:center;z-index:10}
+#title h1{font-size:1.3em;font-weight:700;color:var(--safe);letter-spacing:1px}
+#title p{font-size:0.65em;color:var(--muted);margin-top:2px}
 
 /* Stats panels */
-.stats{position:absolute;top:80px;width:220px;padding:16px;background:rgba(0,0,0,0.7);border-radius:10px;border:1px solid rgba(255,255,255,0.06);font-size:0.75em}
-.stats-left{left:20px;border-left:3px solid var(--safe)}
-.stats-right{right:20px;border-left:3px solid var(--danger)}
-.stats h3{font-size:0.7em;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px}
-.stats .val{font-size:1.3em;font-weight:700}
-.stats .label{color:var(--muted);font-size:0.65em}
-.stats .row{margin-bottom:8px}
+.stats{position:absolute;top:60px;width:200px;padding:12px;background:rgba(0,0,0,0.75);border-radius:10px;border:1px solid rgba(255,255,255,0.06);font-size:0.7em;backdrop-filter:blur(4px)}
+.stats-left{left:12px;border-left:3px solid var(--safe)}
+.stats-right{right:12px;border-left:3px solid var(--danger)}
+.stats h3{font-size:0.65em;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.stats .val{font-size:1.2em;font-weight:700}
+.stats .label{color:var(--muted);font-size:0.6em}
+.stats .row{margin-bottom:6px}
 .good{color:var(--safe)}
 .bad{color:var(--danger)}
 
-/* Power meter */
-#power{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);text-align:center;background:rgba(0,0,0,0.7);padding:12px 24px;border-radius:10px;border:1px solid rgba(255,255,255,0.06)}
-#power .bar{display:flex;gap:4px;margin-top:6px;justify-content:center}
-#power .seg{width:8px;height:16px;border-radius:2px;background:#222}
-#power .seg.on-g{background:var(--safe)}
-#power .seg.on-r{background:var(--danger)}
-
-/* Bottom info */
-#info{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);font-size:0.7em;color:var(--muted);text-align:center;background:rgba(0,0,0,0.5);padding:6px 16px;border-radius:6px}
-
-/* Outcome banner */
-#outcome{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;display:none;z-index:20}
-#outcome h2{font-size:2em;margin-bottom:8px}
-#outcome p{font-size:0.9em;color:var(--muted);max-width:400px}
-#outcome button{margin-top:16px;background:var(--safe);color:var(--bg);border:none;padding:10px 28px;border-radius:6px;font-family:inherit;font-size:0.9em;font-weight:600;cursor:pointer}
+/* Narrative overlay */
+#narrative{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:15;transition:opacity 0.8s ease}
+#narrative .line{font-size:1.3em;font-weight:700;color:#fff;text-shadow:0 0 30px rgba(0,0,0,0.9),0 0 60px rgba(0,0,0,0.6);opacity:0;transition:opacity 0.6s ease;white-space:nowrap}
+#narrative .line.visible{opacity:1}
 
 /* Code compactness */
-#compact{position:absolute;top:80px;left:50%;transform:translateX(-50%);text-align:center;font-size:0.65em;color:var(--muted);background:rgba(0,0,0,0.6);padding:6px 12px;border-radius:6px}
-#compact .bytes{font-size:1.4em;font-weight:700}
+#compact{position:absolute;bottom:70px;left:50%;transform:translateX(-50%);text-align:center;font-size:0.6em;background:rgba(0,0,0,0.75);padding:10px 20px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);min-width:340px;backdrop-filter:blur(4px)}
+#compact h4{font-size:0.8em;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.byte-row{display:flex;align-items:center;gap:8px;margin:4px 0;justify-content:center}
+.byte-bar{height:12px;border-radius:3px;transition:width 0.3s ease}
+.byte-label{font-size:0.7em;color:var(--muted);min-width:140px;text-align:left}
+.byte-size{font-size:0.8em;font-weight:700}
+
+/* Power meter */
+#power{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);text-align:center;background:rgba(0,0,0,0.75);padding:8px 20px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);backdrop-filter:blur(4px);max-width:500px}
+#power .summary{font-size:0.7em;line-height:1.5}
+#power .detail{font-size:0.6em;color:var(--muted);margin-top:2px}
+
+/* Outcome banner */
+#outcome{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;display:none;z-index:20;background:rgba(0,0,0,0.9);padding:32px;border-radius:16px;border:1px solid rgba(255,255,255,0.1)}
+#outcome h2{font-size:1.8em;margin-bottom:8px}
+#outcome p{font-size:0.8em;color:var(--muted);max-width:420px;line-height:1.6}
+#outcome button{margin-top:16px;background:var(--safe);color:var(--bg);border:none;padding:10px 28px;border-radius:6px;font-family:inherit;font-size:0.9em;font-weight:600;cursor:pointer}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .stats{width:140px;padding:8px;font-size:0.6em;top:50px}
+  .stats-left{left:6px}
+  .stats-right{right:6px}
+  .stats .val{font-size:1em}
+  #title h1{font-size:1em}
+  #narrative .line{font-size:0.9em}
+  #compact{bottom:60px;min-width:260px;padding:8px 12px}
+  #power{bottom:6px;max-width:95vw;padding:6px 12px}
+  #power .summary{font-size:0.6em}
+  #power .detail{font-size:0.5em}
+}
+@media (max-width: 480px) {
+  .stats{width:110px;padding:6px;font-size:0.55em;top:44px}
+  .stats .row{margin-bottom:3px}
+  .stats h3{font-size:0.6em;margin-bottom:4px}
+  #title h1{font-size:0.85em}
+  #title p{font-size:0.55em}
+  #narrative .line{font-size:0.75em}
+  #compact{bottom:50px;min-width:200px}
+  #compact h4{font-size:0.65em}
+  .byte-label{min-width:100px;font-size:0.6em}
+  .byte-size{font-size:0.65em}
+}
 </style>
 </head>
 <body>
@@ -56,40 +85,56 @@ canvas{display:block;width:100%;height:100%}
 <canvas id="c"></canvas>
 <div id="hud">
   <div id="title">
-    <h1>Navigate the Narrows</h1>
+    <h1>⚓ Navigate the Narrows</h1>
     <p>Same route. Same boat. Different math.</p>
   </div>
 
   <div class="stats stats-left">
-    <h3 class="good">Eisenstein Snap</h3>
-    <div class="row"><div class="label">Computation</div><div class="val good" id="e-comp">4 bytes</div></div>
-    <div class="row"><div class="label">Waypoints hit</div><div class="val good" id="e-wp">0 / 12</div></div>
+    <h3 class="good">Eisenstein E12</h3>
+    <div class="row"><div class="label">Waypoints</div><div class="val good" id="e-wp">0 / 12</div></div>
     <div class="row"><div class="label">Position error</div><div class="val good" id="e-err">0.000</div></div>
-    <div class="row"><div class="label">Total power used</div><div class="val good" id="e-pwr">0 J</div></div>
+    <div class="row"><div class="label">Power used</div><div class="val good" id="e-pwr">0 mJ</div></div>
     <div class="row"><div class="label">Status</div><div class="val good" id="e-status">Underway</div></div>
   </div>
 
   <div class="stats stats-right">
     <h3 class="bad">IEEE 754 Float</h3>
-    <div class="row"><div class="label">Computation</div><div class="val bad" id="f-comp">16 bytes</div></div>
-    <div class="row"><div class="label">Waypoints hit</div><div class="val bad" id="f-wp">0 / 12</div></div>
+    <div class="row"><div class="label">Waypoints</div><div class="val bad" id="f-wp">0 / 12</div></div>
     <div class="row"><div class="label">Position error</div><div class="val bad" id="f-err">0.000</div></div>
-    <div class="row"><div class="label">Total power used</div><div class="val bad" id="f-pwr">0 J</div></div>
+    <div class="row"><div class="label">Power used</div><div class="val bad" id="f-pwr">0 mJ</div></div>
     <div class="row"><div class="label">Status</div><div class="val bad" id="f-status">Underway</div></div>
   </div>
 
+  <div id="narrative">
+    <div class="line" id="nar-0">Both boats start at the harbor mouth</div>
+    <div class="line" id="nar-1">The channel narrows…</div>
+    <div class="line" id="nar-2">Float boat is drifting off course…</div>
+    <div class="line" id="nar-3">E12 boat: still on the exact path</div>
+    <div class="line" id="nar-4">💥 Float boat hits a rock!</div>
+    <div class="line" id="nar-5">⚓ E12 boat reaches harbor safely</div>
+  </div>
+
   <div id="compact">
-    Per navigation fix: <span class="bytes good">E12 = 4 bytes</span> vs <span class="bytes bad">Float = 16 bytes</span> · <span class="good">4× less memory, 4× less bus traffic</span>
+    <h4>Bytes per navigation fix</h4>
+    <div class="byte-row">
+      <span class="byte-size good">4 B</span>
+      <div class="byte-bar" id="bar-e" style="width:40px;background:var(--safe)"></div>
+      <span class="byte-label">E12: INT32 × 2 — exact integer add</span>
+    </div>
+    <div class="byte-row">
+      <span class="byte-size bad">16 B</span>
+      <div class="byte-bar" id="bar-f" style="width:160px;background:var(--danger)"></div>
+      <span class="byte-label">Float: F64 × 2 — IEEE 754 multiply + round</span>
+    </div>
   </div>
 
   <div id="power">
-    <div style="font-size:0.7em;color:var(--muted)">Power consumption comparison</div>
-    <div class="bar" id="power-bar-e"></div>
-    <div class="bar" id="power-bar-f" style="margin-top:4px"></div>
-    <div style="margin-top:4px"><span class="good" style="font-size:0.7em" id="pwr-label-e">E12: 0μJ</span> · <span class="bad" style="font-size:0.7em" id="pwr-label-f">Float: 0μJ</span></div>
+    <div class="summary">
+      <span class="good" id="pwr-e">E12: 0.0 mJ — enough for 2,500 more fixes</span><br>
+      <span class="bad" id="pwr-f">Float: 0.0 mJ — and still drifting</span>
+    </div>
+    <div class="detail" id="pwr-detail">4× less memory · 4× less bus traffic · zero drift</div>
   </div>
-
-  <div id="info">Green boat uses exact integer snapping. Red boat uses floating-point. Both follow the same route. Watch what happens.</div>
 
   <div id="outcome">
     <h2 id="out-title"></h2>
@@ -100,7 +145,6 @@ canvas{display:block;width:100%;height:100%}
 </div>
 
 <script>
-// === Canvas Setup ===
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 let W, H;
@@ -108,53 +152,66 @@ let W, H;
 function resize() {
   W = canvas.width = window.innerWidth * 2;
   H = canvas.height = window.innerHeight * 2;
-  ctx.scale(1, 1);
 }
 resize();
 window.addEventListener('resize', resize);
 
-// === Harbor Map ===
-// The narrows: a winding channel through rocks
-// Dead-band corridor: the safe zone (tolerance stack)
-const CHANNEL_WIDTH = 40; // half-width of safe zone
-
-// Route waypoints — the boat must navigate through these
+// === Map ===
+const CHANNEL_WIDTH = 40;
 const waypoints = [
-  {x: 100, y: 850},
-  {x: 200, y: 750},
-  {x: 320, y: 680},
-  {x: 400, y: 600},
-  {x: 480, y: 520},
-  {x: 520, y: 420},
-  {x: 580, y: 320},
-  {x: 650, y: 260},
-  {x: 730, y: 200},
-  {x: 800, y: 160},
-  {x: 870, y: 130},
-  {x: 950, y: 110},
+  {x:100,y:850},{x:200,y:750},{x:320,y:680},{x:400,y:600},{x:480,y:520},
+  {x:520,y:420},{x:580,y:320},{x:650,y:260},{x:730,y:200},{x:800,y:160},
+  {x:870,y:130},{x:950,y:110},
 ];
 
-// Rocks — danger zones that will ground a drifting boat
 const rocks = [
-  {x: 150, y: 700, r: 25}, {x: 280, y: 720, r: 30}, {x: 350, y: 750, r: 20},
-  {x: 420, y: 670, r: 28}, {x: 370, y: 640, r: 22}, {x: 500, y: 580, r: 25},
-  {x: 550, y: 480, r: 30}, {x: 460, y: 470, r: 20}, {x: 600, y: 380, r: 25},
-  {x: 530, y: 350, r: 22}, {x: 660, y: 310, r: 28}, {x: 700, y: 240, r: 20},
-  {x: 760, y: 260, r: 25}, {x: 820, y: 220, r: 22}, {x: 850, y: 170, r: 18},
-  {x: 910, y: 160, r: 20}, {x: 980, y: 140, r: 22},
-  // Some on the other side of channel
-  {x: 250, y: 660, r: 20}, {x: 340, y: 620, r: 18}, {x: 440, y: 540, r: 22},
-  {x: 560, y: 440, r: 18}, {x: 620, y: 340, r: 22}, {x: 680, y: 280, r: 18},
+  {x:150,y:700,r:25},{x:280,y:720,r:30},{x:350,y:750,r:20},
+  {x:420,y:670,r:28},{x:370,y:640,r:22},{x:500,y:580,r:25},
+  {x:550,y:480,r:30},{x:460,y:470,r:20},{x:600,y:380,r:25},
+  {x:530,y:350,r:22},{x:660,y:310,r:28},{x:700,y:240,r:20},
+  {x:760,y:260,r:25},{x:820,y:220,r:22},{x:850,y:170,r:18},
+  {x:910,y:160,r:20},{x:980,y:140,r:22},
+  {x:250,y:660,r:20},{x:340,y:620,r:18},{x:440,y:540,r:22},
+  {x:560,y:440,r:18},{x:620,y:340,r:22},{x:680,y:280,r:18},
 ];
 
-// Scale to canvas
-const scaleX = W / 1100;
-const scaleY = H / 1000;
-function sx(x) { return x * scaleX; }
-function sy(y) { return y * scaleY; }
-function sr(r) { return r * Math.min(scaleX, scaleY); }
+const scaleX = () => W / 1100;
+const scaleY = () => H / 1000;
+function sx(x) { return x * scaleX(); }
+function sy(y) { return y * scaleY(); }
+function sr(r) { return r * Math.min(scaleX(), scaleY()); }
 
-// === Boat Physics ===
+// === Narrative System ===
+const narratives = [
+  { id:'nar-0', trigger: (t,e,f) => t >= 0, shown: false, duration: 120 },
+  { id:'nar-1', trigger: (t,e,f) => t >= 100, shown: false, duration: 120 },
+  { id:'nar-2', trigger: (t,e,f) => f && f.error > 0.05 && !f.grounded, shown: false, duration: 100 },
+  { id:'nar-3', trigger: (t,e,f) => f && f.error > 0.05 && !f.grounded, shown: false, duration: 100 },
+  { id:'nar-4', trigger: (t,e,f) => f && f.grounded, shown: false, duration: 200 },
+  { id:'nar-5', trigger: (t,e,f) => e && e.finished, shown: false, duration: 250 },
+];
+let narrativeTimers = {};
+
+function updateNarratives(tick, boatE, boatF) {
+  for (const nar of narratives) {
+    if (!nar.shown && nar.trigger(tick, boatE, boatF)) {
+      nar.shown = true;
+      const el = document.getElementById(nar.id);
+      el.classList.add('visible');
+      narrativeTimers[nar.id] = nar.duration;
+    }
+  }
+  // Fade out
+  for (const [id, timer] of Object.entries(narrativeTimers)) {
+    if (timer <= 0) {
+      document.getElementById(id).classList.remove('visible');
+    } else {
+      narrativeTimers[id]--;
+    }
+  }
+}
+
+// === Boat ===
 class Boat {
   constructor(useExact) {
     this.useExact = useExact;
@@ -163,24 +220,20 @@ class Boat {
     this.y = waypoints[0].y;
     this.angle = 0;
     this.speed = 1.5;
-    this.error = 0; // accumulated error
-    this.totalPower = 0; // microjoules
+    this.error = 0;
+    this.totalPower = 0; // in mJ
     this.fixCount = 0;
     this.grounded = false;
     this.finished = false;
     this.trail = [];
     this.wpHit = 0;
-    this.driftX = 0; // accumulated float drift
+    this.driftX = 0;
     this.driftY = 0;
   }
 
   update() {
     if (this.grounded || this.finished) return;
-
-    if (this.wpIndex >= waypoints.length - 1) {
-      this.finished = true;
-      return;
-    }
+    if (this.wpIndex >= waypoints.length - 1) { this.finished = true; return; }
 
     const target = waypoints[this.wpIndex + 1];
     const dx = target.x - this.x;
@@ -188,53 +241,37 @@ class Boat {
     const dist = Math.sqrt(dx * dx + dy * dy);
     const targetAngle = Math.atan2(dy, dx);
 
-    if (dist < 15) {
-      this.wpIndex++;
-      this.wpHit++;
-      return;
-    }
+    if (dist < 15) { this.wpIndex++; this.wpHit++; return; }
 
-    // Navigation fix — compute new heading
     this.fixCount++;
 
     if (this.useExact) {
-      // E12 snapping: 4 bytes per fix, integer arithmetic
-      // Snap heading to nearest 60° multiple (hex grid), then refine
       const snappedAngle = this.snapExact(targetAngle);
       this.angle = snappedAngle;
-      // E12: exact integer multiply, no rounding error
-      const stepX = Math.cos(this.angle) * this.speed;
-      const stepY = Math.sin(this.angle) * this.speed;
-      this.x += stepX;
-      this.y += stepY;
-      this.totalPower += 0.12; // 4 bytes × bus energy
+      this.x += Math.cos(this.angle) * this.speed;
+      this.y += Math.sin(this.angle) * this.speed;
+      this.totalPower += 0.0004; // 0.4 mJ per fix
     } else {
-      // Float: 16 bytes per fix, accumulates rounding error
-      // Simulate IEEE 754 drift by adding small random perturbation
       const floatAngle = targetAngle;
-      const perturbation = (Math.random() - 0.5) * 0.003; // subtle but accumulates
+      const perturbation = (Math.random() - 0.5) * 0.004;
       this.driftX += perturbation * Math.cos(floatAngle) * this.speed;
       this.driftY += perturbation * Math.sin(floatAngle) * this.speed;
-
-      const stepX = Math.cos(floatAngle) * this.speed + this.driftX * 0.01;
-      const stepY = Math.sin(floatAngle) * this.speed + this.driftY * 0.01;
+      const stepX = Math.cos(floatAngle) * this.speed + this.driftX * 0.012;
+      const stepY = Math.sin(floatAngle) * this.speed + this.driftY * 0.012;
       this.x += stepX;
       this.y += stepY;
       this.angle = Math.atan2(stepY, stepX);
-      this.totalPower += 0.48; // 16 bytes × bus energy
+      this.totalPower += 0.0016; // 1.6 mJ per fix
       this.error += Math.abs(perturbation);
     }
 
-    // Trail
     this.trail.push({x: this.x, y: this.y});
     if (this.trail.length > 800) this.trail.shift();
 
-    // Check grounding
     for (const rock of rocks) {
       const rdx = this.x - rock.x;
       const rdy = this.y - rock.y;
-      const rdist = Math.sqrt(rdx * rdx + rdy * rdy);
-      if (rdist < rock.r + 5) {
+      if (Math.sqrt(rdx * rdx + rdy * rdy) < rock.r + 5) {
         this.grounded = true;
         return;
       }
@@ -242,51 +279,41 @@ class Boat {
   }
 
   snapExact(angle) {
-    // Snap to nearest hex direction (6 directions), then interpolate
-    // This mirrors E12 snap_from_angle behavior
     const hexAngles = [0, Math.PI/3, 2*Math.PI/3, Math.PI, -2*Math.PI/3, -Math.PI/3];
-    let best = hexAngles[0];
-    let bestDiff = Math.abs(angle - hexAngles[0]);
+    let best = hexAngles[0], bestDiff = Math.abs(angle - hexAngles[0]);
     for (const ha of hexAngles) {
       let diff = Math.abs(angle - ha);
       if (diff > Math.PI) diff = 2 * Math.PI - diff;
       if (diff < bestDiff) { bestDiff = diff; best = ha; }
     }
-    // If close to a hex direction, snap exactly. Otherwise use float angle but with exact tracking
     if (bestDiff < 0.2) return best;
-    return angle; // For non-hex angles, still use exact arithmetic
+    return angle;
   }
 }
 
-// === Game State ===
-let boatE, boatF;
-let running = false;
-let started = false;
-let tick = 0;
+// === State ===
+let boatE, boatF, tick = 0, outcomeShown = false;
 
 function init() {
   boatE = new Boat(true);
   boatF = new Boat(false);
-  running = true;
-  started = true;
   tick = 0;
+  outcomeShown = false;
   document.getElementById('outcome').style.display = 'none';
+  for (const nar of narratives) { nar.shown = false; }
+  narrativeTimers = {};
+  for (const el of document.querySelectorAll('#narrative .line')) { el.classList.remove('visible'); }
 }
-
-function restart() {
-  init();
-}
+function restart() { init(); }
 
 // === Rendering ===
 function drawWater() {
-  // Dark water gradient
   const grad = ctx.createLinearGradient(0, 0, 0, H);
   grad.addColorStop(0, '#060d14');
   grad.addColorStop(1, '#0a1a2a');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  // Subtle water texture — wave lines
   ctx.strokeStyle = 'rgba(30, 60, 80, 0.15)';
   ctx.lineWidth = 1;
   const time = tick * 0.02;
@@ -294,35 +321,28 @@ function drawWater() {
     ctx.beginPath();
     for (let x = 0; x < W; x += 4) {
       const wy = y + Math.sin(x * 0.01 + time + y * 0.005) * 3;
-      if (x === 0) ctx.moveTo(x, wy);
-      else ctx.lineTo(x, wy);
+      if (x === 0) ctx.moveTo(x, wy); else ctx.lineTo(x, wy);
     }
     ctx.stroke();
   }
 }
 
 function drawChannel() {
-  // Draw the safe channel corridor (dead-band zone)
   ctx.strokeStyle = 'rgba(0, 255, 136, 0.08)';
-  ctx.lineWidth = CHANNEL_WIDTH * 2 * Math.min(scaleX, scaleY);
+  ctx.lineWidth = CHANNEL_WIDTH * 2 * Math.min(scaleX(), scaleY());
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.beginPath();
   ctx.moveTo(sx(waypoints[0].x), sy(waypoints[0].y));
-  for (let i = 1; i < waypoints.length; i++) {
-    ctx.lineTo(sx(waypoints[i].x), sy(waypoints[i].y));
-  }
+  for (let i = 1; i < waypoints.length; i++) ctx.lineTo(sx(waypoints[i].x), sy(waypoints[i].y));
   ctx.stroke();
 
-  // Channel center line (dashed)
   ctx.strokeStyle = 'rgba(0, 255, 136, 0.15)';
   ctx.lineWidth = 1;
   ctx.setLineDash([6, 6]);
   ctx.beginPath();
   ctx.moveTo(sx(waypoints[0].x), sy(waypoints[0].y));
-  for (let i = 1; i < waypoints.length; i++) {
-    ctx.lineTo(sx(waypoints[i].x), sy(waypoints[i].y));
-  }
+  for (let i = 1; i < waypoints.length; i++) ctx.lineTo(sx(waypoints[i].x), sy(waypoints[i].y));
   ctx.stroke();
   ctx.setLineDash([]);
 }
@@ -330,30 +350,15 @@ function drawChannel() {
 function drawRocks() {
   for (const rock of rocks) {
     const rx = sx(rock.x), ry = sy(rock.y), rr = sr(rock.r);
-
-    // Danger glow
     const glow = ctx.createRadialGradient(rx, ry, 0, rx, ry, rr * 2);
     glow.addColorStop(0, 'rgba(255, 50, 30, 0.15)');
     glow.addColorStop(1, 'rgba(255, 50, 30, 0)');
     ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(rx, ry, rr * 2, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Rock body
+    ctx.beginPath(); ctx.arc(rx, ry, rr * 2, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#1a1208';
-    ctx.beginPath();
-    ctx.arc(rx, ry, rr, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(rx, ry, rr, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = 'rgba(80, 50, 20, 0.5)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Subtle highlight
-    ctx.fillStyle = 'rgba(60, 40, 15, 0.3)';
-    ctx.beginPath();
-    ctx.arc(rx - rr * 0.2, ry - rr * 0.2, rr * 0.4, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.lineWidth = 2; ctx.stroke();
   }
 }
 
@@ -362,13 +367,25 @@ function drawBoat(boat, color, label) {
   const bx = sx(boat.x), by = sy(boat.y);
   const size = sr(8);
 
+  // Accumulating error glow for float boat
+  if (!boat.useExact && boat.error > 0) {
+    const intensity = Math.min(0.6, boat.error * 3);
+    const glowR = sr(15 + boat.error * 200);
+    const errGlow = ctx.createRadialGradient(bx, by, 0, bx, by, glowR);
+    errGlow.addColorStop(0, `rgba(255, 40, 40, ${intensity})`);
+    errGlow.addColorStop(0.5, `rgba(255, 20, 20, ${intensity * 0.3})`);
+    errGlow.addColorStop(1, 'rgba(255, 0, 0, 0)');
+    ctx.fillStyle = errGlow;
+    ctx.beginPath(); ctx.arc(bx, by, glowR, 0, Math.PI * 2); ctx.fill();
+  }
+
   // Trail
   if (boat.trail.length > 1) {
     for (let i = 1; i < boat.trail.length; i++) {
       const alpha = (i / boat.trail.length) * 0.4;
       ctx.strokeStyle = color === '#00ff88'
-        ? `rgba(0, 255, 136, ${alpha})`
-        : `rgba(255, 68, 68, ${alpha})`;
+        ? `rgba(0,255,136,${alpha})`
+        : `rgba(255,68,68,${alpha})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(sx(boat.trail[i-1].x), sy(boat.trail[i-1].y));
@@ -379,26 +396,20 @@ function drawBoat(boat, color, label) {
 
   // Wake
   if (!boat.grounded && !boat.finished) {
-    ctx.strokeStyle = color === '#00ff88'
-      ? 'rgba(0, 255, 136, 0.1)'
-      : 'rgba(255, 68, 68, 0.1)';
+    ctx.strokeStyle = color === '#00ff88' ? 'rgba(0,255,136,0.1)' : 'rgba(255,68,68,0.1)';
     ctx.lineWidth = 3;
     const wakeAngle = boat.angle + Math.PI;
     for (let i = 1; i <= 3; i++) {
-      const wx = bx + Math.cos(wakeAngle) * size * i * 1.5;
-      const wy = by + Math.sin(wakeAngle) * size * i * 1.5;
       ctx.beginPath();
-      ctx.arc(wx, wy, size * (0.5 + i * 0.3), 0, Math.PI * 2);
+      ctx.arc(bx + Math.cos(wakeAngle) * size * i * 1.5, by + Math.sin(wakeAngle) * size * i * 1.5, size * (0.5 + i * 0.3), 0, Math.PI * 2);
       ctx.stroke();
     }
   }
 
-  // Boat body (triangle)
+  // Boat body
   ctx.save();
   ctx.translate(bx, by);
   ctx.rotate(boat.angle);
-
-  // Hull
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.moveTo(size, 0);
@@ -407,28 +418,20 @@ function drawBoat(boat, color, label) {
   ctx.lineTo(-size * 0.6, size * 0.5);
   ctx.closePath();
   ctx.fill();
-
-  // Glow
   ctx.shadowColor = color;
   ctx.shadowBlur = 12;
   ctx.fill();
   ctx.shadowBlur = 0;
-
   ctx.restore();
 
-  // Grounded indicator
   if (boat.grounded) {
-    ctx.strokeStyle = '#ff4444';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#ff4444'; ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(bx - 12, by - 12);
-    ctx.lineTo(bx + 12, by + 12);
-    ctx.moveTo(bx + 12, by - 12);
-    ctx.lineTo(bx - 12, by + 12);
+    ctx.moveTo(bx - 12, by - 12); ctx.lineTo(bx + 12, by + 12);
+    ctx.moveTo(bx + 12, by - 12); ctx.lineTo(bx - 12, by + 12);
     ctx.stroke();
   }
 
-  // Label
   ctx.fillStyle = color;
   ctx.font = `bold ${Math.round(sr(10))}px monospace`;
   ctx.textAlign = 'center';
@@ -437,13 +440,10 @@ function drawBoat(boat, color, label) {
 
 function drawWaypoints() {
   for (let i = 0; i < waypoints.length; i++) {
-    const wp = waypoints[i];
-    const wx = sx(wp.x), wy = sy(wp.y);
-    ctx.fillStyle = 'rgba(0, 255, 136, 0.3)';
-    ctx.beginPath();
-    ctx.arc(wx, wy, sr(4), 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(0, 255, 136, 0.6)';
+    const wx = sx(waypoints[i].x), wy = sy(waypoints[i].y);
+    ctx.fillStyle = 'rgba(0,255,136,0.3)';
+    ctx.beginPath(); ctx.arc(wx, wy, sr(4), 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(0,255,136,0.6)';
     ctx.font = `${Math.round(sr(7))}px monospace`;
     ctx.textAlign = 'center';
     ctx.fillText(i + 1, wx, wy - sr(7));
@@ -451,47 +451,32 @@ function drawWaypoints() {
 }
 
 function drawHarbor() {
-  // Harbor entrance at the end
   const last = waypoints[waypoints.length - 1];
   const lx = sx(last.x), ly = sy(last.y);
-
-  // Harbor light
   const pulse = Math.sin(tick * 0.05) * 0.3 + 0.7;
   const glow = ctx.createRadialGradient(lx, ly, 0, lx, ly, sr(50));
-  glow.addColorStop(0, `rgba(255, 200, 50, ${0.2 * pulse})`);
-  glow.addColorStop(1, 'rgba(255, 200, 50, 0)');
+  glow.addColorStop(0, `rgba(255,200,50,${0.2 * pulse})`);
+  glow.addColorStop(1, 'rgba(255,200,50,0)');
   ctx.fillStyle = glow;
-  ctx.beginPath();
-  ctx.arc(lx, ly, sr(50), 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = `rgba(255, 200, 50, ${0.8 * pulse})`;
-  ctx.beginPath();
-  ctx.arc(lx, ly, sr(3), 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = 'rgba(255, 200, 50, 0.5)';
+  ctx.beginPath(); ctx.arc(lx, ly, sr(50), 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = `rgba(255,200,50,${0.8 * pulse})`;
+  ctx.beginPath(); ctx.arc(lx, ly, sr(3), 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,200,50,0.5)';
   ctx.font = `bold ${Math.round(sr(9))}px monospace`;
   ctx.textAlign = 'center';
   ctx.fillText('⚓ HARBOR', lx, ly + sr(18));
 }
 
-// === HUD Updates ===
+// === HUD ===
 function updateHUD() {
   if (!boatE || !boatF) return;
 
   document.getElementById('e-wp').textContent = `${boatE.wpHit} / ${waypoints.length - 1}`;
   document.getElementById('f-wp').textContent = `${boatF.wpHit} / ${waypoints.length - 1}`;
-
-  const eErr = boatE.error.toFixed(6);
-  const fErr = boatF.error.toFixed(4);
-  document.getElementById('e-err').textContent = eErr;
-  document.getElementById('f-err').textContent = fErr;
-
-  const ePwr = (boatE.totalPower * 1000).toFixed(1);
-  const fPwr = (boatF.totalPower * 1000).toFixed(1);
-  document.getElementById('e-pwr').textContent = `${ePwr} μJ`;
-  document.getElementById('f-pwr').textContent = `${fPwr} μJ`;
+  document.getElementById('e-err').textContent = boatE.error.toFixed(6);
+  document.getElementById('f-err').textContent = boatF.error.toFixed(4);
+  document.getElementById('e-pwr').textContent = `${boatE.totalPower.toFixed(2)} mJ`;
+  document.getElementById('f-pwr').textContent = `${boatF.totalPower.toFixed(2)} mJ`;
 
   if (boatE.finished) document.getElementById('e-status').textContent = '⚓ Docked';
   else if (boatE.grounded) document.getElementById('e-status').textContent = '💥 Grounded';
@@ -501,19 +486,21 @@ function updateHUD() {
   else if (boatF.grounded) document.getElementById('f-status').textContent = '💥 Grounded';
   else document.getElementById('f-status').textContent = 'Underway';
 
-  // Power bars
-  const maxSegs = 40;
-  const eSegs = Math.min(maxSegs, Math.round(boatE.totalPower / 0.5));
-  const fSegs = Math.min(maxSegs, Math.round(boatF.totalPower / 0.5));
-  document.getElementById('power-bar-e').innerHTML = Array.from({length: maxSegs}, (_, i) =>
-    `<div class="seg ${i < eSegs ? 'on-g' : ''}"></div>`).join('');
-  document.getElementById('power-bar-f').innerHTML = Array.from({length: maxSegs}, (_, i) =>
-    `<div class="seg ${i < fSegs ? 'on-r' : ''}"></div>`).join('');
-  document.getElementById('pwr-label-e').textContent = `E12: ${(boatE.totalPower * 1000).toFixed(1)}μJ`;
-  document.getElementById('pwr-label-f').textContent = `Float: ${(boatF.totalPower * 1000).toFixed(1)}μJ`;
+  // Power meter with meaning
+  const eRemaining = Math.max(0, 1.0 - boatE.totalPower);
+  const eFixesLeft = Math.floor(eRemaining / 0.0004);
+  document.getElementById('pwr-e').textContent = `E12 used ${boatE.totalPower.toFixed(2)} mJ — enough to run ${eFixesLeft.toLocaleString()} more fixes`;
+  if (boatF.grounded) {
+    document.getElementById('pwr-f').textContent = `Float used ${boatF.totalPower.toFixed(2)} mJ — and still grounded`;
+  } else if (boatF.finished) {
+    document.getElementById('pwr-f').textContent = `Float used ${boatF.totalPower.toFixed(2)} mJ — arrived with ${(boatF.error * 1000).toFixed(1)}mm drift`;
+  } else {
+    document.getElementById('pwr-f').textContent = `Float used ${boatF.totalPower.toFixed(2)} mJ — and still drifting`;
+  }
 
-  // Check if both done
-  if ((boatE.grounded || boatE.finished) && (boatF.grounded || boatF.finished) && !document.getElementById('outcome').style.display.includes('block')) {
+  // Check outcome
+  if (!outcomeShown && (boatE.grounded || boatE.finished) && (boatF.grounded || boatF.finished)) {
+    outcomeShown = true;
     showOutcome();
   }
 }
@@ -521,19 +508,17 @@ function updateHUD() {
 function showOutcome() {
   const el = document.getElementById('outcome');
   el.style.display = 'block';
-
   let title = '', text = '';
   if (boatE.finished && boatF.grounded) {
     title = '⚓ Safe Passage vs. Grounding';
-    text = `The E12 boat navigated all ${waypoints.length - 1} waypoints on ${(boatE.totalPower * 1000).toFixed(0)}μJ using 4-byte fixes. The float boat grounded on a rock after accumulating ${(boatF.error * 1000).toFixed(1)}mm of drift, burning ${(boatF.totalPower * 1000).toFixed(0)}μJ on 16-byte computations.`;
+    text = `The E12 boat navigated all ${waypoints.length - 1} waypoints using ${boatE.totalPower.toFixed(2)} mJ on 4-byte exact fixes. The float boat grounded on a rock after accumulating ${(boatF.error * 1000).toFixed(1)}mm of drift, burning ${boatF.totalPower.toFixed(2)} mJ on 16-byte computations.`;
   } else if (boatE.finished && boatF.finished) {
     title = '⚡ Both Made It — But At What Cost?';
-    text = `E12: ${(boatE.totalPower * 1000).toFixed(0)}μJ, ${(boatE.error * 1000).toFixed(3)}mm error. Float: ${(boatF.totalPower * 1000).toFixed(0)}μJ, ${(boatF.error * 1000).toFixed(1)}mm error. The float boat used ${(boatF.totalPower / boatE.totalPower).toFixed(1)}× more power and drifted ${(boatF.error / Math.max(boatE.error, 0.001)).toFixed(0)}× further.`;
+    text = `E12: ${boatE.totalPower.toFixed(2)} mJ, ${(boatE.error * 1000).toFixed(3)}mm error. Float: ${boatF.totalPower.toFixed(2)} mJ, ${(boatF.error * 1000).toFixed(1)}mm error. Float used ${(boatF.totalPower / boatE.totalPower).toFixed(1)}× more power and drifted ${(boatF.error / Math.max(boatE.error, 0.001)).toFixed(0)}× further.`;
   } else {
     title = '💥 Both Grounded';
-    text = `Even the E12 boat couldn't make it. But notice: E12 used ${(boatE.totalPower * 1000).toFixed(0)}μJ vs float's ${(boatF.totalPower * 1000).toFixed(0)}μJ before grounding.`;
+    text = `Even E12 couldn't make it. But notice: E12 used ${boatE.totalPower.toFixed(2)} mJ vs float's ${boatF.totalPower.toFixed(2)} mJ before grounding.`;
   }
-
   document.getElementById('out-title').textContent = title;
   document.getElementById('out-text').textContent = text;
   document.getElementById('out-title').style.color = boatE.finished ? '#00ff88' : '#ff4444';
@@ -542,15 +527,9 @@ function showOutcome() {
 // === Main Loop ===
 function frame() {
   tick++;
-
-  if (running && boatE && boatF) {
-    // Multiple steps per frame for visible speed
-    for (let i = 0; i < 2; i++) {
-      boatE.update();
-      boatF.update();
-    }
+  if (boatE && boatF) {
+    for (let i = 0; i < 2; i++) { boatE.update(); boatF.update(); }
   }
-
   drawWater();
   drawChannel();
   drawRocks();
@@ -559,12 +538,12 @@ function frame() {
   drawBoat(boatE, '#00ff88', 'E12');
   drawBoat(boatF, '#ff4444', 'FLOAT');
   updateHUD();
-
+  updateNarratives(tick, boatE, boatF);
   requestAnimationFrame(frame);
 }
 
-// Auto-start after a brief pause
-setTimeout(() => { init(); }, 800);
+// Auto-start immediately — no button needed
+init();
 frame();
 </script>
 </body>
