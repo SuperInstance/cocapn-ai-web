@@ -40,14 +40,17 @@ canvas{display:block;width:100%;height:100%}
 #out button{background:var(--ok);color:var(--bg);border:none;padding:6px 16px;border-radius:4px;font-family:inherit;font-size:.78em;font-weight:600;cursor:pointer}
 #out button.s{background:#333;color:#ccd}
 #df{position:absolute;top:8px;left:8px;font-size:.52em;color:var(--gold);background:rgba(0,0,0,.8);padding:3px 7px;border-radius:4px;z-index:20}
-@media(max-width:768px){.p{width:120px;font-size:.48em;top:40px}#hdr h1{font-size:.85em}#cmp{bottom:42px}#ftr{bottom:3px;max-width:95vw}#out{max-width:92vw;padding:12px}}
+#rabtn{background:var(--gold);color:var(--bg);border:none;padding:2px 8px;border-radius:3px;cursor:pointer;font-family:inherit;font-size:.9em;font-weight:600}
+#ticker{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.88);padding:5px 12px;border-radius:6px;font-size:.5em;display:none;white-space:nowrap;text-align:center;z-index:25}
+#ticker .tk{margin:1px 0}
+@media(max-width:768px){.p{width:120px;font-size:.48em;top:40px}#hdr h1{font-size:.85em}#cmp{bottom:42px}#ftr{bottom:3px;max-width:95vw}#out{max-width:92vw;padding:12px}#ticker{font-size:.42em;max-width:95vw}}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="hud">
 <div id="hdr"><h1>&#9875; Navigate the Narrows</h1><p>Same route &middot; Same boat &middot; Different math</p></div>
-<div id="ts"><select id="sel"></select><button onclick="restart()">&#8635;</button></div>
+<div id="ts"><select id="sel"></select><button onclick="restart()">&#8635;</button><button id="rabtn" onclick="runAll()">&#9654; Run All 12</button></div>
 <div id="df"></div>
 <div class="p pl">
 <h3 class="ok">Eisenstein E12</h3>
@@ -56,6 +59,7 @@ canvas{display:block;width:100%;height:100%}
 <div class="r"><div class="l">Total data</div><div class="v ok" id="ed">0B</div></div>
 <div class="r"><div class="l">Heading error</div><div class="v ok" id="eh">0.000 rad</div></div>
 <div class="r"><div class="l">Status</div><div class="v ok" id="es">&mdash;</div></div>
+<canvas id="cE" width="80" height="80" style="display:block;margin:4px auto 0"></canvas>
 </div>
 <div class="p pr">
 <h3 class="bad">IEEE 754 Float</h3>
@@ -64,6 +68,7 @@ canvas{display:block;width:100%;height:100%}
 <div class="r"><div class="l">Total data</div><div class="v bad" id="fd">0B</div></div>
 <div class="r"><div class="l">Heading error</div><div class="v bad" id="fh">0.000 rad</div></div>
 <div class="r"><div class="l">Status</div><div class="v bad" id="fs">&mdash;</div></div>
+<canvas id="cF" width="80" height="80" style="display:block;margin:4px auto 0"></canvas>
 </div>
 <div id="nar">
 <div class="ln" id="n0">Both autopilots engaged</div>
@@ -77,6 +82,7 @@ canvas{display:block;width:100%;height:100%}
 <div class="cr"><span class="cs ok">4B</span><div class="cb" style="width:28px;background:var(--ok)"></div><span class="cl">E12: 2&times; INT32, integer add</span></div>
 <div class="cr"><span class="cs bad">16B</span><div class="cb" style="width:112px;background:var(--bad)"></div><span class="cl">Float: 2&times; F64, mul+round</span></div>
 </div>
+<div id="ticker"></div>
 <div id="ftr">
 <div><span class="ok" id="pe">E12: 0 fixes &times; 4B</span> &middot; <span class="bad" id="pf">Float: 0 fixes &times; 16B</span></div>
 <div class="d" id="pd">Every fix: 4x less data. Zero heading drift. Every time.</div>
@@ -94,36 +100,42 @@ function resize(){W=C.width=innerWidth*2;H=C.height=innerHeight*2}
 resize();addEventListener("resize",resize);
 function sx(x){return x*W/1100}function sy(y){return y*H/1000}function sr(r){return r*Math.min(W/1100,H/1000)}
 
+// Explosion/ripple effects
+var fx=[];
+function addFx(x,y){for(var i=0;i<3;i++)fx.push({x:x,y:y,r:0,mr:15+i*10,a:1,d:0})}
+
 function B(exact,ds){
   this.exact=exact;this.ds=ds;this.wp=0;this.x=0;this.y=0;this.hb=0;this.fixes=0;
   this.dead=false;this.done=false;this.hit=0;this.spd=1;this.trail=[];
+  this.lastDes=0; // desired heading for compass
 }
 B.prototype.init=function(wps){
   this.x=wps[0].x;this.y=wps[0].y;this.wp=0;this.hb=0;this.fixes=0;
-  this.dead=false;this.done=false;this.hit=0;this.trail=[];
+  this.dead=false;this.done=false;this.hit=0;this.trail=[];this.lastDes=0;
 };
 B.prototype.step=function(wps,rocks){
   if(this.dead||this.done)return;
   if(this.wp>=wps.length-1){this.done=true;return}
   var t=wps[this.wp+1],dx=t.x-this.x,dy=t.y-this.y,d=Math.sqrt(dx*dx+dy*dy);
   if(d<15){this.wp++;this.hit++;return}
-  var des=Math.atan2(dy,dx);this.fixes++;
+  var des=Math.atan2(dy,dx);this.lastDes=des;this.fixes++;
   var s=this.spd;if(d<25)s*=.6;
   var ang=des;
   if(!this.exact){
-    // Heading bias: fewer mantissa bits = faster accumulation
-    // Like float16 vs float64: each op loses more precision
     var n=(Math.random()-.5)*.015*this.ds;
     if(Math.random()<.03)n+=(Math.random()-.5)*.05*this.ds;
     this.hb+=n;this.hb*=.996;ang=des+this.hb;
   }
   this.x+=Math.cos(ang)*s;this.y+=Math.sin(ang)*s;
   this.trail.push({x:this.x,y:this.y});if(this.trail.length>700)this.trail.shift();
-  for(var i=0;i<rocks.length;i++){var r=rocks[i],rx=this.x-r.x,ry=this.y-r.y;if(rx*rx+ry*ry<(r.r+3)*(r.r+3)){this.dead=true;return}}
-  if(this.x<-50||this.x>1150||this.y<-50||this.y>1050)this.dead=true;
+  for(var i=0;i<rocks.length;i++){var r=rocks[i],rx=this.x-r.x,ry=this.y-r.y;if(rx*rx+ry*ry<(r.r+3)*(r.r+3)){this.dead=true;addFx(this.x,this.y);return}}
+  if(this.x<-50||this.x>1150||this.y<-50||this.y>1050){this.dead=true;addFx(this.x,this.y)}
 };
 
 var bE,bF,tick=0,outS=false;
+// Run-all state
+var raMode=false,raIdx=0,raWait=0;
+var raTot={eD:0,fD:0,eS:0,fS:0};
 var narr=[
   {id:"n0",ok:function(t,e,f){return t>=12},v:false,d:60},
   {id:"n1",ok:function(t,e,f){return f&&Math.abs(f.hb)>.02&&!f.dead},v:false,d:70},
@@ -136,21 +148,113 @@ var nT={};
 
 function init(){
   var t=T[ci];bE=new B(true);bF=new B(false,t.ds);bE.init(t.wps);bF.init(t.wps);
-  tick=0;outS=false;document.getElementById("out").style.display="none";
+  tick=0;outS=false;fx=[];document.getElementById("out").style.display="none";
   document.getElementById("hdr").querySelector("h1").textContent="\u2693 "+t.name;
   var st="";for(var i=0;i<5;i++)st+=i<t.diff?"\u2605":"\u2606";
   document.getElementById("df").textContent=st;
   for(var i=0;i<narr.length;i++){narr[i].v=false;document.getElementById(narr[i].id).classList.remove("v")}
   nT={};
 }
-function restart(){init()}
-function nextTrack(){ci=(ci+1)%T.length;sel.value=ci;restart()}
+function restart(){if(!raMode)init();else{raMode=false;init()}}
+function nextTrack(){if(raMode)return;ci=(ci+1)%T.length;sel.value=ci;init()}
+
+// Run All 12
+function runAll(){
+  raMode=true;raIdx=0;raTot={eD:0,fD:0,eS:0,fS:0};
+  ci=0;sel.value=0;init();
+  document.getElementById("ticker").style.display="block";
+  document.getElementById("rabtn").textContent="\u25A0 Stop";
+  updateTicker();
+}
+function stopRunAll(){
+  raMode=false;
+  document.getElementById("ticker").style.display="none";
+  document.getElementById("rabtn").textContent="\u25B6 Run All 12";
+}
+function updateTicker(){
+  var tk=document.getElementById("ticker");
+  tk.innerHTML='<div class="tk"><span class="ok">E12:</span> '+raTot.eS+'/12 survived, '+fmtB(raTot.eD)+'</div>'+
+    '<div class="tk"><span class="bad">FLT:</span> '+raTot.fS+'/12 survived, '+fmtB(raTot.fD)+'</div>'+
+    '<div class="tk" style="color:var(--gold)">Track '+(raIdx+1)+' of 12</div>';
+}
+function advanceRunAll(){
+  // Accumulate stats
+  raTot.eD+=bE.fixes*4;raTot.fD+=bF.fixes*16;
+  if(bE.done&&!bE.dead)raTot.eS++;
+  if(bF.done&&!bF.dead)raTot.fS++;
+  raIdx++;
+  if(raIdx>=12){
+    raMode=false;
+    document.getElementById("ticker").style.display="none";
+    document.getElementById("rabtn").textContent="\u25B6 Run All 12";
+    showFinalSummary();
+    return;
+  }
+  ci=raIdx;sel.value=ci;init();
+  updateTicker();
+}
+function showFinalSummary(){
+  var o=document.getElementById("out");o.style.display="block";
+  var ratio=raTot.eD>0?(raTot.fD/raTot.eD).toFixed(1):"4.0";
+  var saved=((raTot.fD-raTot.eD)/1024).toFixed(1);
+  document.getElementById("ot").textContent="\u2693 Run All 12 — Complete";
+  document.getElementById("ot").style.color="var(--gold)";
+  document.getElementById("op").innerHTML=
+    '<span class="ok">E12:</span> '+fmtB(raTot.eD)+', '+raTot.eS+'/12 tracks survived<br>'+
+    '<span class="bad">Float:</span> '+fmtB(raTot.fD)+', '+raTot.fS+'/12 tracks survived<br>'+
+    '<br>Data ratio: '+ratio+'\u00D7 (Float used '+ratio+'x more data)<br>'+
+    '<span class="ok">E12 saved '+saved+' KB of navigation data across 12 tracks</span><br>'+
+    '<span class="ok">E12 never accumulated heading drift. Float drifted every time.</span>';
+  document.getElementById("out").querySelector(".btns").innerHTML=
+    '<button onclick="ci=0;sel.value=0;init()">\u2693 Replay Track 1</button>'+
+    '<button class="s" onclick="document.getElementById(\'out\').style.display=\'none\';runAll()">\u25B6 Run All Again</button>';
+}
+
+// Compass drawing
+function drawCompass(cid,hb,col){
+  var cv=document.getElementById(cid),c=cv.getContext("2d");
+  var w=80,cx=40,cy=40,r=32;
+  c.clearRect(0,0,w,w);
+  // Background
+  c.fillStyle="rgba(6,10,15,.9)";c.beginPath();c.arc(cx,cy,r+4,0,Math.PI*2);c.fill();
+  c.strokeStyle="rgba(255,255,255,.08)";c.lineWidth=1;c.beginPath();c.arc(cx,cy,r+4,0,Math.PI*2);c.stroke();
+  // Tick marks at 60° intervals
+  c.strokeStyle="rgba(255,255,255,.2)";c.lineWidth=1;
+  for(var i=0;i<6;i++){
+    var a=i*Math.PI/3;
+    c.beginPath();c.moveTo(cx+Math.cos(a)*(r-2),cy+Math.sin(a)*(r-2));
+    c.lineTo(cx+Math.cos(a)*(r+2),cy+Math.sin(a)*(r+2));c.stroke();
+  }
+  // Labels N/E/S/W at 0,90,180,270 (relative)
+  c.fillStyle="rgba(255,255,255,.25)";c.font="7px monospace";c.textAlign="center";c.textBaseline="middle";
+  c.fillText("0",cx+r-9,cy);c.fillText("π",cx-r+9,cy);
+  // Needle — shows heading error
+  var err=hb; // radians of error
+  // Needle points in the direction of error (relative to north/up)
+  // Up = 0 error, so needle angle = err - PI/2 to rotate from "up" convention
+  c.save();c.translate(cx,cy);c.rotate(err);
+  c.fillStyle=col;c.beginPath();c.moveTo(0,-(r-6));c.lineTo(-3,4);c.lineTo(3,4);c.closePath();c.fill();
+  c.fillStyle="rgba(255,255,255,.3)";c.beginPath();c.moveTo(0,r-6);c.lineTo(-3,-4);c.lineTo(3,-4);c.closePath();c.fill();
+  c.restore();
+  // Center dot
+  c.fillStyle="rgba(255,255,255,.4)";c.beginPath();c.arc(cx,cy,2,0,Math.PI*2);c.fill();
+}
 
 function drawWater(){
   var g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,"#050c14");g.addColorStop(1,"#0a1828");
   X.fillStyle=g;X.fillRect(0,0,W,H);
+  // Subtle wave lines
   X.strokeStyle="rgba(25,50,70,.07)";X.lineWidth=1;var t=tick*.01;
   for(var y=0;y<H;y+=24){X.beginPath();for(var x=0;x<W;x+=5){var wy=y+Math.sin(x*.006+t+y*.003)*2;x===0?X.moveTo(x,wy):X.lineTo(x,wy)}X.stroke()}
+  // Animated wave highlights
+  X.strokeStyle="rgba(40,90,120,.05)";X.lineWidth=2;
+  var wt=tick*.02;
+  for(var i=0;i<5;i++){
+    var base=(wt*30+i*H/5)%H;
+    X.beginPath();
+    for(var x=0;x<W;x+=8){var wy=base+Math.sin(x*.004+wt+i)*6;x===0?X.moveTo(x,wy):X.lineTo(x,wy)}
+    X.stroke();
+  }
 }
 function drawPath(t){
   X.strokeStyle="rgba(0,255,136,.03)";X.lineWidth=50*Math.min(W/1100,H/1000);X.lineCap="round";X.lineJoin="round";
@@ -161,8 +265,12 @@ function drawPath(t){
 function drawRocks(t){
   for(var j=0;j<t.rocks.length;j++){
     var r=t.rocks[j],rx=sx(r.x),ry=sy(r.y),rr=sr(r.r);
+    // Depth shadow below rock
+    X.fillStyle="rgba(0,0,0,.15)";X.beginPath();X.ellipse(rx+sr(2),ry+sr(3),rr*1.1,rr*.5,0,0,Math.PI*2);X.fill();
+    // Danger glow
     var g=X.createRadialGradient(rx,ry,0,rx,ry,rr*2);g.addColorStop(0,"rgba(255,40,20,.07)");g.addColorStop(1,"rgba(255,40,20,0)");
     X.fillStyle=g;X.beginPath();X.arc(rx,ry,rr*2,0,Math.PI*2);X.fill();
+    // Rock body
     X.fillStyle="#161008";X.beginPath();X.arc(rx,ry,rr,0,Math.PI*2);X.fill();
     X.strokeStyle="rgba(60,40,12,.25)";X.lineWidth=1;X.stroke();
   }
@@ -173,15 +281,52 @@ function drawHarbor(t){
   X.fillStyle=g;X.beginPath();X.arc(lx,ly,sr(35),0,Math.PI*2);X.fill();
   X.fillStyle="rgba(255,200,50,"+(.7*p)+")";X.beginPath();X.arc(lx,ly,sr(2.5),0,Math.PI*2);X.fill();
 }
+function drawWake(b,col){
+  if(!b||b.trail.length<4)return;
+  var len=b.trail.length,wakeStart=Math.max(0,len-30);
+  var isE=b.exact;
+  for(var i=wakeStart+1;i<len;i++){
+    var a=(i-wakeStart)/(len-wakeStart)*.4;
+    var p0=b.trail[i-1],p1=b.trail[i];
+    // Perpendicular offset for wake spread
+    var dx=p1.x-p0.x,dy=p1.y-p0.y,d=Math.sqrt(dx*dx+dy*dy)||1;
+    var nx=-dy/d,ny=dx/d;
+    var spread=a*(isE?3:6+Math.sin(i*.7)*3);
+    X.strokeStyle=col==="#00ff88"?"rgba(0,255,136,"+a*.5+")":"rgba(255,68,68,"+a*.5+")";
+    X.lineWidth=isE?1:1.5;
+    // Left wake line
+    X.beginPath();X.moveTo(sx(p0.x+nx*spread),sy(p0.y+ny*spread));X.lineTo(sx(p1.x+nx*spread),sy(p1.y+ny*spread));X.stroke();
+    // Right wake line
+    X.beginPath();X.moveTo(sx(p0.x-nx*spread),sy(p0.y-ny*spread));X.lineTo(sx(p1.x-nx*spread),sy(p1.y-ny*spread));X.stroke();
+  }
+}
 function drawBoat(b,col,lbl){
   if(!b)return;var bx=sx(b.x),by=sy(b.y),sz=sr(6);
   if(b.trail.length>1){for(var i=1;i<b.trail.length;i++){var a=(i/b.trail.length)*.3;X.strokeStyle=col==="#00ff88"?"rgba(0,255,136,"+a+")":"rgba(255,68,68,"+a+")";X.lineWidth=1.5;X.beginPath();X.moveTo(sx(b.trail[i-1].x),sy(b.trail[i-1].y));X.lineTo(sx(b.trail[i].x),sy(b.trail[i].y));X.stroke()}}
   var t=T[ci],nxt=t.wps[Math.min(b.wp+1,t.wps.length-1)],ang=Math.atan2(nxt.y-b.y,nxt.x-b.x);
+  // Wake
+  if(!b.dead&&!b.done)drawWake(b,col);
   X.save();X.translate(bx,by);X.rotate(ang);
   X.fillStyle=col;X.beginPath();X.moveTo(sz,0);X.lineTo(-sz*.5,-sz*.4);X.lineTo(-sz*.3,0);X.lineTo(-sz*.5,sz*.4);X.closePath();
   X.fill();X.shadowColor=col;X.shadowBlur=8;X.fill();X.shadowBlur=0;X.restore();
+  // Anchor icon when done
+  if(b.done&&!b.dead){
+    X.fillStyle=col;X.font="bold "+Math.round(sr(10))+"px serif";X.textAlign="center";X.textBaseline="middle";
+    X.fillText("\u2693",bx,by-sz-sr(8));
+  }
   if(b.dead){X.strokeStyle="#ff4444";X.lineWidth=2;X.beginPath();X.moveTo(bx-8,by-8);X.lineTo(bx+8,by+8);X.moveTo(bx+8,by-8);X.lineTo(bx-8,by+8);X.stroke()}
   X.fillStyle=col;X.font="bold "+Math.round(sr(6))+"px monospace";X.textAlign="center";X.fillText(lbl,bx,by-sz-sr(4));
+}
+function drawFx(){
+  for(var i=fx.length-1;i>=0;i--){
+    var e=fx[i];e.r+=.8;e.a=1-e.r/e.mr;
+    if(e.a<=0){fx.splice(i,1);continue}
+    var ex=sx(e.x),ey=sy(e.y);
+    X.strokeStyle="rgba(255,100,30,"+e.a*.6+")";X.lineWidth=2;
+    X.beginPath();X.arc(ex,ey,sr(e.r),0,Math.PI*2);X.stroke();
+    X.strokeStyle="rgba(255,200,50,"+e.a*.3+")";X.lineWidth=1;
+    X.beginPath();X.arc(ex,ey,sr(e.r*.6),0,Math.PI*2);X.stroke();
+  }
 }
 function fmtB(b){if(b<1024)return b+"B";return(b/1024).toFixed(1)+"KB"}
 function updateHUD(){
@@ -199,10 +344,20 @@ function updateHUD(){
   document.getElementById("pf").textContent=ft;
   var ratio=bE.fixes>0?(bF.fixes*16)/(bE.fixes*4):4;
   document.getElementById("pd").textContent="Per fix: "+ratio.toFixed(1)+"\u00D7 more data"+" | Heading error: "+Math.abs(bF.hb).toFixed(4)+" vs "+Math.abs(bE.hb).toFixed(4)+" rad";
-  if(!outS&&(bE.dead||bE.done)&&(bF.dead||bF.done)){outS=true;showOut()}
+  // Compasses
+  drawCompass("cE",bE.hb,"#00ff88");
+  drawCompass("cF",bF.hb,"#ff4444");
+  if(!outS&&(bE.dead||bE.done)&&(bF.dead||bF.done)){
+    outS=true;
+    if(raMode){raWait=240;} // ~4 seconds at 60fps
+    else showOut();
+  }
 }
 function showOut(){
   document.getElementById("out").style.display="block";
+  // Restore default buttons
+  document.getElementById("out").querySelector(".btns").innerHTML=
+    '<button onclick="restart()">\u2693 Replay</button><button class="s" onclick="nextTrack()">Next \u2192</button>';
   var t=T[ci],n=t.wps.length-1,ti="",p="";
   if(bE.done&&!bF.done){
     ti="\u2693 E12 Safe \u2014 Float Grounded";
@@ -223,8 +378,14 @@ function updateNarr(){
 function frame(){
   tick++;var t=T[ci];
   if(bE&&bF){for(var i=0;i<2;i++){bE.step(t.wps,t.rocks);bF.step(t.wps,t.rocks)}}
+  // Auto-advance in run-all mode
+  if(raMode&&outS){
+    raWait--;
+    if(raWait<=0)advanceRunAll();
+  }
   drawWater();drawPath(t);drawRocks(t);drawHarbor(t);
   drawBoat(bE,"#00ff88","E12");drawBoat(bF,"#ff4444","FLT");
+  drawFx();
   updateHUD();updateNarr();requestAnimationFrame(frame);
 }
 init();frame();
