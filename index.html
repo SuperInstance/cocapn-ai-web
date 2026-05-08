@@ -506,7 +506,15 @@ Benchmarks, fuzz testing, and code generation — the infrastructure we built to
 <li><a href="https://github.com/SuperInstance/eisenstein-bench"><strong>eisenstein-bench</strong></a> — CLI benchmark suite (drift, disk, snap, norm commands)</li>
 <li><a href="https://github.com/SuperInstance/eisenstein-fuzz"><strong>eisenstein-fuzz</strong></a> — property-based fuzzing (rotation identity, ring axioms, D6 closure, 13 property tests)</li>
 <li><a href="https://github.com/SuperInstance/hexgrid-gen"><strong>hexgrid-gen</strong></a> — code generator for hex grid lookup tables (Rust, C, Python, JS, JSON output)</li>
+<li><a href="https://github.com/SuperInstance/eisenstein-c"><strong>eisenstein-c</strong></a> — C runtime, 1KB .text, zero deps, embedded-ready (&lt;stdint.h&gt; only)</li>
+<li><a href="https://github.com/SuperInstance/eisenstein-wasm"><strong>eisenstein-wasm</strong></a> — WASM package for browser and Node.js</li>
+<li><a href="https://github.com/SuperInstance/arm-neon-eisenstein-bench"><strong>arm-neon-eisenstein-bench</strong></a> — NEON SIMD analysis: 4× parallel E12 norm in 5 instructions</li>
 </ul>
+
+<h3>DO-178C Certification</h3>
+<p>
+For safety-critical systems requiring formal verification, we provide a <a href="https://github.com/SuperInstance/eisenstein-do178c">DO-178C evidence package</a> with 26 Coq theorems, 19/31 Level A objectives covered, and full traceability from requirements to proofs. The eisenstein library's tiny codebase (600 LOC, 0 unsafe, no FPU) is uniquely suited to certification.
+</p>
 
 <h3>CUDA Benchmarks</h3>
 <p>
