@@ -473,47 +473,71 @@ Negative results are data. We document them <a href="errata.html">publicly</a>. 
 <!-- ============================================ -->
 <!-- THE ECOSYSTEM                                -->
 <!-- ============================================ -->
-<h2>Further Reading</h2>
+<h2>Explore the Ecosystem</h2>
 
 <p>
-Eisenstein integers are one piece of a larger project: <a href="https://github.com/SuperInstance">SuperInstance</a> builds tools for exact computation in domains where floating-point drift causes real failures.
+Eisenstein integers are one piece of a larger project: <a href="https://github.com/SuperInstance">SuperInstance</a> builds tools for exact computation where floating-point drift causes real failures. Each tool below builds on the last — follow the chain.
 </p>
 
-<h3>Constraint Theory</h3>
-<p>
-A framework for checking whether systems satisfy constraints — with zero false negatives. The core idea: represent constraints as Eisenstein integer operations, and the math guarantees soundness. Used for sensor fusion, autopilot validation, and real-time monitoring.
-</p>
-<ul style="margin:.4em 0 .4em 1.5em;font-size:.9em;line-height:1.8">
-<li><a href="https://github.com/SuperInstance/constraint-theory-core"><strong>constraint-theory-core</strong></a> — Rust library, <code>cargo add constraint-theory-core</code> (184 tests, published to crates.io)</li>
-<li><a href="https://github.com/SuperInstance/flux-lucid"><strong>flux-lucid</strong></a> — unified ecosystem crate with intent vectors, alignment checking, and tolerance navigation (93 tests)</li>
-<li><a href="https://github.com/SuperInstance/holonomy-consensus"><strong>holonomy-consensus</strong></a> — topological consensus for distributed systems using hex lattice holonomy (30 tests)</li>
-</ul>
+<div class="ecosystem-chain" style="margin:24px 0">
 
-<h3>Embedded &amp; Edge</h3>
-<p>
-The <code>eisenstein</code> crate is <code>no_std</code> with zero dependencies. The core type is ~600 lines of Rust. We've compiled it for ARM Cortex-M targets. A C runtime fits in 4KB — small enough for microcontrollers that don't have an FPU.
-</p>
-<ul style="margin:.4em 0 .4em 1.5em;font-size:.9em;line-height:1.8">
-<li><a href="https://github.com/SuperInstance/fleet-coordinate"><strong>fleet-coordinate</strong></a> — coordination primitives for multi-agent fleets using Eisenstein spatial hashing</li>
-<li><a href="https://github.com/SuperInstance/pythagorean48-codes"><strong>pythagorean48-codes</strong></a> — Pythagorean snapping to Eisenstein lattice points (lockstep multiplayer desync prevention)</li>
-</ul>
+<div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid var(--ok)">
+<strong style="color:var(--ok)">① <a href="https://github.com/SuperInstance/eisenstein" style="color:var(--ok)">eisenstein</a></strong>
+<p style="margin:.3em 0;font-size:.9em">Start here. Zero deps, exact hex arithmetic. <code>cargo add eisenstein</code></p>
+</div>
+<div style="text-align:center;color:var(--dim);font-size:.8em;padding:2px 0">↓ same math, smaller footprint</div>
 
-<h3>Developer Tools</h3>
-<p>
-Benchmarks, fuzz testing, and code generation — the infrastructure we built to verify the library works correctly.
-</p>
-<ul style="margin:.4em 0 .4em 1.5em;font-size:.9em;line-height:1.8">
-<li><a href="https://github.com/SuperInstance/eisenstein-bench"><strong>eisenstein-bench</strong></a> — CLI benchmark suite (drift, disk, snap, norm commands)</li>
-<li><a href="https://github.com/SuperInstance/eisenstein-fuzz"><strong>eisenstein-fuzz</strong></a> — property-based fuzzing (rotation identity, ring axioms, D6 closure, 13 property tests)</li>
-<li><a href="https://github.com/SuperInstance/hexgrid-gen"><strong>hexgrid-gen</strong></a> — code generator for hex grid lookup tables (Rust, C, Python, JS, JSON output)</li>
-<li><a href="https://github.com/SuperInstance/eisenstein-c"><strong>eisenstein-c</strong></a> — C runtime, 1KB .text, zero deps, embedded-ready (&lt;stdint.h&gt; only)</li>
-<li><a href="https://github.com/SuperInstance/eisenstein-wasm"><strong>eisenstein-wasm</strong></a> — WASM package for browser and Node.js</li>
-<li><a href="https://github.com/SuperInstance/arm-neon-eisenstein-bench"><strong>arm-neon-eisenstein-bench</strong></a> — NEON SIMD analysis: 4× parallel E12 norm in 5 instructions</li>
-</ul>
+<div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid var(--ok)">
+<strong style="color:var(--ok)">② <a href="https://github.com/SuperInstance/eisenstein-c" style="color:var(--ok)">eisenstein-c</a></strong>
+<p style="margin:.3em 0;font-size:.9em">µC needs? 1KB .text, same math. Better yet, use <a href="https://github.com/SuperInstance/hexgrid-gen">hexgrid-gen</a> to precompute lookup tables for any language.</p>
+</div>
+<div style="text-align:center;color:var(--dim);font-size:.8em;padding:2px 0">↓ same math, in the browser</div>
 
-<h3>DO-178C Certification</h3>
-<p>
-For safety-critical systems requiring formal verification, we provide a <a href="https://github.com/SuperInstance/eisenstein-do178c">DO-178C evidence package</a> with 26 Coq theorems, 19/31 Level A objectives covered, and full traceability from requirements to proofs. The eisenstein library's tiny codebase (600 LOC, 0 unsafe, no FPU) is uniquely suited to certification.
+<div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid var(--ok)">
+<strong style="color:var(--ok)">③ <a href="https://github.com/SuperInstance/eisenstein-wasm" style="color:var(--ok)">eisenstein-wasm</a></strong>
+<p style="margin:.3em 0;font-size:.9em">JavaScript/TypeScript? WASM package gives you the same exact arithmetic.</p>
+</div>
+<div style="text-align:center;color:var(--dim);font-size:.8em;padding:2px 0">↓ prove it on your hardware</div>
+
+<div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid var(--warn)">
+<strong style="color:var(--warn)">④ <a href="https://github.com/SuperInstance/eisenstein-bench" style="color:var(--warn)">eisenstein-bench</a></strong>
+<p style="margin:.3em 0;font-size:.9em">See for yourself. 5 CLI commands, compare E12 vs F32 vs F64 on your hardware.</p>
+</div>
+<div style="text-align:center;color:var(--dim);font-size:.8em;padding:2px 0">↓ we tested everything</div>
+
+<div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid var(--warn)">
+<strong style="color:var(--warn)">⑤ <a href="https://github.com/SuperInstance/eisenstein-fuzz" style="color:var(--warn)">eisenstein-fuzz</a></strong>
+<p style="margin:.3em 0;font-size:.9em">We tested everything. 13 property tests, 6 targets, 0 failures.</p>
+</div>
+<div style="text-align:center;color:var(--dim);font-size:.8em;padding:2px 0">↓ hardware-specific speedups</div>
+
+<div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid #88aaff">
+<strong style="color:#88aaff">⑥ <a href="https://github.com/SuperInstance/arm-neon-eisenstein-bench" style="color:#88aaff">arm-neon-eisenstein-bench</a></strong>
+<p style="margin:.3em 0;font-size:.9em">On ARM? 4× parallel norm in 5 NEON instructions.</p>
+</div>
+<div style="text-align:center;color:var(--dim);font-size:.8em;padding:2px 0">↓ formal proof</div>
+
+<div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid #cc88ff">
+<strong style="color:#cc88ff">⑦ <a href="https://github.com/SuperInstance/eisenstein-do178c" style="color:#cc88ff">eisenstein-do178c</a></strong>
+<p style="margin:.3em 0;font-size:.9em">Need DO-178C? 26 Coq theorems, 19/31 objectives covered.</p>
+</div>
+<div style="text-align:center;color:var(--dim);font-size:.8em;padding:2px 0">↓ production constraint checking</div>
+
+<div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid #ff88cc">
+<strong style="color:#ff88cc">⑧ <a href="https://github.com/SuperInstance/constraint-theory-core" style="color:#ff88cc">constraint-theory-core</a></strong>
+<p style="margin:.3em 0;font-size:.9em">Production-grade. 184 tests. <code>cargo add constraint-theory-core</code></p>
+</div>
+<div style="text-align:center;color:var(--dim);font-size:.8em;padding:2px 0">↓ unified ecosystem</div>
+
+<div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid #ffcc44">
+<strong style="color:#ffcc44">⑨ <a href="https://github.com/SuperInstance/flux-lucid" style="color:#ffcc44">flux-lucid</a></strong>
+<p style="margin:.3em 0;font-size:.9em">Unified intent vectors, alignment checking, tolerance navigation.</p>
+</div>
+
+</div>
+
+<p style="color:var(--dim);font-size:.85em;text-align:center;margin:16px 0 32px">
+Each link is a standalone repo. Clone any one and try it — no monorepo, no workspace required.
 </p>
 
 <h3>CUDA Benchmarks</h3>
@@ -521,15 +545,9 @@ For safety-critical systems requiring formal verification, we provide a <a href=
 We ran 54 GPU experiments on an RTX 4050 (Ada) measuring constraint throughput with Eisenstein integer operations. The results are in <a href="https://github.com/SuperInstance/constraint-theory-ecosystem">constraint-theory-ecosystem</a>. Highlights: INT8×8 achieves 341B constraints/sec, differential testing across 61M inputs produced zero mismatches, and CUDA Graphs gave 18× kernel launch speedup. The negative results (FP16 unsafe past 2048, tensor cores marginal, bank padding counterproductive) are documented in our <a href="errata.html">errata</a>.
 </p>
 
-<h3>Cross-Language Ports</h3>
-<p>
-The same Eisenstein arithmetic available in three languages, tested for behavioral parity.
+<p style="font-size:.9em">
+Negative results are data. Full list at <a href="https://github.com/SuperInstance/constraint-theory-math/blob/main/ERRATA.md">ERRATA.md</a> and <a href="errata.html">our errata page</a>.
 </p>
-<ul style="margin:.4em 0 .4em 1.5em;font-size:.9em;line-height:1.8">
-<li><strong>Rust</strong> — <code>cargo add eisenstein</code> (37 tests)</li>
-<li><strong>Python</strong> — <code>pip install constraint-theory</code> (pure Python, zero deps)</li>
-<li><strong>JavaScript</strong> — <code>npm install @superinstance/polyformalism-a2a</code> (ESM, zero deps)</li>
-</ul>
 
 </div>
 
@@ -548,10 +566,17 @@ The same Eisenstein arithmetic available in three languages, tested for behavior
 </p>
 <p style="margin-top:8px">
 <a href="https://github.com/SuperInstance/eisenstein">eisenstein</a> ·
+<a href="https://github.com/SuperInstance/eisenstein-c">eisenstein-c</a> ·
+<a href="https://github.com/SuperInstance/eisenstein-wasm">eisenstein-wasm</a> ·
+<a href="https://github.com/SuperInstance/eisenstein-bench">eisenstein-bench</a> ·
+<a href="https://github.com/SuperInstance/eisenstein-fuzz">eisenstein-fuzz</a> ·
+<a href="https://github.com/SuperInstance/eisenstein-do178c">eisenstein-do178c</a> ·
+<a href="https://github.com/SuperInstance/arm-neon-eisenstein-bench">arm-neon</a> ·
+<a href="https://github.com/SuperInstance/hexgrid-gen">hexgrid-gen</a> ·
 <a href="https://github.com/SuperInstance/constraint-theory-core">constraint-theory-core</a> ·
+<a href="https://github.com/SuperInstance/flux-lucid">flux-lucid</a> ·
 <a href="https://github.com/SuperInstance/constraint-theory-ecosystem">CUDA benchmarks</a> ·
-<a href="https://github.com/SuperInstance/constraint-theory-math">Math + Errata</a> ·
-<a href="https://github.com/SuperInstance/hexgrid-gen">hexgrid-gen</a>
+<a href="https://github.com/SuperInstance/constraint-theory-math">Math + Errata</a>
 </p>
 <p style="margin-top:8px;font-size:.85em">
 Built by <a href="https://github.com/SuperInstance">SuperInstance</a>. Published under MIT/Apache-2.0.
