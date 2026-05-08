@@ -237,7 +237,7 @@ function showOut(){
   }
   document.getElementById("ot").textContent=ti;document.getElementById("op").textContent=p;
   document.getElementById("ot").style.color=bE.done?"#00ff88":"#ff4444";
-  var cdEl=document.getElementById("aac");if(autoAdv&&ci<T.length-1){var cd=4;cdEl.textContent="Next in "+cd+"s...";var cdI=setInterval(function(){cd--;if(cd>0){cdEl.textContent="Next in "+cd+"s..."}else{clearInterval(cdI);cdEl.textContent=""}},1000);aaTimer=setTimeout(function(){clearInterval(cdI);cdEl.textContent="";autoAdvance()},4000)}
+  var cdEl=document.getElementById("aac");if(autoAdv&&ci<T.length-1){var cd=10;cdEl.textContent="Next in "+cd+"s...";var cdI=setInterval(function(){cd--;if(cd>0){cdEl.textContent="Next in "+cd+"s..."}else{clearInterval(cdI);cdEl.textContent=""}},1000);aaTimer=setTimeout(function(){clearInterval(cdI);cdEl.textContent="";autoAdvance()},10000)}
 }
 function frame(){
   tick++;var t=T[ci];
