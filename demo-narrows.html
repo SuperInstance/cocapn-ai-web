@@ -91,9 +91,10 @@ function resize(){W=C.width=innerWidth*2;H=C.height=innerHeight*2}
 resize();addEventListener("resize",resize);
 function sx(x){return x*W/1100}function sy(y){return y*H/1000}function sr(r){return r*Math.min(W/1100,H/1000)}
 
-function B(exact,ds,bpf,col){
-  this.exact=exact;this.ds=ds;this.bpf=bpf;this.col=col;
+function B(exact,ds,bpf,col,name){
+  this.exact=exact;this.ds=ds;this.bpf=bpf;this.col=col;this.name=name;
   this.wp=0;this.x=0;this.y=0;this.hb=0;this.fixes=0;this.dead=false;this.done=false;this.hit=0;this.spd=1;this.trail=[];
+  this.cumData=0;this.cumTracks=0;this.cumOk=0;
 }
 B.prototype.init=function(wps){
   this.x=wps[0].x;this.y=wps[0].y;this.wp=0;this.hb=0;this.fixes=0;this.dead=false;this.done=false;this.hit=0;this.trail=[];
@@ -109,7 +110,7 @@ B.prototype.step=function(wps,rocks){
   if(!this.exact){
     var n=(Math.random()-.5)*.015*this.ds;
     if(Math.random()<.03)n+=(Math.random()-.5)*.05*this.ds;
-    this.hb+=n;this.hb*=.996;ang=des+this.hb;
+    this.hb+=n;this.hb*=.995;ang=des+this.hb;
   }
   this.x+=Math.cos(ang)*s;this.y+=Math.sin(ang)*s;
   this.trail.push({x:this.x,y:this.y});if(this.trail.length>500)this.trail.shift();
@@ -119,11 +120,12 @@ B.prototype.step=function(wps,rocks){
 
 var bE,bF32,bF64,tick=0,outS=false;
 
+var cumE=0,cumF32=0,cumF64=0,cumOkE=0,cumOkF32=0,cumOkF64=0,cumTracks=0;
 function init(){
   var t=T[ci];
-  bE=new B(true,0,4,"#00ff88");
-  bF32=new B(false,1.5,8,"#ffaa22");
-  bF64=new B(false,3.0,16,"#ff4444");
+  bE=new B(true,0,4,"#00ff88","E12");
+  bF32=new B(false,1.5,8,"#ffaa22","F32");
+  bF64=new B(false,3.0,16,"#ff4444","F64");
   bE.init(t.wps);bF32.init(t.wps);bF64.init(t.wps);
   tick=0;outS=false;document.getElementById("out").style.display="none";
   document.getElementById("hdr").querySelector("h1").textContent="\u2693 "+t.name;
@@ -183,14 +185,14 @@ function updateHUD(){
   document.getElementById("e2s").textContent=st(bF32);
   document.getElementById("e3s").textContent=st(bF64);
   var eD=bE.fixes*bE.bpf,f32D=bF32.fixes*bF32.bpf,f64D=bF64.fixes*bF64.bpf;
+  // Live track stats
   document.getElementById("s1").textContent="E12: "+bE.hit+"/"+n+" "+fmtB(eD);
   document.getElementById("s2").textContent="F32: "+bF32.hit+"/"+n+" "+fmtB(f32D)+(f32D>eD?" ("+Math.round(f32D/eD)+"\u00D7)":"");
   document.getElementById("s3").textContent="F64: "+bF64.hit+"/"+n+" "+fmtB(f64D)+(f64D>eD?" ("+Math.round(f64D/eD)+"\u00D7)":"");
   var parts=[];
-  if(f32D>eD)parts.push("F32 used "+Math.round(f32D/eD)+"\u00D7 more data");
-  if(f64D>eD)parts.push("F64 used "+Math.round(f64D/eD)+"\u00D7 more data");
-  if(bF32.dead)parts.push("F32 grounded despite 2\u00D7 precision");
-  if(bF64.dead)parts.push("F64 grounded at 4\u00D7 data cost");
+  if(cumTracks>0)parts.push("After "+cumTracks+" track"+(cumTracks>1?"s":"")+": E12 used "+fmtB(cumE)+", F32 used "+fmtB(cumF32)+" ("+Math.round(cumF32/Math.max(cumE,1))+"\u00D7), F64 used "+fmtB(cumF64)+" ("+Math.round(cumF64/Math.max(cumE,1))+"\u00D7)");
+  if(bF32.dead&&bE.done)parts.push("F32 grounded despite double precision");
+  if(bF64.dead&&bE.done)parts.push("F64 grounded at 4\u00D7 data cost");
   document.getElementById("sd").textContent=parts.length?parts.join(". ")+".":"More precision = more data. E12 needs neither.";
   if(!outS&&(bE.dead||bE.done)&&(bF32.dead||bF32.done)&&(bF64.dead||bF64.done)){outS=true;showOut()}
 }
@@ -211,6 +213,12 @@ function showOut(){
   }else{
     ti="\uD83D\uDCA5 Only E12 Survives";p="E12: wp "+bE.hit+"/"+n+". F32: "+bF32.hit+"/"+n+". F64: "+bF64.hit+"/"+n+".";
   }
+  // Update cumulative stats
+  cumE+=bE.fixes*bE.bpf;cumF32+=bF32.fixes*bF32.bpf;cumF64+=bF64.fixes*bF64.bpf;
+  if(bE.done)cumOkE++;if(bF32.done)cumOkF32++;if(bF64.done)cumOkF64++;
+  cumTracks++;
+  p+="\n\nAfter "+cumTracks+" track"+(cumTracks>1?"s":"")+": E12="+fmtB(cumE)+" F32="+fmtB(cumF32)+" ("+Math.round(cumF32/Math.max(cumE,1))+"\u00D7) F64="+fmtB(cumF64)+" ("+Math.round(cumF64/Math.max(cumE,1))+"\u00D7)";
+  p+=". Survived: E12 "+cumOkE+"/"+cumTracks+" F32 "+cumOkF32+"/"+cumTracks+" F64 "+cumOkF64+"/"+cumTracks+".";
   document.getElementById("ot").textContent=ti;document.getElementById("op").textContent=p;
   document.getElementById("ot").style.color=bE.done?"#00ff88":"#ff4444";
 }
