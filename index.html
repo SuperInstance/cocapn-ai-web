@@ -74,6 +74,7 @@ footer a{color:var(--dim)}footer a:hover{color:var(--ok)}
 <a href="#how-it-works">How It Works</a>
 <a href="#the-numbers">Benchmarks</a>
 <a href="#fleet-on-arm">Fleet on Arm</a>
+<a href="#fleet-physics">Fleet Physics</a>
 <a href="#what-doesnt-work">Limitations</a>
 <a href="#get-started">Get Started</a>
 </nav>
@@ -605,7 +606,57 @@ All negative results are documented in the <a href="errata.html">errata page</a>
 </p>
 
 <!-- ============================================ -->
-<!-- GET STARTED                                  -->
+<!-- FLEET PHYSICS                                -->
+<!-- ============================================ -->
+<h2 id="fleet-physics">Fleet Physics</h2>
+
+<p>
+The same Eisenstein lattice that eliminates drift in navigation doubles as a physical substrate for fleet-scale computation. We ran <strong>66 GPU experiments</strong> on an RTX 4050 measuring how coupled agents behave under constraint — and found a richer phase structure than any mean-field model predicts.
+</p>
+
+<h3>Six Laws of Fleet Thermodynamics</h3>
+
+<div class="cols">
+<div class="col">
+<h4>Discovered</h4>
+<ul style="font-size:.85em;line-height:1.8;margin-left:1em">
+<li>6 laws of fleet thermodynamics</li>
+<li>Phase diagram with 3+ regimes</li>
+<li>Critical coupling separates ordered from chaotic</li>
+<li>Hysteresis zones — history matters</li>
+<li>Max-cut ground state is reachable</li>
+</ul>
+</div>
+<div class="col">
+<h4>Killed</h4>
+<ul style="font-size:.85em;line-height:1.8;margin-left:1em">
+<li>10 hypotheses falsified through experiment</li>
+<li>No universal scaling across all coupling regimes</li>
+<li>Mean-field breaks down at critical point</li>
+</ul>
+</div>
+</div>
+
+<h3>Phase Diagram</h3>
+
+<div class="table-wrap"><table class="table">
+<tr><th>Property</th><th>Value</th><th>Notes</th></tr>
+<tr><td>Melting point</td><td>0.67 × N<sup>-1.06</sup></td><td>Power-law scaling with fleet size</td></tr>
+<tr><td>Critical coupling</td><td>~1.4</td><td>Order → chaos transition threshold</td></tr>
+<tr><td>Hysteresis width</td><td>0.47</td><td>Forward vs reverse sweep gap</td></tr>
+<tr><td>Max-cut ground state</td><td>Reachable</td><td>Via simulated annealing on constraint graph</td></tr>
+<tr><td>Internal detectability</td><td>705×</td><td>Fleet-internal signals 705× stronger than external</td></tr>
+</table></div>
+
+<p style="font-size:.85em;color:var(--dim)">
+Full results: <a href="https://github.com/SuperInstance/fleet-phase">fleet-phase</a> · 
+<a href="https://github.com/SuperInstance/fleet-keel">fleet-keel</a> · 
+<a href="https://github.com/SuperInstance/fleet-discovery">fleet-discovery</a> · 
+<a href="https://github.com/SuperInstance/fleet-yaw">fleet-yaw</a> · 
+<a href="https://github.com/SuperInstance/fleet-stitch">fleet-stitch</a> · 
+<a href="https://github.com/SuperInstance/fleet-simulators">fleet-simulators</a>
+</p>
+
 <!-- ============================================ -->
 <div class="cta" id="get-started">
 <h2 style="border:none;margin-top:0">Get Started</h2>
@@ -670,7 +721,7 @@ Eisenstein integers are one piece of a larger project: <a href="https://github.c
 
 <div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid #cc88ff">
 <strong style="color:#cc88ff">⑦ <a href="https://github.com/SuperInstance/eisenstein-do178c" style="color:#cc88ff">eisenstein-do178c</a></strong>
-<p style="margin:.3em 0;font-size:.9em">Need DO-178C? 26 Coq theorems, 19/31 objectives covered.</p>
+<p style="margin:.3em 0;font-size:.9em">Need DO-178C? 42 Coq theorems, 19/31 objectives covered.</p>
 </div>
 <div style="text-align:center;color:var(--dim);font-size:.8em;padding:2px 0">↓ production constraint checking</div>
 
@@ -683,6 +734,42 @@ Eisenstein integers are one piece of a larger project: <a href="https://github.c
 <div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid #ffcc44">
 <strong style="color:#ffcc44">⑨ <a href="https://github.com/SuperInstance/flux-lucid" style="color:#ffcc44">flux-lucid</a></strong>
 <p style="margin:.3em 0;font-size:.9em">Unified intent vectors, alignment checking, tolerance navigation.</p>
+</div>
+<div style="text-align:center;color:var(--dim);font-size:.8em;padding:2px 0">↓ fleet dynamics</div>
+
+<div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid var(--ok)">
+<strong style="color:var(--ok)">⑩ <a href="https://github.com/SuperInstance/fleet-phase" style="color:var(--ok)">fleet-phase</a></strong>
+<p style="margin:.3em 0;font-size:.9em">Phase diagram, critical coupling, hysteresis zones for fleet dynamics.</p>
+</div>
+<div style="text-align:center;color:var(--dim);font-size:.8em;padding:2px 0">↓ self-orientation</div>
+
+<div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid var(--ok)">
+<strong style="color:var(--ok)">⑪ <a href="https://github.com/SuperInstance/fleet-keel" style="color:var(--ok)">fleet-keel</a></strong>
+<p style="margin:.3em 0;font-size:.9em">5D self-orientation compass: position, sign, velocity, strain, alignment.</p>
+</div>
+<div style="text-align:center;color:var(--dim);font-size:.8em;padding:2px 0">↓ discovery engine</div>
+
+<div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid var(--warn)">
+<strong style="color:var(--warn)">⑫ <a href="https://github.com/SuperInstance/fleet-discovery" style="color:var(--warn)">fleet-discovery</a></strong>
+<p style="margin:.3em 0;font-size:.9em">Falsification-driven discovery wheel engine.</p>
+</div>
+<div style="text-align:center;color:var(--dim);font-size:.8em;padding:2px 0">↓ autopilot bridge</div>
+
+<div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid #88aaff">
+<strong style="color:#88aaff">⑬ <a href="https://github.com/SuperInstance/fleet-yaw" style="color:#88aaff">fleet-yaw</a></strong>
+<p style="margin:.3em 0;font-size:.9em">Autopilot bridging yard infrastructure and agent navigation.</p>
+</div>
+<div style="text-align:center;color:var(--dim);font-size:.8em;padding:2px 0">↓ constraint manifolds</div>
+
+<div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid #cc88ff">
+<strong style="color:#cc88ff">⑭ <a href="https://github.com/SuperInstance/fleet-stitch" style="color:#cc88ff">fleet-stitch</a></strong>
+<p style="margin:.3em 0;font-size:.9em">Constraint manifold projection for fleet latent space.</p>
+</div>
+<div style="text-align:center;color:var(--dim);font-size:.8em;padding:2px 0">↓ browser simulators</div>
+
+<div style="background:var(--bg2);padding:14px 18px;border-radius:6px;margin-bottom:2px;border-left:3px solid #ff88cc">
+<strong style="color:#ff88cc">⑮ <a href="https://github.com/SuperInstance/fleet-simulators" style="color:#ff88cc">fleet-simulators</a></strong>
+<p style="margin:.3em 0;font-size:.9em">Zero-dep browser simulators for fleet physics.</p>
 </div>
 
 </div>
@@ -722,7 +809,13 @@ We ran 54 GPU experiments on an RTX 4050 (Ada) measuring constraint throughput w
 <a href="https://github.com/SuperInstance/constraint-theory-core">constraint-theory-core</a> ·
 <a href="https://github.com/SuperInstance/flux-lucid">flux-lucid</a> ·
 <a href="https://github.com/SuperInstance/constraint-theory-ecosystem">CUDA benchmarks</a> ·
-<a href="https://github.com/SuperInstance/constraint-theory-math">Math + Errata</a>
+<a href="https://github.com/SuperInstance/constraint-theory-math">Math + Errata</a> ·
+<a href="https://github.com/SuperInstance/fleet-phase">fleet-phase</a> ·
+<a href="https://github.com/SuperInstance/fleet-keel">fleet-keel</a> ·
+<a href="https://github.com/SuperInstance/fleet-discovery">fleet-discovery</a> ·
+<a href="https://github.com/SuperInstance/fleet-yaw">fleet-yaw</a> ·
+<a href="https://github.com/SuperInstance/fleet-stitch">fleet-stitch</a> ·
+<a href="https://github.com/SuperInstance/fleet-simulators">fleet-simulators</a>
 </p>
 <p style="margin-top:8px;font-size:.85em">
 Built by <a href="https://github.com/SuperInstance">SuperInstance</a>. Published under MIT/Apache-2.0.
