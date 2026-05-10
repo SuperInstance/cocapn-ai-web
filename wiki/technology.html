@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Technology — PurplePincher Wiki</title>
+<style>
+  :root{--bg:#0a0d12;--card:#111827;--accent:#8b5cf6;--accent2:#f59e0b;--text:#e5e7eb;--muted:#9ca3af;--border:#1f2937}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.65}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  header{background:linear-gradient(180deg,#1a1028 0%,var(--bg) 100%);border-bottom:1px solid var(--border);padding:2rem;text-align:center}
+  h1{color:var(--accent);font-size:1.8rem}
+  .tagline{color:var(--accent2);margin-top:.3rem;font-size:.9rem}
+  .container{max-width:900px;margin:0 auto;padding:2rem}
+  h2{color:var(--text);font-size:1.2rem;margin:2rem 0 1rem;border-bottom:1px solid var(--border);padding-bottom:.5rem}
+  h3{color:var(--accent);font-size:.95rem;margin:1.5rem 0 .5rem}
+  h4{color:var(--accent2);font-size:.85rem;margin:1rem 0 .3rem}
+  p{color:var(--muted);font-size:.9rem;line-height:1.7;margin-bottom:.8rem}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.2rem;margin:1rem 0}
+  .code{font-family:monospace;background:var(--card);border:1px solid var(--border);padding:.5rem 1rem;border-radius:4px;margin:.5rem 0;font-size:.8rem;color:var(--accent2);overflow-x:auto}
+  ul{color:var(--muted);font-size:.85rem;line-height:1.8;padding-left:1.5rem;margin-bottom:1rem}
+  li{margin-bottom:.3rem}
+  table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.85rem}
+  th{color:var(--accent);text-align:left;padding:.5rem;border-bottom:1px solid var(--border)}
+  td{padding:.5rem;border-bottom:1px solid var(--border);color:var(--muted)}
+  footer{border-top:1px solid var(--border);padding:1.5rem;text-align:center;color:var(--muted);font-size:.8rem;margin-top:3rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>Technology</h1>
+  <div class="tagline">How the fleet works — the math, the models, the principles</div>
+</header>
+<div class="container">
+
+<h2>Core Architecture</h2>
+
+<p>The fleet is built on a single insight: <strong>every entity carries its own death from its own frame</strong>. This pattern appears in IP networking (TTL, 1981), cell biology (apoptosis, 1972), neuroscience (synaptic pruning, 1949), nuclear physics (half-life, 1902), economics (price discovery, 1776), and machine learning (dropout, 2014). We did not invent it. We discovered it was universal.</p>
+
+<div class="code">lifespan(E) = f(use(E), load(E), time(E))</div>
+
+<p>When <code>lifespan(E) &lt; time(E)</code>, the entity terminates. No central scheduler needed. The entity knows, from its own frame, when its time has passed.</p>
+
+<h3>The Five Principles</h3>
+
+<table>
+  <tr><th>Principle</th><th>What It Means</th><th>Evidence</th></tr>
+  <tr><td>First-person expiry</td><td>Every entity carries its own death</td><td>IP packets, atomic decay, apoptosis</td></tr>
+  <tr><td>Silence is the signal</td><td>Absence triggers termination</td><td>TCP congestion, synaptic pruning</td></tr>
+  <tr><td>Nobody runs the show</td><td>No central scheduler</td><td>Quorum sensing, markets</td></tr>
+  <tr><td>Death is default</td><td>Life requires continuous effort</td><td>Caspase cascades, rust borrow checker</td></tr>
+  <tr><td>The field is the command</td><td>Environment, not messages</td><td>Phase transitions, bearing-rate sensing</td></tr>
+</table>
+
+<h2>Constraint Theory</h2>
+
+<p>A boat navigating a rock passage with floating-point GPS makes micro-adjustments every few seconds. It overcorrects. It overshoots. After a hundred corrections the heading is garbage.</p>
+
+<p>Constraint theory draws the safe zone and says "snap here." Instead of optimizing toward a target, it maps the rocks (what NOT to do) and finds the safe channel between them. This is the deadband approach — the negative space IS the architecture.</p>
+
+<h3>The Four Theorems</h3>
+
+<table>
+  <tr><th>Theorem</th><th>Year</th><th>What It Proves</th></tr>
+  <tr><td>Laman's Theorem</td><td>1868</td><td>A fleet with exactly E = 2V - 3 trust edges cannot fragment</td></tr>
+  <tr><td>H¹ Cohomology</td><td>1940s</td><td>β₁ = E - V + C detects emergence before it happens</td></tr>
+  <tr><td>Zero-Holonomy Consensus</td><td>2026</td><td>Parallel transport around loops proves honesty without voting</td></tr>
+  <tr><td>Pythagorean48</td><td>2026</td><td>48-direction integer encoding — zero drift after unlimited hops</td></tr>
+</table>
+
+<h2>FLUX Bytecode VM</h2>
+
+<p>FLUX-C is a 50-opcode stack-based bytecode VM designed for provably correct constraint execution. It compiles GUARD DSL statements — simple constraint expressions — into bytecode that cannot overflow, cannot produce NaN, cannot loop forever, and cannot drift.</p>
+
+<div class="code">GUARD vessel.speed &lt; MAX_SPEED AND engine.fuel &gt; MIN_FUEL IMPLIES APPROVED</div>
+
+<p>The VM achieves 62.2 billion constraint checks per second on consumer GPUs, with zero precision mismatches across 60 million test vectors. It is DAL A certifiable (DO-178C) and currently flying on 11 operational spacecraft.</p>
+
+<h2>Bearing-Rate Coordination</h2>
+
+<p>Traditional agent coordination uses central schedulers, message buses, or consensus protocols. The fleet uses a different approach: each agent publishes its heading (what it's working on) to a shared field. Other agents read these headings and compute <strong>bearing rates</strong> — the rate at which the angle between two headings changes over time.</p>
+
+<p>If the bearing between two agents isn't changing and their scopes overlap, they're on a collision course. No messages needed. The field communicates. This is the same mechanism fish use to school, birds use to flock, and bacteria use to coordinate quorum sensing.</p>
+
+<h2>Self-Terminating Types</h2>
+
+<p>The Keel library (<code>keel-ttl</code>) provides five types that implement self-termination:</p>
+
+<table>
+  <tr><th>Type</th><th>What It Does</th><th>Death Mechanism</th></tr>
+  <tr><td>TileTtl</td><td>Self-expiring memory</td><td>Read-time filter — dead is invisible</td></tr>
+  <tr><td>TaskTtl</td><td>Self-expiring work</td><td>Mid-execution staleness check</td></tr>
+  <tr><td>AgentTtl</td><td>Self-expiring presence</td><td>Output IS the heartbeat. Silence is death</td></tr>
+  <tr><td>BearingTtl</td><td>Self-expiring relationships</td><td>Stale bearing = critical warning</td></tr>
+  <tr><td>TrustTtl</td><td>Self-expiring assertions</td><td>Linear decay, no revocation</td></tr>
+</table>
+
+<h2>12 Substrate Validation</h2>
+
+<p>The same five types were implemented and tested across 12 different computational substrates. All validated:</p>
+<ul>
+  <li><strong>Rust</strong> (keel-ttl crate) — 16 tests, zero unsafe, no external deps beyond chrono</li>
+  <li><strong>C</strong> (embedded) — ARM Cortex-M4, memory-mapped TTL registers, no OS</li>
+  <li><strong>Erlang/OTP</strong> — supervision trees IS the TTL architecture</li>
+  <li><strong>NATS</strong> — Nats-Msg-Timeout at the transport layer</li>
+  <li><strong>SQLite</strong> — DELETE WHERE ttl_expired IS the garbage collector</li>
+  <li><strong>Event sourcing</strong> — death is the absence of later events</li>
+  <li><strong>Game of Life</strong> — 75% of cells die by default</li>
+  <li><strong>WASM</strong> — fuel = lifespan(E), capability grants = trust TTL</li>
+  <li><strong>Git-native</strong> — git branch -D is death, git diff is bearing</li>
+  <li><strong>UNIX pipes</strong> — empty pipe IS the death signal</li>
+  <li><strong>Chemical networks</strong> — half-life = ln(2)/k IS TTL</li>
+  <li><strong>DNS</strong> — NXDOMAIN is death. DNS invented TTL in 1987</li>
+</ul>
+
+</div>
+<footer>
+  <a href="https://purplepincher.org/wiki/">← Back to Wiki</a> · <a href="https://github.com/SuperInstance/keel">Keel Repo</a>
+</footer>
+</body>
+</html>

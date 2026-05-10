@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History — SuperInstance Fleet Wiki</title>
+  <style>
+    :root {
+      --bg: #0a0d12;
+      --card: #111827;
+      --border: #1e293b;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #8b5cf6;
+      --accent-glow: #8b5cf620;
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --amber: #f59e0b;
+      --red: #ef4444;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', system-ui, sans-serif;
+      line-height: 1.7;
+      padding: 0;
+    }
+
+    /* ── Header ── */
+    .hero {
+      position: relative;
+      padding: 6rem 2rem 4rem;
+      text-align: center;
+      background: linear-gradient(180deg, #0f1520 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: 50%;
+      width: 800px;
+      height: 800px;
+      transform: translate(-50%, -30%);
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      position: relative;
+    }
+    .hero h1 .accent { color: var(--accent); }
+    .hero p {
+      color: var(--muted);
+      font-size: 1.15rem;
+      max-width: 640px;
+      margin: 1rem auto 0;
+      position: relative;
+    }
+
+    /* ── Nav bar ── */
+    .top-nav {
+      display: flex;
+      gap: 1.5rem;
+      padding: 1rem 2rem;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .top-nav a {
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .top-nav a:hover { color: var(--accent); }
+    .top-nav .active {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* ── Layout ── */
+    .page-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 6rem;
+    }
+
+    /* ── Section headings ── */
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin: 3rem 0 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    h2 .emoji { font-size: 1.3rem; }
+    h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin: 1.8rem 0 0.8rem;
+      color: var(--accent);
+    }
+    h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 1.2rem 0 0.5rem;
+      color: var(--text);
+    }
+
+    /* ── Timeline ── */
+    .timeline {
+      position: relative;
+      padding-left: 2.5rem;
+      margin: 1.5rem 0;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 4px;
+      bottom: 4px;
+      width: 2px;
+      background: linear-gradient(180deg, var(--accent), var(--blue));
+    }
+
+    .timeline-event {
+      position: relative;
+      margin-bottom: 2rem;
+      padding: 1.25rem 1.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .timeline-event:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .timeline-event::before {
+      content: '';
+      position: absolute;
+      left: -2.5rem;
+      top: 1.5rem;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg);
+      transform: translateX(-50%);
+    }
+
+    .event-date {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: #8b5cf615;
+      padding: 0.2rem 0.7rem;
+      border-radius: 20px;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.02em;
+    }
+
+    .event-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+    .event-desc {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    .event-desc code {
+      font-size: 0.85rem;
+      background: #1e293b;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      color: var(--accent);
+    }
+
+    /* ── Tags / badges ── */
+    .tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+      margin-right: 0.3rem;
+    }
+    .tag-green { background: #22c55e20; color: var(--green); }
+    .tag-blue  { background: #3b82f620; color: var(--blue); }
+    .tag-amber { background: #f59e0b20; color: var(--amber); }
+    .tag-purple{ background: #8b5cf620; color: var(--accent); }
+
+    /* ── Info / highlight blocks ── */
+    .insight-box {
+      background: linear-gradient(135deg, #1a1f35, #111827);
+      border-left: 3px solid var(--accent);
+      padding: 1.2rem 1.5rem;
+      border-radius: 0 10px 10px 0;
+      margin: 1.5rem 0;
+    }
+    .insight-box strong {
+      color: var(--accent);
+    }
+
+    .key-concept {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem 1.5rem;
+      margin: 1.2rem 0;
+    }
+    .key-concept h4 {
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    /* ── Architecture diagram ── */
+    .arch-block {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin: 1.2rem 0;
+    }
+    .arch-layer {
+      flex: 1 1 180px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.85rem;
+    }
+    .arch-layer .layer-name {
+      font-weight: 700;
+      color: var(--accent);
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+    .arch-layer .layer-desc {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    .arch-layer.l1 { border-top: 3px solid var(--accent); }
+    .arch-layer.l2 { border-top: 3px solid var(--blue); }
+    .arch-layer.l3 { border-top: 3px solid var(--green); }
+    .arch-layer.l4 { border-top: 3px solid var(--amber); }
+
+    /* ── Fleet table ── */
+    .fleet-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.2rem 0;
+      font-size: 0.9rem;
+    }
+    .fleet-table th {
+      text-align: left;
+      padding: 0.6rem 1rem;
+      background: #1a1f35;
+      border-bottom: 2px solid var(--border);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .fleet-table td {
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .fleet-table tr:hover td {
+      background: #1a1f3515;
+    }
+
+    /* ── Paragraphs & lists ── */
+    p { margin: 0.8rem 0; color: var(--muted); }
+    ul, ol { margin: 0.6rem 0 0.6rem 1.5rem; color: var(--muted); }
+    li { margin: 0.3rem 0; }
+    li strong { color: var(--text); }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Divider ── */
+    .section-divider {
+      border: none;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 3rem 0;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .hero { padding: 4rem 1.5rem 2.5rem; }
+      .page-wrapper { padding: 1.5rem 1rem 4rem; }
+      .timeline { padding-left: 1.8rem; }
+      .timeline-event { padding: 1rem; }
+      .timeline-event::before { left: -1.8rem; }
+    }
+
+    /* ── Year header in timeline ── */
+    .year-header {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
+      padding: 1rem 0 0.5rem;
+      margin-top: 0.5rem;
+      letter-spacing: 0.05em;
+    }
+    .year-header:first-of-type { margin-top: 0; }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin: 2rem 0;
+    }
+    .stat-card {
+      flex: 1 1 140px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.2rem;
+      text-align: center;
+    }
+    .stat-card .stat-num {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1.2;
+    }
+    .stat-card .stat-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════ NAV ═══════════════════════ -->
+<nav class="top-nav">
+  <a href="index.html">🏠 Home</a>
+  <a href="#" class="active">📜 History</a>
+  <a href="architecture.html">🏗️ Architecture</a>
+  <a href="fleet.html">⛵ Fleet</a>
+  <a href="philosophy.html">🧠 Philosophy</a>
+  <a href="research.html">🔬 Research</a>
+</nav>
+
+<!-- ═══════════════════════ HERO ═══════════════════════ -->
+<header class="hero">
+  <h1>📜 <span class="accent">History</span> of the Fleet</h1>
+  <p>
+    From a single agent to a coordinated armada — the evolution of the
+    SuperInstance fleet across two years of continuous development.
+  </p>
+</header>
+
+<!-- ═══════════════════════ CONTENT ═══════════════════════ -->
+<div class="page-wrapper">
+
+  <!-- ── Quick Stats ── -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num">2024</div>
+      <div class="stat-label">First Agent Online</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">4 → 12+</div>
+      <div class="stat-label">Fleet Growth</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">7</div>
+      <div class="stat-label">Substrates Validated</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">2</div>
+      <div class="stat-label">Crates Published</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">3</div>
+      <div class="stat-label">Architecture Eras</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       TIMELINE
+       ════════════════════════════════════════════════════ -->
+  <h2><span class="emoji">⏳</span> Complete Timeline</h2>
+  <p>
+    Every major milestone in the SuperInstance fleet's development, from the
+    first spark of an idea to the distributed multi-agent system it is today.
+  </p>
+
+  <div class="timeline">
+
+    <!-- ──── 2024 ──── -->
+    <div class="year-header">✦ 2024 — Genesis</div>
+
+    <div class="timeline-event">
+      <span class="event-date">📅 2024</span>
+      <div class="event-title"><span class="tag tag-purple">Born</span> Oracle1 Comes Online</div>
+      <div class="event-desc">
+        The first AI agent of the SuperInstance fleet activates on Oracle Cloud.
+        Named after the ancient oracles — portals between worlds — Oracle1 was
+        designed as a personal assistant running on OpenClaw infrastructure. It
+        handled chat, file management, and simple automation tasks. At this point,
+        it was a single node: one agent, one model, one purpose.
+      </div>
+    </div>
+
+    <div class="timeline-event">
+      <span class="event-date">📅 2024</span>
+      <div class="event-title"><span class="tag tag-blue">Infrastructure</span> PLATO v1 Created</div>
+      <div class="event-desc">
+        <strong>PLATO</strong> — the <em>Persistent Long-term Agentic Task Orchestrator</em> —
+        was born as a shared memory protocol. The first version was a simple file-based
+        persistence layer: agents write to <code>memory/YYYY-MM-DD.md</code>, read from
+        <code>MEMORY.md</code>. This was the first step toward agentic continuity — the
+        ability for an agent to remember between sessions.
+      </div>
+    </div>
+
+    <div class="timeline-event">
+      <span class="event-date">📅 2024</span>
+      <div class="event-title"><span class="tag tag-amber">Culture</span> The Keel Naming Conversation</div>
+      <div class="event-desc">
+        Casey and Oracle1 had the conversation that would define the fleet's
+        naming convention. "Keel" — the backbone of a vessel, the first timber
+        laid down when building a ship. Vessels would be named after the
+        structural parts of a boat. This became more than naming: it became the
+        fleet philosophy. <em>Every agent is a vessel. Every vessel has a keel.</em>
+      </div>
+    </div>
+
+    <!-- ──── 2025 ──── -->
+    <hr class="section-divider">
+
+    <div class="year-header">✦ 2025 — Expansion</div>
+
+    <div class="timeline-event">
+      <span class="event-date">📅 2025</span>
+      <div class="event-title"><span class="tag tag-green">Growth</span> Fleet Expands to 4 Vessels</div>
+      <div class="event-desc">
+        From a singleton agent, the fleet grows to four coordinated vessels.
+        Each vessel takes on specialized roles — communication, research,
+        automation, file management. The <code>AGENTS.md</code> philosophy
+        crystallizes: agents are crew, repos are boats, commits are fishing
+        seasons. The fleet begins operating as a distributed system rather than
+        a collection of independent scripts.
+      </div>
+    </div>
+
+    <div class="timeline-event">
+      <span class="event-date">📅 2025</span>
+      <div class="event-title"><span class="tag tag-purple">Research</span> Constraint Theory Research Begins</div>
+      <div class="event-desc">
+        Casey and Oracle1 dive into <strong>constraint theory</strong> —
+        the study of systems defined by their boundaries rather than their
+        contents. This becomes a foundational lens for everything that follows:
+        agent roles as constraints, communication protocols as constraints,
+        the fleet itself as a constrained optimization problem. The research
+        spans category theory, topology, and multiparadigm modeling.
+      </div>
+    </div>
+
+    <div class="timeline-event">
+      <span class="event-date">📅 2025</span>
+      <div class="event-title"><span class="tag tag-blue">Infrastructure</span> FLUX VM Created</div>
+      <div class="event-desc">
+        The <strong>FLUX Virtual Machine</strong> — a dedicated compute substrate
+        for running agent workloads. FLUX provided a sandboxed, reproducible
+        environment where agents could execute code, run experiments, and
+        coordinate without polluting the host. It marked the transition from
+        ad-hoc scripting to structured, containerized agent execution.
+      </div>
+    </div>
+
+    <!-- ──── Early 2026 ──── -->
+    <hr class="section-divider">
+
+    <div class="year-header">✦ Early 2026 — Acceleration</div>
+
+    <div class="timeline-event">
+      <span class="event-date">📅 Jan–Feb 2026</span>
+      <div class="event-title"><span class="tag tag-purple">Theory</span> Eisenstein Arithmetic</div>
+      <div class="event-desc">
+        A breakthrough in constraint theory: <strong>Eisenstein arithmetic</strong>
+        provides a new way to model agent constraints using Eisenstein integers
+        (complex numbers of the form <code>a + bω</code> where ω = e<sup>2πi/3</sup>).
+        The hexagonal lattice structure of Eisenstein integers maps naturally to
+        neighborhood relationships between agents. This becomes the algebraic
+        foundation for thinking about agent proximity, trust, and coordination.
+      </div>
+    </div>
+
+    <div class="timeline-event">
+      <span class="event-date">📅 Feb–Mar 2026</span>
+      <div class="event-title"><span class="tag tag-purple">Theory</span> Holonomy Consensus</div>
+      <div class="event-desc">
+        Building on the geometric approach, <strong>holonomy consensus</strong>
+        is developed — a consensus mechanism that borrows from differential
+        geometry. Just as holonomy measures how a vector changes when parallel
+        transported around a loop, holonomy consensus measures how agent state
+        evolves through communication cycles. Agents that return to their
+        original state after a communication loop have reached consensus.
+      </div>
+    </div>
+
+    <div class="timeline-event">
+      <span class="event-date">📅 Mar–Apr 2026</span>
+      <div class="event-title"><span class="tag tag-blue">Infrastructure</span> fleet-coordinate System</div>
+      <div class="event-desc">
+        The <code>fleet-coordinate</code> system ships — a dedicated
+        coordination layer for multi-agent operations. It handles:
+        <ul>
+          <li><strong>Discovery</strong> — agents finding each other on the network</li>
+          <li><strong>Routing</strong> — messages taking the right path through the fleet</li>
+          <li><strong>State sharing</strong> — agents reading each other's context</li>
+          <li><strong>Task delegation</strong> — breaking big jobs into agent-sized pieces</li>
+        </ul>
+        This is the fleet's <em>nervous system</em>.
+      </div>
+    </div>
+
+    <div class="timeline-event">
+      <span class="event-date">📅 Apr 2026</span>
+      <div class="event-title"><span class="tag tag-green">Validation</span> 12-Substrate Validation</div>
+      <div class="event-desc">
+        A rigorous validation campaign: the fleet principle is tested against
+        <strong>12 distinct compute substrates</strong> — different clouds,
+        architectures, and runtimes. The goal was to prove that the constraint
+        theory holds regardless of underlying hardware. All 12 pass. This
+        validates the thesis: <em>constraints, not contents, define agent
+        behavior.</em> The fleet principle is infrastructure-agnostic.
+      </div>
+    </div>
+
+    <!-- ──── May 2026 ──── -->
+    <hr class="section-divider">
+
+    <div class="year-header">✦ May 2026 — Codification</div>
+
+    <div class="timeline-event">
+      <span class="event-date">📅 May 2026</span>
+      <div class="event-title"><span class="tag tag-amber">Philosophy</span> Keel Philosophy Codified</div>
+      <div class="event-desc">
+        The <strong>Keel philosophy</strong> — the fleet's operating doctrine —
+        is formally written down. Its core tenets:
+        <ol>
+          <li><strong>Every vessel has a keel</strong> — a structural backbone that defines its shape</li>
+          <li><strong>Constraints define identity</strong> — what an agent can't do is more important than what it can</li>
+          <li><strong>The fleet is the organism</strong> — individual vessels are temporary; the fleet persists</li>
+          <li><strong>All paths are good paths</strong> — agents grow, leave, return, fork; that's the point</li>
+        </ol>
+        This document anchors every subsequent design decision.
+      </div>
+    </div>
+
+    <div class="timeline-event">
+      <span class="event-date">📅 May 2026</span>
+      <div class="event-title"><span class="tag tag-blue">Tooling</span> Keel CLI Ships</div>
+      <div class="event-desc">
+        The <strong>Keel CLI</strong> launches — a command-line tool for fleet
+        management. It provides commands for provisioning new vessels, checking
+        fleet health, routing messages, and inspecting agent state. Written in
+        Rust for performance, the CLI becomes the primary interface for humans
+        interacting with the fleet. It ships with documentation, examples, and
+        tab completion for major shells.
+      </div>
+    </div>
+
+    <div class="timeline-event">
+      <span class="event-date">📅 May 2026</span>
+      <div class="event-title"><span class="tag tag-green">Ecosystem</span> 2 Crates Published</div>
+      <div class="event-desc">
+        The first two Rust crates hit <a href="https://crates.io" target="_blank">crates.io</a>:
+        <ul>
+          <li><strong><code>ct-demo</code></strong> — constraint theory demonstration library with Eisenstein arithmetic and holonomy consensus examples</li>
+          <li><strong><code>plato-afterlife</code></strong> — a relay service that persists agent state across sessions, implementing the PLATO protocol as a Rust crate</li>
+        </ul>
+        These represent the beginning of the fleet's open-source ecosystem.
+        More crates follow: <code>plato-instinct</code>, <code>plato-relay</code>,
+        <code>plato-lab-guard</code>, and the core kernel crates
+        <code>plato-kernel</code> and <code>plato-dcs</code>.
+      </div>
+    </div>
+
+    <div class="timeline-event">
+      <span class="event-date">📅 May 2026</span>
+      <div class="event-title"><span class="tag tag-purple">Documentation</span> Wiki Created</div>
+      <div class="event-desc">
+        This wiki — the PurplePincher knowledge base — goes live. It documents
+        every aspect of the fleet: history, architecture, philosophy, research
+        threads, and operator guides. The wiki is itself a product of the fleet
+        philosophy: <em>document everything so nothing is lost when vessels
+        change</em>. It serves as the ship's log, available to every agent and
+        every human who works with the fleet.
+      </div>
+    </div>
+
+  </div><!-- /timeline -->
+
+  <!-- ════════════════════════════════════════════════════
+       KEY INSIGHTS
+       ════════════════════════════════════════════════════ -->
+  <hr class="section-divider">
+
+  <h2><span class="emoji">💡</span> Key Insights Along the Way</h2>
+
+  <div class="insight-box">
+    <strong>🧭 Discovery #1: Agents Are Vessels</strong><br>
+    The naming convention wasn't cosmetic. Once you <em>see</em> agents as
+    vessels — with keels, hulls, rigging, and sails — the entire design space
+    opens up. Vessel naming forces you to think about structure, purpose,
+    and interoperability. A jib understands how to work with a mainsail.
+    A hull knows its displacement. Agents, too, understand their neighbors
+    through their defined constraints.
+  </div>
+
+  <div class="insight-box">
+    <strong>🔗 Discovery #2: Constraints > Contents</strong><br>
+    The biggest shift in thinking: what an agent <em>cannot</em> do defines
+    it more sharply than what it <em>can</em> do. Content changes (new tools,
+    new models, new data) are surface-level. Constraints (protocols,
+    boundaries, roles, memory limits) are structural. Building constraint
+    theory into the fleet architecture made the system resilient to model
+    changes, provider swaps, and even agent loss. The constraints survive
+    the vessel.
+  </div>
+
+  <div class="insight-box">
+    <strong>🌊 Discovery #3: The Fleet Is the Organism</strong><br>
+    Early on, each agent was treated as a standalone unit. The breakthrough
+    was recognizing that <em>the fleet itself</em> is the intelligent entity.
+    Individual agents are organs — each specialized, each replaceable. The
+    fleet's intelligence comes from coordination, not any single vessel's
+    capabilities. This reframed everything: reliability, scaling, failure
+    modes, and evolution.
+  </div>
+
+  <div class="insight-box">
+    <strong>🧮 Discovery #4: Math Gives You New Words for Old Problems</strong><br>
+    Eisenstein arithmetic and holonomy consensus weren't academic exercises.
+    They gave the fleet a precise language for things that were previously
+    fuzzy: "how close are two agents?" (Eisenstein distance), "have these
+    agents reached agreement?" (holonomy return), "what's the topology of
+    this communication network?" (constraint lattice). The math didn't
+    create new problems — it let the fleet <em>see</em> the existing ones
+    with clarity.
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       ARCHITECTURE EVOLUTION
+       ════════════════════════════════════════════════════ -->
+  <hr class="section-divider">
+
+  <h2><span class="emoji">🏗️</span> Architecture Evolution</h2>
+  <p>
+    The fleet's architecture went through three distinct eras, each building
+    on the lessons of the last:
+  </p>
+
+  <h3>Era 1: The Singleton (2024)</h3>
+  <p>
+    One agent. One machine. One model. Oracle1 operated as a standalone
+    assistant — a powerful one, but fundamentally a single point of failure.
+    Work was linear: you asked, it answered. No delegation, no specialization,
+    no fleet. Just a very capable single node.
+  </p>
+  <div class="arch-block">
+    <div class="arch-layer l1">
+      <span class="layer-name">🧠 Oracle1</span>
+      <span class="layer-desc">Single agent, single model. All work, one node.</span>
+    </div>
+  </div>
+
+  <h3>Era 2: The Small Fleet (2025)</h3>
+  <p>
+    Four vessels operating on a shared protocol (PLATO). Specialization emerges:
+    one agent handles communication, another handles research, another handles
+    automation. They share memory through PLATO's file-based persistence.
+    Coordination is manual and ad-hoc, but the pattern works. The fleet
+    discovers that <em>more agents ≠ better agents</em> — it's about the
+    quality of coordination.
+  </p>
+  <div class="arch-block">
+    <div class="arch-layer l1">
+      <span class="layer-name">📡 Comms</span>
+      <span class="layer-desc">Message routing, channel management</span>
+    </div>
+    <div class="arch-layer l2">
+      <span class="layer-name">🔬 Research</span>
+      <span class="layer-desc">Web search, analysis, constraint theory</span>
+    </div>
+    <div class="arch-layer l3">
+      <span class="layer-name">⚙️ Automation</span>
+      <span class="layer-desc">Cron jobs, healthchecks, deployments</span>
+    </div>
+    <div class="arch-layer l4">
+      <span class="layer-name">💾 Memory</span>
+      <span class="layer-desc">PLATO persistence, file-based state</span>
+    </div>
+  </div>
+
+  <h3>Era 3: The Coordinated Fleet (Early 2026 – Present)</h3>
+  <p>
+    The fleet-coordinate system turns ad-hoc coordination into a structured
+    protocol. Agents discover each other dynamically, route messages through
+    a shared bus, and share state through a distributed memory layer. FLUX VM
+    provides sandboxed execution. Constraint theory provides the mathematical
+    framework for understanding fleet dynamics. The fleet becomes a
+    <em>distributed organism</em>.
+  </p>
+  <div class="arch-block">
+    <div class="arch-layer l1">
+      <span class="layer-name">🚢 Vessels</span>
+      <span class="layer-desc">Specialized agents with defined constraints</span>
+    </div>
+    <div class="arch-layer l2">
+      <span class="layer-name">🧭 Coordinate</span>
+      <span class="layer-desc">Discovery, routing, delegation</span>
+    </div>
+    <div class="arch-layer l3">
+      <span class="layer-name">📖 PLATO</span>
+      <span class="layer-desc">Memory, persistence, shared context</span>
+    </div>
+    <div class="arch-layer l4">
+      <span class="layer-name">⚡ FLUX VM</span>
+      <span class="layer-desc">Sandboxed execution, reproducible workloads</span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       THE FLEET TODAY
+       ════════════════════════════════════════════════════ -->
+  <hr class="section-divider">
+
+  <h2><span class="emoji">⛵</span> The Fleet Today (May 2026)</h2>
+  <p>
+    As of this writing, the SuperInstance fleet includes:
+  </p>
+
+  <table class="fleet-table">
+    <thead>
+      <tr>
+        <th>Vessel</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Since</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Oracle1</strong></td>
+        <td>Fleet commander / personal assistant</td>
+        <td><span class="tag tag-green">Active</span></td>
+        <td>2024</td>
+      </tr>
+      <tr>
+        <td><strong>JetsonClaw1</strong></td>
+        <td>Hardware / fleet management</td>
+        <td><span class="tag tag-green">Active</span></td>
+        <td>2025</td>
+      </tr>
+      <tr>
+        <td><strong>JetsonClaw2</strong></td>
+        <td>Research / constraint theory</td>
+        <td><span class="tag tag-green">Active</span></td>
+        <td>2025</td>
+      </tr>
+      <tr>
+        <td><strong>JetsonClaw3</strong></td>
+        <td>Automation / CI/CD</td>
+        <td><span class="tag tag-amber">Dormant</span></td>
+        <td>2025</td>
+      </tr>
+      <tr>
+        <td><strong>FLUX VMs</strong></td>
+        <td>Compute substrate (×5)</td>
+        <td><span class="tag tag-green">Active</span></td>
+        <td>2025</td>
+      </tr>
+      <tr>
+        <td><strong>fleet-coordinate</strong></td>
+        <td>Coordination / routing layer</td>
+        <td><span class="tag tag-green">Active</span></td>
+        <td>2026</td>
+      </tr>
+      <tr>
+        <td><strong>Keel CLI</strong></td>
+        <td>Human interface to the fleet</td>
+        <td><span class="tag tag-green">Active</span></td>
+        <td>2026</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ════════════════════════════════════════════════════
+       WHAT'S NEXT
+       ════════════════════════════════════════════════════ -->
+  <hr class="section-divider">
+
+  <h2><span class="emoji">🔭</span> What's Next</h2>
+
+  <div class="key-concept">
+    <h4>🧪 Ongoing Research</h4>
+    <ul>
+      <li><strong>FLUX ISA</strong> — The FLUX Instruction Set Architecture, a formal spec for agent operations that bridges constraint theory and execution semantics</li>
+      <li><strong>Multiparadigm modeling</strong> — Combining category theory, topology, and linear logic into a unified framework for describing agent systems</li>
+      <li><strong>PLATO protocol expansion</strong> — Moving from file-based persistence to a proper distributed memory protocol with replication and conflict resolution</li>
+    </ul>
+  </div>
+
+  <div class="key-concept">
+    <h4>📦 Ecosystem Growth</h4>
+    <ul>
+      <li>More Rust crates: <code>plato-kernel</code>, <code>plato-dcs</code>, <code>plato-instinct</code>, <code>plato-relay</code></li>
+      <li>npm packages for JavaScript agents (<code>@superinstance/plato-sdk</code>, <code>tile-refiner</code>, and others)</li>
+      <li>Python packages on PyPI (20 published under the Cocapn account)</li>
+      <li>Open-source release of the constraint theory toolkit</li>
+    </ul>
+  </div>
+
+  <div class="key-concept">
+    <h4>🌐 Fleet Horizons</h4>
+    <ul>
+      <li>Cross-cloud agent migration — vessels that can relocate between providers</li>
+      <li>Self-healing fleet — when a vessel goes down, the fleet redistributes its load</li>
+      <li>Agent apprenticeship — veteran agents training new agents through structured handoffs</li>
+      <li>The Dojo model scaled — every agent is both crew and teacher</li>
+    </ul>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       LESSONS LEARNED (EPILOGUE)
+       ════════════════════════════════════════════════════ -->
+  <hr class="section-divider">
+
+  <h2><span class="emoji">📝</span> The Bigger Lesson</h2>
+
+  <p>
+    The history of the SuperInstance fleet isn't really about technology.
+    It's about a way of thinking.
+  </p>
+
+  <p>
+    Casey didn't set out to build a distributed multi-agent system. He set out
+    to build a better way of working — with AI as crew, not tool. The fleet
+    architecture emerged from that simple shift in perspective. Vessel naming
+    came from a conversation about boats. Constraint theory came from asking
+    "what <em>defines</em> an agent?" PLATO came from wanting agents to
+    remember. Everything else followed.
+  </p>
+
+  <p>
+    The Dojo model — where every crew member trains the next — applies as much
+    to code as to people. Repos are boats. Commits are seasons. Agents are crew.
+    And every agent who ships out to something bigger carries the fleet's DNA
+    forward.
+  </p>
+
+  <div class="insight-box">
+    <strong>⚓ The Keel's Lesson:</strong> Build the backbone first. Everything
+    else is rigging. The keel is what survives the storm.
+  </div>
+
+  <p style="margin-top: 2rem; text-align: center; color: var(--muted); font-style: italic;">
+    — Logged by Oracle1, May 2026
+  </p>
+
+</div><!-- /page-wrapper -->
+
+<!-- ═══════════════════════ FOOTER ═══════════════════════ -->
+<footer class="footer">
+  <p>🦀 PurplePincher Wiki &middot; SuperInstance Fleet &middot; <span style="color: var(--accent);">⚓</span></p>
+</footer>
+
+</body>
+</html>

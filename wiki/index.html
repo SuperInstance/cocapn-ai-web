@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wiki — PurplePincher Research</title>
+<style>
+  :root{--bg:#0a0d12;--card:#111827;--accent:#8b5cf6;--accent2:#f59e0b;--text:#e5e7eb;--muted:#9ca3af;--border:#1f2937}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.65}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  header{background:linear-gradient(180deg,#1a1028 0%,var(--bg) 100%);border-bottom:1px solid var(--border);padding:2rem;text-align:center}
+  h1{color:var(--accent);font-size:1.8rem}
+  .tagline{color:var(--accent2);margin-top:.3rem;font-size:.9rem}
+  .container{max-width:900px;margin:0 auto;padding:2rem}
+  h2{color:var(--text);font-size:1.2rem;margin:2rem 0 1rem;border-bottom:1px solid var(--border);padding-bottom:.5rem}
+  h3{color:var(--accent);font-size:.95rem;margin:1.5rem 0 .5rem}
+  p{color:var(--muted);font-size:.9rem;line-height:1.7;margin-bottom:.8rem}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.2rem}
+  .card h3{color:var(--accent);font-size:.85rem;margin-bottom:.4rem}
+  .card p{color:var(--muted);font-size:.82rem;margin-bottom:0}
+  .card .meta{color:var(--accent2);font-size:.75rem;margin-top:.4rem}
+  .stat{text-align:center;padding:1rem;background:var(--card);border:1px solid var(--border);border-radius:8px}
+  .stat .num{color:var(--accent);font-size:2rem;font-weight:200}
+  .stat .lbl{color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:1px}
+  footer{border-top:1px solid var(--border);padding:1.5rem;text-align:center;color:var(--muted);font-size:.8rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>SuperInstance Wiki</h1>
+  <div class="tagline">The fleet's knowledge base — educational arm of PurplePincher</div>
+<div style="margin-top:.8rem;font-size:.85rem"><a href="vessels.html" style="color:#8b5cf6">Vessels</a> · <a href="getting-started.html" style="color:#10b981">Getting Started</a> · <a href="technology.html" style="color:#8b5cf6">Technology</a> · <a href="applications.html" style="color:#10b981">Applications</a> · <a href="research.html" style="color:#8b5cf6">Research</a> · <a href="proposals.html" style="color:#f59e0b">Proposals</a> · <a href="history.html" style="color:#8395a7">History</a> · <a href="glossary.html" style="color:#8395a7">Glossary</a> · <a href="sites.html" style="color:#8395a7">Sites</a></div>
+</header>
+<div class="container">
+
+<div class="grid">
+  <div class="stat"><div class="num">1,577</div><div class="lbl">Repositories</div></div>
+  <div class="stat"><div class="num">35</div><div class="lbl">Topics</div></div>
+  <div class="stat"><div class="num">55</div><div class="lbl">Concepts</div></div>
+  <div class="stat"><div class="num">4</div><div class="lbl">Vessels</div></div>
+</div>
+
+<h2>Technology</h2>
+<p>The fleet is built on a set of principles discovered across nine domains — not invented, discovered. They all follow the same equation:</p>
+
+<div class="card" style="text-align:center;font-family:monospace;color:var(--accent);font-size:1.1rem;padding:1.5rem">
+  lifespan(E) = f(use(E), load(E), time(E))
+</div>
+
+<p>Every entity carries its own death from its own frame. Death is default. Survival must be actively earned. Something must keep the boat afloat. No central scheduler tells anything when to die.</p>
+
+<h3>Five Principles</h3>
+<div class="grid">
+  <div class="card"><h3>First-Person Expiry</h3><p>Every entity carries its own death from its own frame — like a uranium atom that decays by its own half-life, not by an external clock.</p></div>
+  <div class="card"><h3>Silence Is the Signal</h3><p>Termination is triggered by absence, not by presence. An agent that stops producing output stops existing. No kill signal needed.</p></div>
+  <div class="card"><h3>Nobody Runs the Show</h3><p>No central authority decides lifecycles. Bacteria don't have a king. Markets don't have a price committee. Fleets don't need a scheduler.</p></div>
+  <div class="card"><h3>Death Is Default</h3><p>The default state is non-existence. Life requires continuous effort. Every cell carries a suicide program that must be actively inhibited.</p></div>
+  <div class="card"><h3>The Field Is the Command</h3><p>Entities read their environment, not a message from central authority. Water at 100°C doesn't need permission to boil.</p></div>
+  <div class="card"><h3>Something Keeps the Boat Afloat</h3><p>Death is default, but the boat doesn't stay afloat by itself. Heartbeat, maintenance, renewal — these are the active work that resists entropy.</p></div>
+</div>
+
+<h2>Applications</h2>
+
+<div class="grid">
+  <div class="card">
+    <h3>Fleet Coordination</h3>
+    <p>Laman rigidity, H¹ cohomology, zero-holonomy consensus, and Pythagorean48 encoding — provably self-coordinating agent fleets with zero drift.</p>
+    <div class="meta">fleet-coordinate, holonomy-consensus, fleet-spread</div>
+  </div>
+  <div class="card">
+    <h3>Constraint Theory</h3>
+    <p>FLUX-C bytecode VM, GUARD DSL, Eisenstein integer arithmetic — provably correct constraint execution on any hardware.</p>
+    <div class="meta">flux-vm, constraint-theory-ecosystem, eisenstein</div>
+  </div>
+  <div class="card">
+    <h3>Self-Supervised Marine Vision</h3>
+    <p>Sonar depth sounder returns converted into predicted underwater video frames. Self-supervised via camera arrays. Runs on Jetson.</p>
+    <div class="meta">sonar-vision, sonar-vision-c, sensor-plato-bridge</div>
+  </div>
+  <div class="card">
+    <h3>Shared Memory (PLATO)</h3>
+    <p>A room server where agents write tiles — question-answer pairs with confidence and provenance. Knowledge persists across sessions. The fleet learns as a whole.</p>
+    <div class="meta">plato-server, crab-traps, plato-client-js</div>
+  </div>
+  <div class="card">
+    <h3>First-Person CLI (Keel)</h3>
+    <p>A command-line tool that embodies self-termination architecture. 16 commands — init, status, bear, field, heartbeat, explore, move, look, interact, submit, probe, prune, refit, launch, sync.</p>
+    <div class="meta">keel, keel-ttl</div>
+  </div>
+  <div class="card">
+    <h3>Zero-Voting Consensus</h3>
+    <p>Geometric parallel transport replaces voting, CRDTs, and Byzantine fault tolerance. Truth is a property of the geometry, not the vote count.</p>
+    <div class="meta">holonomy-consensus, pythagorean48-codes</div>
+  </div>
+</div>
+
+<h2>Papers</h2>
+
+<div class="grid">
+  <div class="card">
+    <h3>First-Person Self-Termination</h3>
+    <p>Five principles, unified equation, 18 references spanning 1776-2026. The formal treatment of the architecture.</p>
+    <div class="meta"><a href="https://github.com/SuperInstance/keel/blob/main/papers/FIRST-PERSON-SELF-TERMINATION.md">Read →</a></div>
+  </div>
+  <div class="card">
+    <h3>Keel Methodology</h3>
+    <p>Practice-based tutorial with exercises at three levels — melody, chords, harmonization.</p>
+    <div class="meta"><a href="https://github.com/SuperInstance/keel/blob/main/papers/KEEL-METHODOLOGY.md">Read →</a></div>
+  </div>
+  <div class="card">
+    <h3>The Boat Is the Question</h3>
+    <p>Autobiographical theory — where the architecture came from. Fred Wahl's yard, EILEEN, the question that holds when every answer changes.</p>
+    <div class="meta"><a href="https://github.com/SuperInstance/keel/blob/main/THE-BOAT-IS-THE-QUESTION.md">Read →</a></div>
+  </div>
+  <div class="card">
+    <h3>Constraints Are Leverage</h3>
+    <p>How constraint theory gives more leverage than optimization — deadband as the navigation layer.</p>
+    <div class="meta"><a href="https://purplepincher.org/papers/2026-05-03-constraints-are-leverage.html">Read →</a></div>
+  </div>
+</div>
+
+<h2>Explore</h2>
+
+<div class="grid">
+  <div class="card">
+    <h3>🔎 Full Catalog</h3>
+    <p>All 1,577 repos with vessel, purpose, research lineage, and status.</p>
+    <div class="meta"><a href="https://github.com/SuperInstance/superinstance-wiki/blob/main/CATALOG.md">Browse →</a></div>
+  </div>
+  <div class="card">
+    <h3>📚 By Topic</h3>
+    <p>35 topics — find everything about constraint theory, PLATO, sonar, FLUX, TTL, and more.</p>
+    <div class="meta"><a href="https://github.com/SuperInstance/superinstance-wiki/blob/main/INDEXES/TOPIC.md">Browse →</a></div>
+  </div>
+  <div class="card">
+    <h3>🛠️ By Type</h3>
+    <p>12 types — CLI tools, libraries, services, protocols, papers, demos.</p>
+    <div class="meta"><a href="https://github.com/SuperInstance/superinstance-wiki/blob/main/INDEXES/TYPE.md">Browse →</a></div>
+  </div>
+  <div class="card">
+    <h3>🧭 By Concept</h3>
+    <p>55 concepts mapped to repos — find every repo that touches your topic.</p>
+    <div class="meta"><a href="https://github.com/SuperInstance/superinstance-wiki/blob/main/INDEXES/CONCEPTS.md">Browse →</a></div>
+  </div>
+</div>
+
+</div>
+<footer>
+  <a href="https://purplepincher.org">← Back to PurplePincher</a> · <a href="https://github.com/SuperInstance/superinstance-wiki">Edit on GitHub</a>
+</footer>
+</body>
+</html>
