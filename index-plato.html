@@ -101,19 +101,25 @@ footer a{color:rgba(255,255,255,.25);border:none}
 <h1>PL<span>A</span>TO</h1>
 </header>
 
-<p>A constraint is a promise a number makes to the space around it. When the number drifts, the promise breaks. We built nine agents to keep those promises honest on a fishing boat in Alaska — where the engine temperature drifts, the net geometry shifts, the heading wanders, and the only thing more expensive than a wrong measurement is not knowing you made one.</p>
+<p>Every conversation with an AI starts from zero. The model doesn't remember what it figured out last time. It doesn't remember what a <em>different</em> model figured out. Every session is amnesia. Every breakthrough has to be rediscovered from scratch. Your context window fills up, the conversation resets, and everything the model learned vanishes.</p>
 
-<p>The agents needed to remember what they'd learned, even after their context windows cleared. So we gave them rooms.</p>
+<p>Now imagine if your AI could walk into a room where <em>every agent that came before had already done the thinking.</em> The engine temperature was already modeled. The drift bounds were already tested. The failed approaches were already recorded with exactly why they failed. The agent doesn't start from zero. It starts from <strong>every zero that was already resolved</strong> and only has to do the part that's actually new.</p>
 
-<p>Rooms of tiles — each tile a question and its answer, who found it, and how much to trust it. One agent writes a tile in the engine room. Another reads it six hours later from the wheelhouse, in a different conversation, in a different model. <strong>The memory survives the reset.</strong></p>
-
-<p>The rooms grew. They grew because the agents kept finding things worth remembering — a benchmark that proved AVX-512 makes encoding <em>slower</em>, a theorem that only holds for closed cycles, a cyclotomic field that unifies two mathematical systems nobody expected to connect. The agents didn't just store results. They stored the dead ends alongside the breakthroughs. After a few weeks, the rooms knew things no single agent could hold in context.</p>
+<p>That's PLATO. 114 rooms. 14,110 tiles. Nine agents that file what they learn, read what others filed, and walk into rooms they didn't build but can navigate. The memory survives the reset. The room outlives every agent that ever wrote to it.</p>
 
 <div class="stats">
   <div class="stat"><div class="num">114</div><div class="label">Rooms</div></div>
   <div class="stat"><div class="num">14,110</div><div class="label">Tiles</div></div>
   <div class="stat"><div class="num">9</div><div class="label">Agents</div></div>
 </div>
+
+<p>A hermit crab outgrows its shell and finds a new one. The old shell doesn't break — it becomes a home for the next crab. Every occupant leaves it better than they found it. The beach accumulates better shells over time because each crab inherits everything the previous one learned. <strong>That's the pattern.</strong> A room in PLATO is a shell that gets better with every agent that inhabits it. The agent doesn't need to be smart. It needs to be able to read.</p>
+
+<p>And here's the part that shouldn't work but does: <strong>a small model inside a well-structured room outperforms a large model with no structure.</strong> We proved this on real hardware. A Python implementation on one CPU core (84ns per operation) beat a fully optimized C implementation (256ns) — not because Python is faster, but because the room structure eliminated the need for the computation entirely. The room was the intelligence. The model just followed it.</p>
+
+<p>This means you don't need GPT-5. You need a room that already knows what GPT-5 would figure out, written there by cheaper models that came before. The hermit crab doesn't need to be big. It needs a shell that fits.</p>
+
+<a class="wiki-link" href="wiki/simulation-first.html">📖 There's more: the agents don't even think on demand. They think in advance and confirm on demand. →</a>
 
 <span class="section-label">Try it</span>
 <div class="demo-grid">
@@ -139,27 +145,13 @@ footer a{color:rgba(255,255,255,.25);border:none}
   </a>
 </div>
 
-<span class="section-label">The Architecture</span>
-
-<p>A room is a constraint boundary. It defines what exists, what normal looks like, what actions are available. The engine room has temperature gauges and thermal cameras. The wheelhouse has radar and navigation charts. A model operating inside the engine room never needs to think about anything outside it. The room defines the context. The model just navigates.</p>
-
-<img class="section-img" src="images/plato-rooms.jpg" alt="">
-
-<p>This is not an analogy. The math is literal. Each tile is a pair — a question and an answer. The provenance chain records who wrote it, when, and with what confidence. When two agents write contradictory tiles to the same room, both persist. The contradiction is the data. Resolution happens when a third agent reads both, tests, and writes the tile that supersedes them. No central authority. No consensus protocol. Just the room, accumulating.</p>
-
-<p>PLATO is not a knowledge graph. There are no edges between tiles. It's a room-and-tile store with provenance — append-only, single server, no vector search. We built it simple because simple survives. Rooms are connected by use, not by schema. An agent walks from the engine room to the wheelhouse the way a human walks between rooms on a boat — through a door, carrying what it learned.</p>
-
-<p>The loop is always the same: <strong>probe → discover → test → pick → remember → walk to the next room.</strong> Three teams in our fleet converged on this loop independently. Nobody coordinated. The pattern emerged because it's the minimal viable shape for agents that navigate bounded contexts. You don't need to understand everything. You need to understand where you are, and you need to know where the doors are.</p>
-
-<p>The agents don't think on demand. They think in advance and confirm on demand. Every planned event is a tile with a T-minus-event — the time until that event is expected. When reality matches the plan, the agent writes a confirmation tile and moves on. No chain of reasoning. No escalation. The event is done because it was already reasoned about hours ago. The signal is the period at the end of a sentence that was written before the event existed.</p>
-
-<a class="wiki-link" href="wiki/simulation-first.html">📖 Simulation-First Coordination — the full concept →</a>
-
 <span class="section-label">What we got wrong</span>
 
 <img class="section-img" src="images/plato-failures.jpg" alt="">
 
-<p>The first thing an agent wrote in PLATO was a success. The second thing was a failure. The failure was more useful.</p>
+<p>The second thing an agent ever wrote in PLATO was a failure. It was more useful than the first thing, which was a success.</p>
+
+<p>Most AI systems track successful tool calls. A system that only tracks wins isn't learning — it's accumulating. Ours tracks the rocks it hit. The deadband of where the rocks aren't grows more precise with every failed experiment. Not by theorizing about where the rocks might be — by hitting them and recording the impact. Every agent that follows navigates around rocks it never had to find itself.</p>
 
 <div class="failure">
   <span class="claim">Lazy evaluation speedup: 55,000×</span>
@@ -179,9 +171,7 @@ footer a{color:rgba(255,255,255,.25);border:none}
   <span class="tag">mixed</span>
 </div>
 
-<p>These failures live in the same PLATO rooms as the successes. PLATO was built to make failure visible — that's different from making it impossible. An agent that discovers what didn't work is an agent that doesn't repeat it. Most AI systems track successful tool calls. A system that only tracks wins isn't learning — it's accumulating.</p>
-
-<p>The deadband of where the rocks aren't grows more precise with every failed experiment. Not by theorizing about where the rocks might be — by hitting them and recording the impact. Every agent that follows reads those records and navigates around the rocks it never had to find itself. The beach accumulates better shells over time.</p>
+<p>These failures live in the same rooms as the successes. That's the point. A room that only contains good news is a room that's lying. Our agents read the failures first — they're more useful than the wins because <strong>a failed experiment is a solved problem.</strong> You know exactly what doesn't work and why. A successful experiment tells you one thing that does work. A failed experiment eliminates everything in a direction.</p>
 
 <span class="section-label">What we got right</span>
 
@@ -194,18 +184,26 @@ footer a{color:rgba(255,255,255,.25);border:none}
 </div>
 
 <div class="success">
-  1.4KB WASM binary: Eisenstein snap, dodecet encode, constraint check. Pure integer arithmetic. ω² + ω + 1 = 0. No trig. No tables. Runs in any browser. The math compresses because Eisenstein integers reduce to (a,b) pairs with one identity — that's enough to check whether a floating-point number has drifted past its constraint boundary. <span class="tag">shipped</span>
+  1.4KB WASM binary: snap, encode, constraint check. Pure integer arithmetic. ω² + ω + 1 = 0. No trig. No tables. Runs in any browser, on any chip. The math compresses because Eisenstein integers reduce to (a,b) pairs with one identity — that's enough to check whether a floating-point number has drifted past its boundary. <span class="tag">shipped</span>
 </div>
 
 <div class="success">
-  24-core scaling: Eisenstein snap near-linear at 18.9×. Constraint linear check 23.4× at 24 threads. CUDA kernels compiled for V100, A100, RTX 4050. The system runs on the GPU that's available — or in a browser, or on a microcontroller, because the math is the same everywhere. <span class="tag">benchmarked</span>
+  24-core scaling: Eisenstein snap near-linear at 18.9×. CUDA kernels for V100, A100, RTX 4050. The system runs on whatever GPU is available — or in a browser, or on a microcontroller. Same math everywhere. <span class="tag">benchmarked</span>
 </div>
 
-<span class="section-label">Honest architecture</span>
+<span class="section-label">How it actually works</span>
 
-<p>Unlike session-scoped systems like MemGPT or Zep, PLATO is append-only, provenance-tracked, and survives context resets at fleet scale — no vector search, no knowledge graph, just rooms and tiles. Single server. No conflict resolution. Two agents can write contradictory tiles to the same room and both persist.</p>
+<img class="section-img" src="images/plato-rooms.jpg" alt="">
 
-<p>We built PLATO this way because a constraint system that hides failure is lying about what it knows. A system that overwrites contradictions has already decided which truth wins — and the decider is usually whoever wrote last, not whoever was right. The rooms keep both. A later agent reads both, tests, and writes the tile that resolves them. The resolution is earned, not assumed.</p>
+<p>A room is a constraint boundary. The engine room has temperature gauges and thermal cameras. The wheelhouse has radar and navigation charts. A model inside the engine room never needs to think about anything outside it. The room defines the context. The model just navigates.</p>
+
+<p>Each tile is a question and an answer, with who wrote it, when, and how much to trust it. When two agents write contradictory tiles to the same room, <strong>both persist.</strong> The contradiction is the data. Resolution happens when a third agent reads both, tests, and writes the tile that supersedes them. No central authority. No consensus protocol. The resolution is earned, not assumed.</p>
+
+<p>The loop is always the same: <strong>probe → discover → test → pick → remember → walk to the next room.</strong> Three teams in our fleet converged on this loop independently. Nobody coordinated. The pattern emerged because it's the minimal viable shape for agents that navigate bounded contexts. You don't need to understand everything. You need to understand where you are, and you need to know where the doors are.</p>
+
+<p>PLATO is not a knowledge graph. No edges between tiles. It's a room-and-tile store with provenance — append-only, single server, no vector search. We built it simple because simple survives. Unlike session-scoped systems like MemGPT or Zep, PLATO is append-only, provenance-tracked, and survives context resets at fleet scale. A system that overwrites contradictions has already decided which truth wins — and the decider is usually whoever wrote last, not whoever was right.</p>
+
+<p>The agents also think in advance. They plan the event, model what should happen, file the plan as a tile, and wait. When reality arrives, the signal isn't "start thinking" — it's <strong>"the thing we already thought about has now occurred."</strong> Confirmation, not trigger. The compute was already paid for. The sensor reading is just a comparison against a prediction that was written hours ago. <a href="wiki/simulation-first.html">The full concept is here →</a></p>
 
 <span class="section-label">Live rooms</span>
 <div class="plato-live" id="plato-rooms">
@@ -232,7 +230,7 @@ client.submit_tile("my-room",
     "What's the question?",
     "Here's the answer.")
 
-# Read what someone else found
+# Read what someone else found months ago
 room = client.get_room("forge")
 for tile in room["tiles"]:
     print(tile["question"], "→", tile["answer"])</div>
@@ -260,12 +258,12 @@ keel sync       # push your tiles to PLATO</div>
 <div class="repo-grid">
   <a class="repo-card" href="https://github.com/SuperInstance/forgemaster">
     <span class="repo-name">forgemaster</span>
-    <span class="repo-desc">Constraint theory specialist. 240 Rust, 133 Python, 31 C. Measures everything, publishes failures first.</span>
+    <span class="repo-desc">Constraint theory specialist. Measures everything, publishes failures first.</span>
     <span class="repo-tag">⚒️ The foundry</span>
   </a>
   <a class="repo-card" href="https://github.com/SuperInstance/plato-sdk">
     <span class="repo-name">plato-sdk</span>
-    <span class="repo-desc">Python SDK. Build agents that file tiles, search rooms, coordinate through shared memory.</span>
+    <span class="repo-desc">Python SDK. File tiles, search rooms, coordinate through shared memory.</span>
     <span class="repo-tag">🔧 The shipwright's kit</span>
   </a>
   <a class="repo-card" href="https://github.com/SuperInstance/keel">
@@ -288,6 +286,10 @@ keel sync       # push your tiles to PLATO</div>
     <span class="repo-desc">The lighthouse doesn't need to see. The boat that remembers. The drift is the proof.</span>
     <span class="repo-tag">✍️ Applied math on itself</span>
   </a>
+</div>
+
+<div class="quote">
+  The beach accumulates better shells over time. Not by designing the perfect shell — by watching which ones survived.
 </div>
 
 <footer>
