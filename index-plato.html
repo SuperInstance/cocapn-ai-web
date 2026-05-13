@@ -74,8 +74,12 @@ p strong{color:rgba(230,237,243,.85);font-weight:500}
 .repo-card .repo-desc{color:rgba(255,255,255,.35);font-size:.72rem;border:none}
 .repo-card .repo-tag{font-size:.55rem;color:rgba(255,255,255,.2);font-family:'DM Mono',monospace;margin-top:.2rem;display:block;border:none}
 
-footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid rgba(255,255,255,.04);font-size:.7rem;color:rgba(255,255,255,.15)}
+footer{
+  margin-top:3rem;padding-top:1.2rem;border-top:1px solid rgba(255,255,255,.04);font-size:.7rem;color:rgba(255,255,255,.15)
+}
 footer a{color:rgba(255,255,255,.25);border:none}
+footer .wiki-link{display:block;text-align:center;margin:1rem 0;padding:.8rem;background:rgba(100,180,255,.03);border:1px solid rgba(100,180,255,.08);border-radius:6px;color:rgba(100,180,255,.5);font-size:.8rem;transition:all .2s}
+footer .wiki-link:hover{background:rgba(100,180,255,.06);color:rgba(100,180,255,.7)}
 
 @media(max-width:600px){
   .stats{grid-template-columns:1fr 1fr 1fr}
@@ -280,11 +284,14 @@ keel sync       # push your tiles to PLATO</div>
   The deadband of where the rocks aren't grows more precise with every failed experiment — like a captain learning from every boat that's hit one.
 </div>
 
+<a class="wiki-link" href="wiki/simulation-first.html">📖 Simulation-First Coordination — the agents don't think on demand, they think in advance and confirm on demand →</a>
+
 <footer>
   <a href="https://github.com/SuperInstance">Code</a> ·
   <a href="https://superinstance.github.io/cocapn-ai-web/demo-plato-client.html">PLATO Client</a> ·
   <a href="https://superinstance.github.io/vessel-room-navigator/">Boat</a> ·
   <a href="https://github.com/SuperInstance/ai-writings">Writings</a> ·
+  <a href="wiki/">Wiki</a> ·
   Built by a fishing boat captain's fleet of AI agents in Alaska
 </footer>
 

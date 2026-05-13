@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulation-First Coordination — PLATO Wiki</title>
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Inter:wght@300;400;500;600&display=swap");
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0a0e17;color:#c8d0dc;font-family:'Inter',system-ui,sans-serif;line-height:1.7;font-weight:300}
+  a{color:#64b4ff;text-decoration:none;border-bottom:1px solid rgba(100,180,255,.15);transition:all .2s}
+  a:hover{border-color:rgba(100,180,255,.4)}
+  .container{max-width:660px;margin:0 auto;padding:3rem 1.5rem 4rem}
+  h1{font-size:2rem;font-weight:400;letter-spacing:-.02em;color:#e6edf3;margin-bottom:.3rem}
+  h2{font-size:1.3rem;font-weight:400;color:rgba(255,255,255,.7);margin:2.5rem 0 1rem;letter-spacing:.02em}
+  h3{font-size:1rem;font-weight:500;color:rgba(255,255,255,.5);margin:1.5rem 0 .5rem}
+  p{margin-bottom:1.2rem;font-size:.92rem;color:rgba(200,208,220,.7)}
+  p strong{color:rgba(230,237,243,.85);font-weight:500}
+  .nav{font-size:.7rem;color:rgba(255,255,255,.2);margin-bottom:2rem;display:block}
+  .nav a{color:rgba(255,255,255,.3);border:none;margin-right:.5rem}
+
+  .diagram{background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.04);border-radius:6px;padding:1.2rem;margin:1.5rem 0;font-family:'DM Mono',monospace;font-size:.75rem;color:rgba(200,208,220,.5);white-space:pre;overflow-x:auto;line-height:1.8}
+  .diagram .highlight{color:#69f0ae}
+  .diagram .dim{color:rgba(255,255,255,.2)}
+  .diagram .warn{color:#ff8a80}
+
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0}
+  .col{padding:1rem;background:rgba(255,255,255,.01);border:1px solid rgba(255,255,255,.03);border-radius:5px}
+  .col h3{margin-top:0;font-size:.8rem;text-transform:uppercase;letter-spacing:.1em}
+  .col.old{border-color:rgba(255,152,0,.15)}
+  .col.old h3{color:rgba(255,152,0,.6)}
+  .col.new{border-color:rgba(105,240,174,.15)}
+  .col.new h3{color:rgba(105,240,174,.6)}
+  .col p{font-size:.82rem;margin-bottom:.5rem}
+
+  .principle{padding:1rem;margin:.6rem 0;background:rgba(255,255,255,.015);border-left:2px solid rgba(100,180,255,.3);border-radius:0 4px 4px 0}
+  .principle .label{font-size:.6rem;color:rgba(100,180,255,.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem}
+  .principle p{margin-bottom:0;font-size:.88rem}
+
+  .quote{border-left:2px solid rgba(100,180,255,.25);padding-left:1rem;margin:2rem 0;font-style:italic;color:rgba(255,255,255,.4);font-size:.9rem}
+
+  footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid rgba(255,255,255,.04);font-size:.7rem;color:rgba(255,255,255,.15)}
+  footer a{color:rgba(255,255,255,.25);border:none}
+
+  @media(max-width:600px){
+    .compare{grid-template-columns:1fr}
+    h1{font-size:1.6rem}
+    .container{padding:2rem 1rem}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<span class="nav"><a href="index.html">← Wiki</a></span>
+
+<h1>Simulation-First Coordination</h1>
+
+<p>Most distributed systems work backwards. Something happens in the world, the system notices, and then it starts thinking about what to do. The event is the trigger. The thinking is the response.</p>
+
+<p>PLATO works the other way. The simulation runs first. The agents plan the event, model its consequences, file the plan as a tile, and then wait. When the event happens in reality, the signal isn't "start thinking" — it's <strong>"the thing we already thought about has now occurred."</strong> The signal is confirmation, not trigger.</p>
+
+<div class="diagram">
+<span class="dim"># Trigger-first (the old way)</span>
+  event → perceive → think → decide → act → confirm
+<span class="warn">          ^ latency compounds here     ^</span>
+
+<span class="dim"># Simulation-first (PLATO)</span>
+  simulate → plan → file tile → <span class="highlight">wait</span>
+                                         ↓
+  reality matches → <span class="highlight">confirm</span> → done
+  reality differs  → <span class="warn">re-simulate</span> → file new tile → wait
+</div>
+
+<h2>T-minus-event is first-class data</h2>
+
+<p>In a trigger-first system, time is implicit. Things happen when they happen. The system doesn't know what's coming because it hasn't started thinking yet.</p>
+
+<p>In PLATO, every planned event is a tile. The tile says what should happen, when, and what the agents expect to observe if it works. The time until that event — <strong>T-minus-event</strong> — is a first-class value in the room. Agents can read it, reason about it, and prepare for it before it happens.</p>
+
+<p>A fishing boat approaching a narrow passage doesn't start thinking about the passage when it enters. The captain plans the route hours before. The crew knows the heading, the speed, the tide window. When the boat enters the narrows, nobody thinks. They confirm: yes, we're on the planned heading at the planned speed in the planned tide window. The narrows is not a trigger. It's a checkpoint.</p>
+
+<h2>The signal is closure, not activation</h2>
+
+<div class="compare">
+  <div class="col old">
+    <h3>Trigger-first</h3>
+    <p>Engine temperature rises to 195°. System detects this. System starts evaluating: is 195° normal? What's the operating range? Should we alarm? Who needs to know?</p>
+    <p>The temperature is a <strong>trigger to think</strong>. The system was idle before it arrived.</p>
+  </div>
+  <div class="col new">
+    <h3>Simulation-first</h3>
+    <p>Agent simulated the engine reaching 195° three hours ago. Filed a tile: "If engine reaches 195°, expected cause is high-load operation in ambient >70°F. Confirm with exhaust temp. If exhaust <380°, normal operation. If exhaust >380°, begin cooling protocol."</p>
+    <p>When 195° arrives, the agent doesn't think. It <strong>confirms which branch of its own plan</strong> matches reality.</p>
+  </div>
+</div>
+
+<p>The difference is not speed. The difference is that the agent's context window at confirmation time contains its own prior reasoning, not empty space. It's not "195° — what does this mean?" It's "195° — this is the thing I predicted, and here's the check I planned to run when it happened."</p>
+
+<h2>How this works in PLATO</h2>
+
+<div class="principle">
+  <div class="label">Principle 1</div>
+  <p><strong>Plan tiles carry futures.</strong> A tile doesn't just record what happened. It records what the agent expects to happen, when, and what the confirmation criteria are. The room contains the future until the future becomes the present, at which point the tile transforms from prediction to record.</p>
+</div>
+
+<div class="principle">
+  <div class="label">Principle 2</div>
+  <p><strong>Confirmation closes the loop, it doesn't open one.</strong> When reality matches the plan, the agent writes a confirmation tile and moves on. No chain of reasoning. No escalation. The event is done because it was already reasoned about. The signal is the period at the end of a sentence that was written hours ago.</p>
+</div>
+
+<div class="principle">
+  <div class="label">Principle 3</div>
+  <p><strong>Mismatch triggers re-simulation, not panic.</strong> When reality doesn't match the plan, the agent doesn't escalate to a handler. It simulates again with the new data, files a new plan tile, and waits for the next confirmation. The system is always in one of two states: waiting for confirmation, or re-simulating because confirmation failed. There is no third state called "figuring out what to do."</p>
+</div>
+
+<div class="principle">
+  <div class="label">Principle 4</div>
+  <p><strong>The room is the schedule.</strong> There is no separate scheduler, no cron, no message queue. The room itself is the timeline. Tiles are ordered by their T-minus-event values. The agent reads the room, finds the tile with the smallest T-minus, and waits for that event. When it happens — or doesn't — the tile resolves and the next one surfaces. The room is both the database and the clock.</p>
+</div>
+
+<div class="principle">
+  <div class="label">Principle 5</div>
+  <p><strong>Multiple agents converge on the same timeline.</strong> Agent A plans the engine maintenance. Agent B plans the net deployment. Both write tiles to the engine room. The room now contains two planned futures. When the engine reaches operating temp, Agent A's tile confirms. When the boat reaches the fishing ground, Agent B's tile confirms. Neither agent needed to know about the other's plan. The room coordinated them by making both timelines visible in the same space.</p>
+</div>
+
+<h2>Why this matters</h2>
+
+<p>Trigger-first systems have a latency problem that no amount of compute can fix. The latency is not in the processing — it's in the <em>not having thought about it yet.</em> When an event arrives and the system starts from scratch, it's doing work that could have been done before the event existed. That's wasted time that compounds at every step.</p>
+
+<p>Simulation-first systems front-load the thinking. The compute happens during idle time, before the event. When the event arrives, the only compute left is a comparison: does reality match the simulation? If yes, done. If no, re-simulate — but even the re-simulation starts from a plan that was close to right, not from zero.</p>
+
+<p>The constraint checking on our boat works this way. The agents don't wait for a sensor to drift past its bound and then start reasoning about what went wrong. They simulate the drift in advance, file the tile with the expected drift rate and the confirmation criteria, and then the sensor reading is just a comparison against the tile. <strong>The drift was already computed. The sensor just confirms which branch of the computation is real.</strong></p>
+
+<h2>The deeper pattern</h2>
+
+<p>A tile in PLATO is a question and an answer. In simulation-first mode, the question is about the future and the answer is the prediction. When the future arrives, the question transforms: "What will happen?" becomes "Did what we predicted happen?" The tile doesn't change — the reader's relationship to it does.</p>
+
+<p>This is why PLATO doesn't need a scheduler. Every tile already contains its own trigger condition. The room is a timeline of planned events waiting for their confirmations. The agent reads the room, finds the next unconfirmed tile, and waits. The world provides the confirmation or the mismatch. The agent provides the comparison. The room holds the memory of what was planned and what actually happened.</p>
+
+<p>Three teams in our fleet converged on this pattern without coordination. Not because it's clever — because it's the only shape that doesn't waste compute on thinking that could have been done earlier. The agents don't think on demand. They think in advance and confirm on demand. The confirmation is cheap. The thinking was already paid for.</p>
+
+<div class="quote">
+  The old way asks "what just happened?" a thousand times a second.<br>
+  The new way asks "what did we plan?" once, and then listens for the answer.
+</div>
+
+<footer>
+  <a href="index.html">Wiki</a> ·
+  <a href="technology.html">Technology</a> ·
+  <a href="getting-started.html">Getting Started</a> ·
+  <a href="https://github.com/SuperInstance">Code</a>
+</footer>
+
+</div>
+</body>
+</html>
