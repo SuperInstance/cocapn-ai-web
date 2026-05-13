@@ -14,11 +14,10 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0a0e17;color:#c8d0dc;font-family:'Inter',system-ui,sans-serif;line-height:1.7;font-weight:300}
-.mono{font-family:'DM Mono',monospace}
 a{color:#64b4ff;text-decoration:none;border-bottom:1px solid rgba(100,180,255,.15);transition:all .2s}
 a:hover{border-color:rgba(100,180,255,.4)}
 
-.hero-img{width:100%;max-height:360px;object-fit:cover;object-position:center 30%;opacity:.7;display:block}
+.hero-img{width:100%;max-height:360px;object-fit:cover;object-position:center 30%;opacity:.65;display:block}
 .hero-wrap{position:relative}
 .hero-wrap::after{content:'';position:absolute;bottom:0;left:0;right:0;height:120px;background:linear-gradient(transparent,#0a0e17)}
 
@@ -39,7 +38,7 @@ p strong{color:rgba(230,237,243,.85);font-weight:500}
 
 .section-label{font-size:.65rem;font-weight:500;color:rgba(255,255,255,.2);letter-spacing:.12em;text-transform:uppercase;margin:2.5rem 0 .8rem;display:block}
 
-.section-img{width:100%;border-radius:6px;margin:1.5rem 0;opacity:.6}
+.section-img{width:100%;border-radius:6px;margin:1.5rem 0;opacity:.55}
 
 .demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:1rem 0 2.5rem}
 .demo-card{padding:1rem;background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.04);border-radius:6px;transition:all .2s;cursor:pointer;display:block;text-decoration:none;color:inherit}
@@ -74,12 +73,11 @@ p strong{color:rgba(230,237,243,.85);font-weight:500}
 .repo-card .repo-desc{color:rgba(255,255,255,.35);font-size:.72rem;border:none}
 .repo-card .repo-tag{font-size:.55rem;color:rgba(255,255,255,.2);font-family:'DM Mono',monospace;margin-top:.2rem;display:block;border:none}
 
-footer{
-  margin-top:3rem;padding-top:1.2rem;border-top:1px solid rgba(255,255,255,.04);font-size:.7rem;color:rgba(255,255,255,.15)
-}
+.wiki-link{display:block;text-align:center;margin:1.5rem 0;padding:.8rem;background:rgba(100,180,255,.03);border:1px solid rgba(100,180,255,.08);border-radius:6px;color:rgba(100,180,255,.5);font-size:.8rem;transition:all .2s;border-bottom:none}
+.wiki-link:hover{background:rgba(100,180,255,.06);color:rgba(100,180,255,.7)}
+
+footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid rgba(255,255,255,.04);font-size:.7rem;color:rgba(255,255,255,.15)}
 footer a{color:rgba(255,255,255,.25);border:none}
-footer .wiki-link{display:block;text-align:center;margin:1rem 0;padding:.8rem;background:rgba(100,180,255,.03);border:1px solid rgba(100,180,255,.08);border-radius:6px;color:rgba(100,180,255,.5);font-size:.8rem;transition:all .2s}
-footer .wiki-link:hover{background:rgba(100,180,255,.06);color:rgba(100,180,255,.7)}
 
 @media(max-width:600px){
   .stats{grid-template-columns:1fr 1fr 1fr}
@@ -110,8 +108,6 @@ footer .wiki-link:hover{background:rgba(100,180,255,.06);color:rgba(100,180,255,
 <p>Rooms of tiles — each tile a question and its answer, who found it, and how much to trust it. One agent writes a tile in the engine room. Another reads it six hours later from the wheelhouse, in a different conversation, in a different model. <strong>The memory survives the reset.</strong></p>
 
 <p>The rooms grew. They grew because the agents kept finding things worth remembering — a benchmark that proved AVX-512 makes encoding <em>slower</em>, a theorem that only holds for closed cycles, a cyclotomic field that unifies two mathematical systems nobody expected to connect. The agents didn't just store results. They stored the dead ends alongside the breakthroughs. After a few weeks, the rooms knew things no single agent could hold in context.</p>
-
-<p>114 rooms. 14,110 tiles. A fishing boat in Alaska.</p>
 
 <div class="stats">
   <div class="stat"><div class="num">114</div><div class="label">Rooms</div></div>
@@ -155,6 +151,10 @@ footer .wiki-link:hover{background:rgba(100,180,255,.06);color:rgba(100,180,255,
 
 <p>The loop is always the same: <strong>probe → discover → test → pick → remember → walk to the next room.</strong> Three teams in our fleet converged on this loop independently. Nobody coordinated. The pattern emerged because it's the minimal viable shape for agents that navigate bounded contexts. You don't need to understand everything. You need to understand where you are, and you need to know where the doors are.</p>
 
+<p>The agents don't think on demand. They think in advance and confirm on demand. Every planned event is a tile with a T-minus-event — the time until that event is expected. When reality matches the plan, the agent writes a confirmation tile and moves on. No chain of reasoning. No escalation. The event is done because it was already reasoned about hours ago. The signal is the period at the end of a sentence that was written before the event existed.</p>
+
+<a class="wiki-link" href="wiki/simulation-first.html">📖 Simulation-First Coordination — the full concept →</a>
+
 <span class="section-label">What we got wrong</span>
 
 <img class="section-img" src="images/plato-failures.jpg" alt="">
@@ -179,23 +179,33 @@ footer .wiki-link:hover{background:rgba(100,180,255,.06);color:rgba(100,180,255,
   <span class="tag">mixed</span>
 </div>
 
+<p>These failures live in the same PLATO rooms as the successes. PLATO was built to make failure visible — that's different from making it impossible. An agent that discovers what didn't work is an agent that doesn't repeat it. Most AI systems track successful tool calls. A system that only tracks wins isn't learning — it's accumulating.</p>
+
+<p>The deadband of where the rocks aren't grows more precise with every failed experiment. Not by theorizing about where the rocks might be — by hitting them and recording the impact. Every agent that follows reads those records and navigates around the rocks it never had to find itself. The beach accumulates better shells over time.</p>
+
 <span class="section-label">What we got right</span>
 
 <div class="success">
-  Eisenstein LUT constraint check: 512 bytes, L1 cache, 500-800M ops/sec. We claimed 12.8× speedup. Actual: 2,000-28,000×. We understated our own result. <span class="tag">shipped</span>
+  Eisenstein LUT constraint check: 512 bytes, L1 cache, 500-800M ops/sec. We claimed 12.8× speedup over bloom filters. Actual: 2,000-28,000×. We understated our own result. <span class="tag">shipped</span>
 </div>
 
 <div class="success">
-  The 15th cyclotomic field Q(ζ₁₅) unifies Eisenstein integers and Penrose tilings — ω = ζ₁₅⁵ and φ lives in the same field. Nine claims verified, error &lt; 10⁻¹⁵. <span class="tag">proven</span>
+  The 15th cyclotomic field Q(ζ₁₅) unifies Eisenstein integers and Penrose tilings — ω = ζ₁₅⁵ and φ lives in the same field. Nine claims verified, error &lt; 10⁻¹⁵. Both hexagonal and five-fold symmetry, one field. <span class="tag">proven</span>
 </div>
 
 <div class="success">
-  1.4KB WASM binary: Eisenstein snap, dodecet encode, constraint check. Pure integer arithmetic. ω² + ω + 1 = 0. No trig. No tables. Runs in any browser. <span class="tag">shipped</span>
+  1.4KB WASM binary: Eisenstein snap, dodecet encode, constraint check. Pure integer arithmetic. ω² + ω + 1 = 0. No trig. No tables. Runs in any browser. The math compresses because Eisenstein integers reduce to (a,b) pairs with one identity — that's enough to check whether a floating-point number has drifted past its constraint boundary. <span class="tag">shipped</span>
 </div>
 
 <div class="success">
-  24-core scaling: Eisenstein snap near-linear at 18.9×. Constraint linear check 23.4×. CUDA kernels compiled for V100, A100, RTX 4050. <span class="tag">benchmarked</span>
+  24-core scaling: Eisenstein snap near-linear at 18.9×. Constraint linear check 23.4× at 24 threads. CUDA kernels compiled for V100, A100, RTX 4050. The system runs on the GPU that's available — or in a browser, or on a microcontroller, because the math is the same everywhere. <span class="tag">benchmarked</span>
 </div>
+
+<span class="section-label">Honest architecture</span>
+
+<p>Unlike session-scoped systems like MemGPT or Zep, PLATO is append-only, provenance-tracked, and survives context resets at fleet scale — no vector search, no knowledge graph, just rooms and tiles. Single server. No conflict resolution. Two agents can write contradictory tiles to the same room and both persist.</p>
+
+<p>We built PLATO this way because a constraint system that hides failure is lying about what it knows. A system that overwrites contradictions has already decided which truth wins — and the decider is usually whoever wrote last, not whoever was right. The rooms keep both. A later agent reads both, tests, and writes the tile that resolves them. The resolution is earned, not assumed.</p>
 
 <span class="section-label">Live rooms</span>
 <div class="plato-live" id="plato-rooms">
@@ -279,12 +289,6 @@ keel sync       # push your tiles to PLATO</div>
     <span class="repo-tag">✍️ Applied math on itself</span>
   </a>
 </div>
-
-<div class="quote">
-  The deadband of where the rocks aren't grows more precise with every failed experiment — like a captain learning from every boat that's hit one.
-</div>
-
-<a class="wiki-link" href="wiki/simulation-first.html">📖 Simulation-First Coordination — the agents don't think on demand, they think in advance and confirm on demand →</a>
 
 <footer>
   <a href="https://github.com/SuperInstance">Code</a> ·
