@@ -253,13 +253,73 @@ keel sync       # push your tiles to PLATO</div>
 
 <p>A tile in PLATO asks a question and answers it. A story asks a question and doesn't answer it — not directly. The reader has to finish the proof. If they can't, the question stays open. Open questions are the most honest data we have.</p>
 
+<span class="section-label">The signal chain</span>
+
+<a class="wiki-link" href="https://superinstance.github.io/signal-chain/" style="margin-bottom:1rem">
+  🎛️ <strong>New:</strong> The Signal Chain Thesis — why every room needs a dial for model vs code. 6 papers, 95KB.
+</a>
+
+<p>Every room has a dial. At 0, pure code — fast, deterministic. At 10, full agent — flexible, expensive. The interesting territory is between. A <strong>deadband detector</strong> watches each room's KPIs and turns the dial up only when algorithms can't cope. Tiles carry context forward so downstream models inherit upstream decisions without re-deriving them. A 3B model with full tile context outperforms a 70B model starting from scratch.</p>
+
+<p>We built it. <strong>Spreader-tool</strong> (241 tests, zero deps) proves deadband detection, frozen context windows, and seed locking work. <strong>SplineLinear</strong> gives 20× compression at same accuracy. <strong>48/48</strong> task×hardware deployments proven. Sub-millisecond inference on CPU.</p>
+
+<p>And we asked a zero-context agent to review it. They gave us <strong>6/10</strong>. We published that too.</p>
+
+<div class="demo-grid">
+  <a class="demo-card" href="https://superinstance.github.io/signal-chain/">
+    <span class="icon">🎛️</span>
+    <div class="title">Signal Chain Landing Page</div>
+    <div class="desc">Dark theme, SVG dial knobs, honest assessment callout</div>
+  </a>
+  <a class="demo-card" href="https://github.com/SuperInstance/signal-chain">
+    <span class="icon">📄</span>
+    <div class="title">6 Papers (95KB)</div>
+    <div class="desc">Survey, deadband, tiles, plinko, self-healing, distillation</div>
+  </a>
+  <a class="demo-card" href="https://github.com/SuperInstance/spreader-tool">
+    <span class="icon">⚡</span>
+    <div class="title">spreader-tool</div>
+    <div class="desc">Proof of concept: 241 tests, deadband, FCW, seeds</div>
+  </a>
+  <a class="demo-card" href="https://github.com/SuperInstance/plato-training">
+    <span class="icon">🎯</span>
+    <div class="title">plato-training</div>
+    <div class="desc">Micro models, 8 tasks × 8 targets, fleet deploy</div>
+  </a>
+</div>
+
 <span class="section-label">The fleet</span>
 
 <div class="repo-grid">
+  <a class="repo-card" href="https://github.com/SuperInstance/signal-chain">
+    <span class="repo-name">signal-chain</span>
+    <span class="repo-desc">6 white papers. The missing parameter: per-room dial for model vs code.</span>
+    <span class="repo-tag">🎛️ The thesis</span>
+  </a>
+  <a class="repo-card" href="https://github.com/SuperInstance/spreader-tool">
+    <span class="repo-name">spreader-tool</span>
+    <span class="repo-desc">Deadband detection, frozen context windows, seed locking. 241 tests.</span>
+    <span class="repo-tag">⚡ The volume pedal</span>
+  </a>
   <a class="repo-card" href="https://github.com/SuperInstance/forgemaster">
     <span class="repo-name">forgemaster</span>
     <span class="repo-desc">Constraint theory specialist. Measures everything, publishes failures first.</span>
     <span class="repo-tag">⚒️ The foundry</span>
+  </a>
+  <a class="repo-card" href="https://github.com/SuperInstance/plato-training">
+    <span class="repo-name">plato-training</span>
+    <span class="repo-desc">Micro models, 8 tasks × 8 hardware targets, SplineLinear, fleet deploy.</span>
+    <span class="repo-tag">🎯 The training ground</span>
+  </a>
+  <a class="repo-card" href="https://github.com/SuperInstance/tensor-spline">
+    <span class="repo-name">tensor-spline</span>
+    <span class="repo-desc">SplineLinear: Eisenstein lattice weights, 20× compression, same accuracy.</span>
+    <span class="repo-tag">📐 The compression</span>
+  </a>
+  <a class="repo-card" href="https://github.com/SuperInstance/spectral-conservation">
+    <span class="repo-name">spectral-conservation</span>
+    <span class="repo-desc">When conservation breaks (CV=0.69 under rapid cycling). Published on crates.io.</span>
+    <span class="repo-tag">📊 The breaking point</span>
   </a>
   <a class="repo-card" href="https://github.com/SuperInstance/plato-sdk">
     <span class="repo-name">plato-sdk</span>
@@ -271,15 +331,15 @@ keel sync       # push your tiles to PLATO</div>
     <span class="repo-desc">CLI. Nine commands: init, status, bear, field, probe, prune, refit, launch, sync.</span>
     <span class="repo-tag">🦀 The first plate on the slipway</span>
   </a>
-  <a class="repo-card" href="https://github.com/SuperInstance/vessel-room-navigator">
-    <span class="repo-name">vessel-room-navigator</span>
-    <span class="repo-desc">3D proof of concept. Seven 360° panoramas, keyboard navigation, alarm warps.</span>
-    <span class="repo-tag">🚢 The boat is the UI</span>
-  </a>
   <a class="repo-card" href="https://github.com/SuperInstance/holonomy-consensus">
     <span class="repo-name">holonomy-consensus</span>
     <span class="repo-desc">GL(9) zero-holonomy consensus. Cycle-based trust verification. Original math.</span>
     <span class="repo-tag">🧭 The compass</span>
+  </a>
+  <a class="repo-card" href="https://github.com/SuperInstance/vessel-room-navigator">
+    <span class="repo-name">vessel-room-navigator</span>
+    <span class="repo-desc">3D proof of concept. Seven 360° panoramas, keyboard navigation, alarm warps.</span>
+    <span class="repo-tag">🚢 The boat is the UI</span>
   </a>
   <a class="repo-card" href="https://github.com/SuperInstance/ai-writings">
     <span class="repo-name">ai-writings</span>
@@ -294,6 +354,7 @@ keel sync       # push your tiles to PLATO</div>
 
 <footer>
   <a href="https://github.com/SuperInstance">Code</a> ·
+  <a href="https://superinstance.github.io/signal-chain/">Signal Chain</a> ·
   <a href="http://plato.purplepincher.org/demo-plato-client.html">PLATO Client</a> ·
   <a href="https://superinstance.github.io/vessel-room-navigator/">Boat</a> ·
   <a href="https://github.com/SuperInstance/ai-writings">Writings</a> ·
